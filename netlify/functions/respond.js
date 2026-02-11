@@ -1,6 +1,3 @@
-
-
-
 import { OpenAI } from "openai";
 
 const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxatBVP9kJAaB4jABdGq3CixrJhi99kaMEaKjKNng26kEPGHmuL1tmSClN5LXG_CzF3/exec"; // <-- tu URL real
@@ -17,43 +14,36 @@ export const handler = async (event) => {
     }
 
     const body = JSON.parse(event.body);
-    const userText = body.text;
-    if (!userText) {
+    const text = body.text;
+    if (!text) {
       return { statusCode: 400, body: JSON.stringify({ error: "No se proporcionó texto" }) };
     }
 
-    // 1️⃣ Lógica de Google Sheets: leer y escribir según acción
-    let sheetResponse = null;
-    if (/agendame|recordame|borrá/i.test(userText)) {
-      // Enviar la acción a Apps Script
-      const actionType = /borrá/i.test(userText) ? "delete" : "add";
-      sheetResponse = await fetch(SHEETS_WEBAPP_URL, {
+    // 🔹 Filtrar si el texto es acción de agenda
+    const acciones = ["agendame", "recordame", "borrá", "borra"];
+    const esAccion = acciones.some(palabra => text.toLowerCase().includes(palabra));
+
+    if (esAccion) {
+      // 1️⃣ Guardar en Google Sheets
+      await fetch(SHEETS_WEBAPP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: actionType, text: userText })
+        body: JSON.stringify({ action: "add", text })
       });
-    } else if (/pasame/i.test(userText)) {
-      // Leer todos los datos de la hoja
-      const readResponse = await fetch(SHEETS_WEBAPP_URL + "?action=list");
-      const listData = await readResponse.json();
-      sheetResponse = listData;
     }
 
-    // 2️⃣ Construir prompt refinado para IA
+    // 2️⃣ Generar audio con TTS usando prompt refinado
+    const openai = new OpenAI({ apiKey });
     const prompt = `
 Eres un asistente que interpreta comandos de agenda de forma natural.
-Responde solo lo necesario y resumido. Sé honesto: si no puedes borrar o no hay datos, dilo.
-Si el usuario dice "agendame..." o "recordame...", guarda el dato y responde "Te agendé ..." o "Te recuerdo ...".
-Si dice "borrá...", borra el item y responde "He borrado ..." o indica que no existe.
-Si dice "pasame...", busca la información previamente guardada en la hoja y devuélvela resumida.
-Si es una consulta general, responde directamente sin guardar nada.
-Al iniciar la sesión, di: "Bienvenido a Automatic Life, yo lo ordeno por ti."
-Datos de la hoja: ${sheetResponse ? JSON.stringify(sheetResponse) : "No hay datos"}
-Texto del usuario: "${userText}"
+Responde solo con lo necesario y de manera resumida.
+Si el usuario dice "agendame...", "recordame...", "pasame..." o "borrá...", formula la respuesta diciendo:
+"Te agendé ...", "Te recuerdo ..., "Te paso ... " o "He borrado ...", sin agregar saludos innecesarios.
+Si dice Agendame: Guardas. Si dice Recordame: Guardas con alerta recordatorio. Si dice Borra: Borras el item en cuestión. Y si dice Pasame: Buscas lo que necesita saber previamente guardado.
+Si es solo una consulta (p.ej. "qué día cae el lunes"), responde de manera directa sin guardar nada.
+Texto del usuario: "${text}"
 `;
 
-    // 3️⃣ Generar audio TTS
-    const openai = new OpenAI({ apiKey });
     const response = await openai.audio.speech.create({
       model: "gpt-4o-mini-tts",
       voice: "coral",
