@@ -26,13 +26,21 @@ export const handler = async (event) => {
       body: JSON.stringify({ action: "add", text })
     });
 
-    // 2️⃣ Generar audio con TTS
-    const openai = new OpenAI({ apiKey });
-    const response = await openai.audio.speech.create({
-      model: "gpt-4o-mini-tts",
-      voice: "coral",
-      input: text
-    });
+    // 2️⃣ Generar audio con TTS usando el prompt refinado
+const openai = new OpenAI({ apiKey });
+const prompt = `
+Eres un asistente que interpreta comandos de agenda de forma natural.
+Responde solo con lo necesario para el usuario y de manera resumida.
+Si el usuario dice "agendame...", "recordame..." o "borra...", formula la respuesta diciendo:
+"Te agendé ...", "Te recuerdo ..." o "He borrado ...", sin agregar saludos innecesarios.
+Texto del usuario: "${texto}"
+`;
+
+const response = await openai.audio.speech.create({
+  model: "gpt-4o-mini-tts",
+  voice: "coral",
+  input: prompt
+});
 
     const arrayBuffer = await response.arrayBuffer();
     const base64Audio = Buffer.from(arrayBuffer).toString("base64");
