@@ -1,35 +1,36 @@
-import OpenAI from "openai";
+// netlify/functions/transcribe.js
+const { OpenAI } = require("openai");
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
-export async function handler(event) {
+exports.handler = async (event, context) => {
   try {
-    const { audioBase64 } = JSON.parse(event.body || "{}");
+    const { audioBase64 } = JSON.parse(event.body);
     if (!audioBase64) {
-      return { statusCode: 400, body: JSON.stringify({ ok: false, error: "No audio provided" }) };
+      return { statusCode: 400, body: JSON.stringify({ ok: false, error: "No audio" }) };
     }
 
+    // Convertir base64 a buffer
     const audioBuffer = Buffer.from(audioBase64, "base64");
 
-    const transcript = await openai.audio.transcriptions.create({
+    // Llamar a OpenAI Whisper
+    const transcription = await openai.audio.transcriptions.create({
       file: audioBuffer,
-      model: "gpt-4o-mini-transcribe"
+      model: "gpt-4o-mini-transcribe",
+      response_format: "json"
     });
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: true, text: transcript.text })
+      body: JSON.stringify({ ok: true, text: transcription.text })
     };
-
   } catch (err) {
-    console.error(err);
+    console.error("Error transcribing audio:", err);
     return {
       statusCode: 500,
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ok: false, error: err.message })
     };
   }
-}
+};
