@@ -1,115 +1,80 @@
-<!DOCTYPE html>
+
+
+ <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Automatic Life</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-    }
-
+    /* Fondo oscuro y estilo general */
     body {
       margin: 0;
       height: 100vh;
-      background: radial-gradient(circle at bottom, #020024, #000010, #000);
-      overflow: hidden;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       justify-content: center;
-      color: white;
-    }
-
-    /* Fondo espacial animado */
-    body::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        url("https://raw.githubusercontent.com/JulianLaval/canvas-particle-network/master/img/stars.png") repeat;
-      animation: moveStars 120s linear infinite;
-      opacity: 0.5;
-      z-index: 0;
-    }
-
-    @keyframes moveStars {
-      from { background-position: 0 0; }
-      to { background-position: -2000px 2000px; }
-    }
-
-    .app {
-      position: relative;
-      z-index: 1;
-      text-align: center;
-      padding: 2.5rem 3rem;
-      border-radius: 24px;
-      background: rgba(10, 10, 30, 0.6);
-      backdrop-filter: blur(16px);
-      box-shadow: 0 0 40px rgba(0, 255, 255, 0.2);
+      align-items: center;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      font-family: 'Orbitron', sans-serif;
+      color: #00ffea;
+      overflow: hidden;
     }
 
     h1 {
-      margin-bottom: 2rem;
-      font-size: 2.4rem;
-      letter-spacing: 2px;
-      text-shadow: 0 0 12px #00ffff;
+      font-size: 2.5rem;
+      margin-bottom: 50px;
+      text-shadow: 0 0 10px #00ffea, 0 0 20px #00ffea, 0 0 40px #00ffea;
+      animation: glow 2s ease-in-out infinite alternate;
     }
 
+    /* Botón central neon */
     #startBtn {
-      padding: 1.1rem 3.2rem;
-      font-size: 1.3rem;
-      border-radius: 999px;
-      border: none;
+      background: transparent;
+      border: 2px solid #00ffea;
+      color: #00ffea;
+      padding: 20px 50px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      border-radius: 12px;
       cursor: pointer;
-      background: linear-gradient(135deg, #00ffff, #7f00ff);
-      color: black;
-      font-weight: 700;
-      letter-spacing: 1px;
-      box-shadow:
-        0 0 15px #00ffff,
-        0 0 40px rgba(127, 0, 255, 0.6);
-      transition: all 0.25s ease;
+      text-transform: uppercase;
+      box-shadow: 0 0 5px #00ffea, 0 0 20px #00ffea, 0 0 40px #00ffea;
+      transition: all 0.2s ease-in-out;
+      animation: pulse 1.5s infinite;
     }
 
     #startBtn:hover {
-      transform: scale(1.08);
-      box-shadow:
-        0 0 25px #00ffff,
-        0 0 60px rgba(127, 0, 255, 0.9);
+      background: rgba(0,255,234,0.1);
+      box-shadow: 0 0 10px #00ffea, 0 0 30px #00ffea, 0 0 60px #00ffea;
     }
 
-    #startBtn:active {
-      transform: scale(0.95);
+    p {
+      margin-top: 30px;
+      font-size: 1.2rem;
+      text-align: center;
+      max-width: 80%;
+      color: #00ffea;
+      text-shadow: 0 0 5px #00ffea;
     }
 
-    .output {
-      margin-top: 2rem;
-      font-size: 1.05rem;
-      opacity: 0.9;
+    /* Animaciones */
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 5px #00ffea, 0 0 20px #00ffea; }
+      50% { transform: scale(1.05); box-shadow: 0 0 15px #00ffea, 0 0 40px #00ffea; }
+      100% { transform: scale(1); box-shadow: 0 0 5px #00ffea, 0 0 20px #00ffea; }
     }
 
-    #transcribedText {
-      display: block;
-      margin-top: 0.7rem;
-      font-size: 1.1rem;
-      color: #00ffff;
-      text-shadow: 0 0 6px #00ffff;
-      min-height: 1.4em;
+    @keyframes glow {
+      0% { text-shadow: 0 0 5px #00ffea, 0 0 10px #00ffea; }
+      100% { text-shadow: 0 0 20px #00ffea, 0 0 40px #00ffea; }
     }
   </style>
 </head>
-
 <body>
-  <div class="app">
-    <h1>Automatic Life</h1>
-    <button id="startBtn">Grabar</button>
-    <div class="output">
-      Texto:
-      <span id="transcribedText"></span>
-    </div>
-  </div>
+  <h1>Automatic Life</h1>
+  <button id="startBtn">Grabar</button>
+  <p>Texto: <span id="transcribedText"></span></p>
 
   <script>
     let mediaRecorder;
@@ -120,16 +85,20 @@
 
     startBtn.onclick = async () => {
       if (!mediaRecorder || mediaRecorder.state === "inactive") {
-        // Obtener audio del micrófono
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          mediaRecorder = new MediaRecorder(stream);
+          audioChunks = [];
 
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = sendAudio;
-        mediaRecorder.start();
-        startBtn.textContent = "Detener";
-        console.log("Grabando audio...");
+          mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+          mediaRecorder.onstop = sendAudio;
+          mediaRecorder.start();
+          startBtn.textContent = "Detener";
+          console.log("Grabando audio...");
+        } catch(err) {
+          console.error("No se pudo acceder al micrófono:", err);
+          alert("Error al acceder al micrófono.");
+        }
       } else {
         mediaRecorder.stop();
         startBtn.textContent = "Grabar";
@@ -160,7 +129,7 @@
           const texto = dataTrans.text || "[Error de transcripción]";
           transcribedText.textContent = texto;
 
-          // 2️⃣ Enviar a respond.js para TTS y guardado en Google Sheets
+          // 2️⃣ Enviar a respond.js para TTS y Google Sheets
           const resResp = await fetch("/.netlify/functions/respond", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -174,6 +143,7 @@
             const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
             audio.play();
           }
+
         } catch (err) {
           console.error("Error en la transcripción o respuesta:", err);
           transcribedText.textContent = "[Error de transcripción]";
