@@ -1,78 +1,51 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Automatic Life</title>
-</head>
-<body>
-  <h1>Automatic Life</h1>
-  <button id="startBtn">Grabar</button>
-  <p>Texto: <span id="transcribedText"></span></p>
+<button id="recordBtn">Grabar</button>
+<p id="status"></p>
+<script>
+let mediaRecorder;
+let audioChunks = [];
 
-  <script>
-    let mediaRecorder;
-    let audioChunks = [];
+const recordBtn = document.getElementById("recordBtn");
+const status = document.getElementById("status");
 
-    const startBtn = document.getElementById("startBtn");
-    const transcribedText = document.getElementById("transcribedText");
+recordBtn.addEventListener("click", async () => {
+  if (!mediaRecorder || mediaRecorder.state === "inactive") {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
 
-    startBtn.onclick = async () => {
-      if (!mediaRecorder || mediaRecorder.state === "inactive") {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
 
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = sendAudio;
-        mediaRecorder.start();
-        startBtn.textContent = "Detener";
-      } else {
-        mediaRecorder.stop();
-        startBtn.textContent = "Grabar";
-      }
-    };
-
-    async function sendAudio() {
+    mediaRecorder.onstop = async () => {
+      status.textContent = "Enviando audio...";
       const blob = new Blob(audioChunks, { type: "audio/webm" });
+
       const reader = new FileReader();
-      reader.readAsDataURL(blob);
       reader.onloadend = async () => {
-        const base64 = reader.result.split(",")[1];
+        const base64Audio = reader.result.split(",")[1]; // sacamos 'data:audio/webm;base64,'
 
-        // 🟢 Mostrar en consola el audio base64
-        console.log("Audio base64:", base64);
-
-        // 1️⃣ Transcribir
-        const resTrans = await fetch("/.netlify/functions/transcribe", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ audioBase64: base64 })
-        });
-        const dataTrans = await resTrans.json();
-
-        // 4️⃣ Chequear que haya transcripción antes de responder
-        if (!dataTrans.ok || !dataTrans.text) {
-          console.error("No se pudo transcribir el audio:", dataTrans.error);
-          transcribedText.textContent = "[Error de transcripción]";
-          return;
-        }
-
-        transcribedText.textContent = dataTrans.text;
-
-        // 2️⃣ Responder con voz
-        const resResp = await fetch("/.netlify/functions/respond", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: `Te agendé: ${dataTrans.text}` })
-        });
-        const dataResp = await resResp.json();
-
-        if (dataResp.ok && dataResp.audioBase64) {
-          const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
-          audio.play();
+        try {
+          const res = await fetch("/.netlify/functions/transcribe", {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: base64Audio,
+          });
+          const data = await res.json();
+          console.log(data);
+          status.textContent = "Texto: " + data.text;
+        } catch (err) {
+          console.error(err);
+          status.textContent = "Error al enviar audio";
         }
       };
-    }
-  </script>
-</body>
-</html>
+      reader.readAsDataURL(blob);
+    };
+
+    mediaRecorder.start();
+    status.textContent = "Grabando...";
+    recordBtn.textContent = "Detener";
+  } else if (mediaRecorder.state === "recording") {
+    mediaRecorder.stop();
+    recordBtn.textContent = "Grabar";
+  }
+});
+</script>
