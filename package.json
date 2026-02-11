@@ -4,5 +4,8 @@
   "private": true,
   "dependencies": {
     "openai": "^5.0.0"
+  },
+  "scripts": {
+    "build": "echo 'Nothing to build'"
   }
 }
