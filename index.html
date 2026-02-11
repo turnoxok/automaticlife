@@ -45,11 +45,11 @@
         let dataTrans = { text: "[Error de transcripción]" };
         try {
           const resTrans = await fetch("/.netlify/functions/transcribe", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ audioBase64: base64 })
-          });
-          dataTrans = await resTrans.json();
+  method: "POST",
+  headers: { "Content-Type": "text/plain" }, // <- importante
+  body: base64
+});
+dataTrans = await resTrans.json();
         } catch (err) {
           console.error("Error en transcripción:", err);
         }
