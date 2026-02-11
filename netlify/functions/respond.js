@@ -19,26 +19,33 @@ export const handler = async (event) => {
       return { statusCode: 400, body: JSON.stringify({ error: "No se proporcionó texto" }) };
     }
 
-    // 1️⃣ Guardar en Google Sheets vía Apps Script
-    await fetch(SHEETS_WEBAPP_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "add", text })
-    });
+    // 🔹 Filtrar si el texto es acción de agenda
+    const acciones = ["agendame", "recordame", "borrá", "borra"];
+    const esAccion = acciones.some(palabra => text.toLowerCase().includes(palabra));
+
+    if (esAccion) {
+      // 1️⃣ Guardar en Google Sheets
+      await fetch(SHEETS_WEBAPP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "add", text })
+      });
+    }
 
     // 2️⃣ Generar audio con TTS usando prompt refinado
     const openai = new OpenAI({ apiKey });
-
     const prompt = `
 Eres un asistente que interpreta comandos de agenda de forma natural.
-Responde solo con lo necesario para el usuario y de manera resumida.
-Si el usuario dice "agendame...", "recordame..." o "borra...", formula la respuesta diciendo:
-"Te agendé ...", "Te recuerdo ..." o "He borrado ...", sin agregar saludos ni palabras extra.
+Responde solo con lo necesario y de manera resumida.
+Si el usuario dice "agendame...", "recordame...", "pasame..." o "borrá...", formula la respuesta diciendo:
+"Te agendé ...", "Te recuerdo ..., "Te paso ... " o "He borrado ...", sin agregar saludos innecesarios.
+Si dice Agendame: Guardas. Si dice Recordame: Guardas con alerta recordatorio. Si dice Borra: Borras el item en cuestión. Y si dice Pasame: Buscas lo que necesita saber previamente guardado.
+Si es solo una consulta (p.ej. "qué día cae el lunes"), responde de manera directa sin guardar nada.
 Texto del usuario: "${text}"
 `;
 
     const response = await openai.audio.speech.create({
-      model: "gpt-4o-mini-tts", // modelo TTS
+      model: "gpt-4o-mini-tts",
       voice: "coral",
       input: prompt
     });
