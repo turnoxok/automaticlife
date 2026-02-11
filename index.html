@@ -1,62 +1,51 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>Hablar</title>
-</head>
-<body>
+<button id="recordBtn">Grabar</button>
+<p id="status"></p>
+<script>
+let mediaRecorder;
+let audioChunks = [];
 
-  <h1>Hablar</h1>
+const recordBtn = document.getElementById("recordBtn");
+const status = document.getElementById("status");
 
-  <button id="recordBtn">🎙️ Hablar</button>
-  <p id="status"></p>
-  <pre id="result"></pre>
+recordBtn.addEventListener("click", async () => {
+  if (!mediaRecorder || mediaRecorder.state === "inactive") {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
 
-  <script>
-    let mediaRecorder;
-    let audioChunks = [];
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
 
-    const btn = document.getElementById("recordBtn");
-    const status = document.getElementById("status");
-    const result = document.getElementById("result");
+    mediaRecorder.onstop = async () => {
+      status.textContent = "Enviando audio...";
+      const blob = new Blob(audioChunks, { type: "audio/webm" });
 
-    btn.onclick = async () => {
-      if (!mediaRecorder || mediaRecorder.state === "inactive") {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Audio = reader.result.split(",")[1]; // sacamos 'data:audio/webm;base64,'
 
-        audioChunks = [];
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-
-        mediaRecorder.onstop = sendAudio;
-
-        mediaRecorder.start();
-        status.textContent = "Grabando...";
-        btn.textContent = "⏹️ Detener";
-      } else {
-        mediaRecorder.stop();
-        status.textContent = "Audio grabado ✔️ (siguiente paso: enviarlo)";
-        btn.textContent = "🎙️ Hablar";
-      }
+        try {
+          const res = await fetch("/.netlify/functions/transcribe", {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: base64Audio,
+          });
+          const data = await res.json();
+          console.log(data);
+          status.textContent = "Texto: " + data.text;
+        } catch (err) {
+          console.error(err);
+          status.textContent = "Error al enviar audio";
+        }
+      };
+      reader.readAsDataURL(blob);
     };
 
-    async function sendAudio() {
-      const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-      const formData = new FormData();
-      formData.append("file", audioBlob, "audio.webm");
-
-      status.textContent = "Enviando audio...";
-
-      const res = await fetch("/.netlify/functions/transcribe", {
-        method: "POST",
-        body: formData
-      });
-
-      const data = await res.json();
-      result.textContent = JSON.stringify(data, null, 2);
-      status.textContent = "Listo ✅";
-    }
-  </script>
-
-</body>
-</html>
+    mediaRecorder.start();
+    status.textContent = "Grabando...";
+    recordBtn.textContent = "Detener";
+  } else if (mediaRecorder.state === "recording") {
+    mediaRecorder.stop();
+    recordBtn.textContent = "Grabar";
+  }
+});
+</script>
