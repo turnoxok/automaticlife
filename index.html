@@ -49,3 +49,29 @@ recordBtn.addEventListener("click", async () => {
   }
 });
 </script>
+<script>
+async function processAudio(audioBlob) {
+  // 1️⃣ Enviar audio a transcribe.js
+  const formData = new FormData();
+  formData.append("file", audioBlob);
+
+  const transRes = await fetch("/.netlify/functions/transcribe", {
+    method: "POST",
+    body: formData
+  });
+  const transData = await transRes.json();
+  const userText = transData.text;
+
+  // Mostrar el texto en pantalla (para Sheets)
+  document.getElementById("userText").innerText = userText;
+
+  // 2️⃣ Enviar texto a respond.js para obtener audio
+  const ttsRes = await fetch("/.netlify/functions/respond", {
+    method: "POST",
+    body: JSON.stringify({ text: userText })
+  });
+  const audioBase64 = await ttsRes.text();
+  const audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`);
+  audio.play();
+}
+</script>
