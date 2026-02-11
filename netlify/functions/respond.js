@@ -1,57 +1,35 @@
-// netlify/functions/respond.js
-const fetch = require("node-fetch");
+import OpenAI from "openai";
 
-exports.handler = async (event) => {
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+export async function handler(event) {
   try {
-    const body = JSON.parse(event.body);
-    const userText = body.text;
+    const { audioBase64 } = JSON.parse(event.body || "{}");
+    if (!audioBase64) {
+      return { statusCode: 400, body: JSON.stringify({ ok: false, error: "No audio provided" }) };
+    }
 
-    // Llamada a la API de OpenAI para generar la respuesta en texto
-    const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-5.2-mini",
-        messages: [
-          { role: "system", content: "Eres una mujer misteriosa, amable y precisa, que responde recordatorios y tareas." },
-          { role: "user", content: userText }
-        ]
-      })
+    const audioBuffer = Buffer.from(audioBase64, "base64");
+
+    const transcript = await openai.audio.transcriptions.create({
+      file: audioBuffer,
+      model: "gpt-4o-mini-transcribe"
     });
-
-    const aiData = await aiRes.json();
-    const aiText = aiData.choices[0].message.content;
-
-    // Llamada a la API de TTS
-    const ttsRes = await fetch("https://api.openai.com/v1/audio/speech", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini-tts",
-        voice: "alloy",
-        input: aiText
-      })
-    });
-
-    const audioBuffer = Buffer.from(await ttsRes.arrayBuffer());
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "audio/mpeg" },
-      body: audioBuffer.toString("base64"),
-      isBase64Encoded: true
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ok: true, text: transcript.text })
     };
 
-  } catch (error) {
+  } catch (err) {
+    console.error(err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ ok: false, error: error.message })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ok: false, error: err.message })
     };
   }
-};
+}
