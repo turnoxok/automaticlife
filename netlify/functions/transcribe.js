@@ -1,62 +1,35 @@
-export const handler = async (event) => {
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+export async function handler(event) {
   try {
-    // Solo POST
-    if (event.httpMethod !== "POST") {
-      return {
-        statusCode: 405,
-        body: JSON.stringify({ error: "Method not allowed" }),
-      };
+    const { audioBase64 } = JSON.parse(event.body || "{}");
+    if (!audioBase64) {
+      return { statusCode: 400, body: JSON.stringify({ ok: false, error: "No audio provided" }) };
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: "OPENAI_API_KEY no definida" }),
-      };
-    }
+    const audioBuffer = Buffer.from(audioBase64, "base64");
 
-    // El body llega como base64
-    const buffer = Buffer.from(event.body, "base64");
-
-    // Armamos FormData
-    const formData = new FormData();
-    formData.append(
-      "file",
-      new Blob([buffer], { type: "audio/webm" }),
-      "audio.webm"
-    );
-    formData.append("model", "whisper-1");
-    formData.append("language", "es");
-
-    const response = await fetch(
-      "https://api.openai.com/v1/audio/transcriptions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: formData,
-      }
-    );
-
-    const data = await response.json();
+    const transcript = await openai.audio.transcriptions.create({
+      file: audioBuffer,
+      model: "gpt-4o-mini-transcribe"
+    });
 
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        ok: true,
-        text: data.text || "",
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ok: true, text: transcript.text })
     };
+
   } catch (err) {
     console.error(err);
     return {
       statusCode: 500,
-      body: JSON.stringify({
-        ok: false,
-        error: err.message,
-      }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ok: false, error: err.message })
     };
   }
-};
+}
