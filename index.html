@@ -18,7 +18,19 @@ btn.onclick = async () => {
 
     mediaRecorder.onstop = async () => {
       const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-      result.innerText = "Audio grabado ✔️ (siguiente paso: enviarlo)";
+
+      result.innerText = "Enviando audio...";
+
+      const formData = new FormData();
+      formData.append("file", audioBlob, "audio.webm");
+
+      const res = await fetch("/.netlify/functions/transcribe_test", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+      result.innerText = data.text || JSON.stringify(data);
     };
 
     mediaRecorder.start();
