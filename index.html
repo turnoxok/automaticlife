@@ -47,7 +47,7 @@
 
       status.textContent = "Enviando audio...";
 
-      const res = await fetch("/.netlify/functions/transcribe_test", {
+      const res = await fetch("/.netlify/functions/transcribe", {
         method: "POST",
         body: formData
       });
