@@ -1,3 +1,5 @@
+
+
 import { OpenAI } from "openai";
 
 // URL de tu Apps Script desplegado
@@ -15,54 +17,68 @@ export const handler = async (event) => {
     }
 
     const body = JSON.parse(event.body);
-    const userText = body.text;
+    const userText = body.text?.trim();
     if (!userText) {
       return { statusCode: 400, body: JSON.stringify({ error: "No se proporcionó texto" }) };
     }
 
-    // Determinar acción según palabras clave
-    let action = "query";   // por defecto solo consulta
+    let responseText = "";
+    let action = "query";
+
+    // Determinar la acción
     if (/agendame/i.test(userText)) action = "add";
     else if (/recordame/i.test(userText)) action = "add";
     else if (/borr[áa]/i.test(userText)) action = "delete";
     else if (/pasame/i.test(userText)) action = "query";
 
-    let responseText = "";
-
+    // Ejecutar acción según tipo
     if (action === "add") {
-      await fetch(SHEETS_WEBAPP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "add", text: userText })
-      });
-      responseText = `Te agendé: ${userText}`;
+      try {
+        await fetch(SHEETS_WEBAPP_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "add", text: userText })
+        });
+        responseText = `Te agendé: ${userText}`;
+      } catch {
+        responseText = "No pude guardar el dato, intenta de nuevo.";
+      }
     } else if (action === "delete") {
-      await fetch(SHEETS_WEBAPP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete", text: userText })
-      });
-      responseText = "He borrado el item solicitado.";
+      try {
+        const resDelete = await fetch(SHEETS_WEBAPP_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "delete", text: userText })
+        });
+        const dataDelete = await resDelete.json();
+        responseText = dataDelete.ok ? "He borrado el item solicitado." : "No encontré el item para borrar.";
+      } catch {
+        responseText = "No pude borrar el item, intenta de nuevo.";
+      }
     } else if (action === "query") {
-      const resSheet = await fetch(SHEETS_WEBAPP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "query", text: userText })
-      });
-      const dataSheet = await resSheet.json();
-      responseText = dataSheet.ok && dataSheet.result
-        ? dataSheet.result
-        : "No encontré datos guardados para eso.";
+      try {
+        const resQuery = await fetch(SHEETS_WEBAPP_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "query", text: userText })
+        });
+        const dataQuery = await resQuery.json();
+        responseText = dataQuery.ok && dataQuery.result
+          ? dataQuery.result
+          : "No encontré datos guardados para eso.";
+      } catch {
+        responseText = "No pude acceder a los datos, intenta de nuevo.";
+      }
     }
 
     // Prompt refinado
     const prompt = `
 Eres un asistente que interpreta comandos de agenda de forma natural.
 Al iniciar sesión, di: "Bienvenido a Automatic Life, yo lo ordeno por ti".
-Responde solo con lo necesario y de manera resumida.
+Responde solo lo necesario y de manera resumida.
 Si el usuario dice "agendame...", "recordame...", "pasame..." o "borrá...", formula la respuesta diciendo:
 "Te agendé ...", "Te recuerdo ...", "Te paso ...", "He borrado ...", sin agregar saludos innecesarios.
-Si es solo una consulta, responde de manera directa sin guardar nada.
+Si es solo una consulta (por ejemplo: "qué día cae el lunes"), responde directamente sin guardar nada.
 Texto de la acción a responder: "${responseText}"
 `;
 
@@ -81,6 +97,7 @@ Texto de la acción a responder: "${responseText}"
       statusCode: 200,
       body: JSON.stringify({ ok: true, audioBase64: base64Audio })
     };
+
   } catch (err) {
     console.error(err);
     return { statusCode: 500, body: JSON.stringify({ ok: false, error: err.message }) };
