@@ -1,28 +1,51 @@
-<button id="recordBtn">🎤 Hablar</button>
-<p id="result"></p>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hablar</title>
+</head>
+<body>
 
-<script>
-let mediaRecorder;
-let audioChunks = [];
+  <h1>Hablar</h1>
 
-const btn = document.getElementById("recordBtn");
-const result = document.getElementById("result");
+  <button id="recordBtn">🎙️ Hablar</button>
+  <p id="status"></p>
+  <pre id="result"></pre>
 
-btn.onclick = async () => {
-  if (!mediaRecorder || mediaRecorder.state === "inactive") {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
 
-    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    const btn = document.getElementById("recordBtn");
+    const status = document.getElementById("status");
+    const result = document.getElementById("result");
 
-    mediaRecorder.onstop = async () => {
+    btn.onclick = async () => {
+      if (!mediaRecorder || mediaRecorder.state === "inactive") {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+
+        audioChunks = [];
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+
+        mediaRecorder.onstop = sendAudio;
+
+        mediaRecorder.start();
+        status.textContent = "Grabando...";
+        btn.textContent = "⏹️ Detener";
+      } else {
+        mediaRecorder.stop();
+        status.textContent = "Audio grabado ✔️ (siguiente paso: enviarlo)";
+        btn.textContent = "🎙️ Hablar";
+      }
+    };
+
+    async function sendAudio() {
       const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-
-      result.innerText = "Enviando audio...";
-
       const formData = new FormData();
       formData.append("file", audioBlob, "audio.webm");
+
+      status.textContent = "Enviando audio...";
 
       const res = await fetch("/.netlify/functions/transcribe_test", {
         method: "POST",
@@ -30,14 +53,10 @@ btn.onclick = async () => {
       });
 
       const data = await res.json();
-      result.innerText = data.text || JSON.stringify(data);
-    };
+      result.textContent = JSON.stringify(data, null, 2);
+      status.textContent = "Listo ✅";
+    }
+  </script>
 
-    mediaRecorder.start();
-    btn.innerText = "⏹️ Detener";
-  } else {
-    mediaRecorder.stop();
-    btn.innerText = "🎤 Hablar";
-  }
-};
-</script>
+</body>
+</html>
