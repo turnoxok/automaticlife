@@ -1,35 +1,30 @@
-import OpenAI from "openai";
+// netlify/functions/respond.js
+const { OpenAI } = require("openai");
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export async function handler(event) {
+exports.handler = async (event) => {
   try {
-    const { audioBase64 } = JSON.parse(event.body || "{}");
-    if (!audioBase64) {
-      return { statusCode: 400, body: JSON.stringify({ ok: false, error: "No audio provided" }) };
-    }
+    const { text } = JSON.parse(event.body);
+    if (!text) return { statusCode: 400, body: JSON.stringify({ ok: false, error: "No text" }) };
 
-    const audioBuffer = Buffer.from(audioBase64, "base64");
+    console.log("Texto recibido en respond:", text); // 🔹 Ver en consola
 
-    const transcript = await openai.audio.transcriptions.create({
-      file: audioBuffer,
-      model: "gpt-4o-mini-transcribe"
+    const resp = await openai.audio.speech.create({
+      model: "gpt-4o-mini-tts",
+      voice: "alloy",
+      input: text
     });
+
+    // Convertir a base64 para enviar al cliente
+    const audioBase64 = Buffer.from(await resp.arrayBuffer()).toString("base64");
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: true, text: transcript.text })
+      body: JSON.stringify({ ok: true, audioBase64 })
     };
-
   } catch (err) {
-    console.error(err);
-    return {
-      statusCode: 500,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ok: false, error: err.message })
-    };
+    console.error("Error en respond:", err);
+    return { statusCode: 500, body: JSON.stringify({ ok: false, error: err.message }) };
   }
-}
+};
