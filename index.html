@@ -1,44 +1,31 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>Automatic Life</title>
-</head>
-<body>
+<button id="recordBtn">🎤 Hablar</button>
+<p id="result"></p>
 
-  <button id="talk">Hablar</button>
-  <p id="result"></p>
+<script>
+let mediaRecorder;
+let audioChunks = [];
 
-  <script>
-    let recorder;
-    let audioChunks = [];
+const btn = document.getElementById("recordBtn");
+const result = document.getElementById("result");
 
-    document.getElementById("talk").onclick = async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      recorder = new MediaRecorder(stream);
+btn.onclick = async () => {
+  if (!mediaRecorder || mediaRecorder.state === "inactive") {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
 
-      recorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
 
-      recorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-        audioChunks = [];
-
-        const formData = new FormData();
-        formData.append("file", audioBlob, "audio.webm");
-
-        const res = await fetch("/.netlify/functions/transcribe", {
-          method: "POST",
-          body: formData
-        });
-
-        const data = await res.json();
-        document.getElementById("result").innerText = data.text || JSON.stringify(data);
-      };
-
-      recorder.start();
-      setTimeout(() => recorder.stop(), 4000);
+    mediaRecorder.onstop = async () => {
+      const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+      result.innerText = "Audio grabado ✔️ (siguiente paso: enviarlo)";
     };
-  </script>
 
-</body>
-</html>
+    mediaRecorder.start();
+    btn.innerText = "⏹️ Detener";
+  } else {
+    mediaRecorder.stop();
+    btn.innerText = "🎤 Hablar";
+  }
+};
+</script>
