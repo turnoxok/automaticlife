@@ -27,9 +27,11 @@
         mediaRecorder.onstop = sendAudio;
         mediaRecorder.start();
         startBtn.textContent = "Detener";
+        console.log("Grabando audio...");
       } else {
         mediaRecorder.stop();
         startBtn.textContent = "Grabar";
+        console.log("Audio detenido, enviando...");
       }
     };
 
@@ -41,7 +43,6 @@
       reader.onloadend = async () => {
         // 1️⃣ Sacar el prefijo "data:audio/webm;base64,"
         const base64 = reader.result.split(",")[1];
-
         console.log("Audio base64:", base64);
 
         // 2️⃣ Enviar a tu transcribe.js
@@ -57,4 +58,11 @@
 
           transcribedText.textContent = dataTrans.text || "[Error de transcripción]";
         } catch (err) {
-          console.error
+          console.error("Error al transcribir:", err);
+          transcribedText.textContent = "[Error de transcripción]";
+        }
+      };
+    }
+  </script>
+</body>
+</html>
