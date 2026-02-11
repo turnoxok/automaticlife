@@ -1,36 +1,62 @@
-// netlify/functions/transcribe.js
-const { OpenAI } = require("openai");
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
-
-exports.handler = async (event, context) => {
+export const handler = async (event) => {
   try {
-    const { audioBase64 } = JSON.parse(event.body);
-    if (!audioBase64) {
-      return { statusCode: 400, body: JSON.stringify({ ok: false, error: "No audio" }) };
+    // Solo POST
+    if (event.httpMethod !== "POST") {
+      return {
+        statusCode: 405,
+        body: JSON.stringify({ error: "Method not allowed" }),
+      };
     }
 
-    // Convertir base64 a buffer
-    const audioBuffer = Buffer.from(audioBase64, "base64");
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: "OPENAI_API_KEY no definida" }),
+      };
+    }
 
-    // Llamar a OpenAI Whisper
-    const transcription = await openai.audio.transcriptions.create({
-      file: audioBuffer,
-      model: "gpt-4o-mini-transcribe",
-      response_format: "json"
-    });
+    // El body llega como base64
+    const buffer = Buffer.from(event.body, "base64");
+
+    // Armamos FormData
+    const formData = new FormData();
+    formData.append(
+      "file",
+      new Blob([buffer], { type: "audio/webm" }),
+      "audio.webm"
+    );
+    formData.append("model", "whisper-1");
+    formData.append("language", "es");
+
+    const response = await fetch(
+      "https://api.openai.com/v1/audio/transcriptions",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: formData,
+      }
+    );
+
+    const data = await response.json();
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ ok: true, text: transcription.text })
+      body: JSON.stringify({
+        ok: true,
+        text: data.text || "",
+      }),
     };
   } catch (err) {
-    console.error("Error transcribing audio:", err);
+    console.error(err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ ok: false, error: err.message })
+      body: JSON.stringify({
+        ok: false,
+        error: err.message,
+      }),
     };
   }
 };
