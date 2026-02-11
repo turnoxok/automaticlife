@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Automatic Life</title>
+</head>
+<body>
+
+  <button id="talk">Hablar</button>
+  <p id="result"></p>
+
+  <script>
+    let recorder;
+    let audioChunks = [];
+
+    document.getElementById("talk").onclick = async () => {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recorder = new MediaRecorder(stream);
+
+      recorder.ondataavailable = e => audioChunks.push(e.data);
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        audioChunks = [];
+
+        const formData = new FormData();
+        formData.append("file", audioBlob, "audio.webm");
+
+        const res = await fetch("/.netlify/functions/transcribe", {
+          method: "POST",
+          body: formData
+        });
+
+        const data = await res.json();
+        document.getElementById("result").innerText = data.text || JSON.stringify(data);
+      };
+
+      recorder.start();
+      setTimeout(() => recorder.stop(), 4000);
+    };
+  </script>
+
+</body>
+</html>
