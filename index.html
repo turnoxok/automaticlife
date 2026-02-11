@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Automatic Life</title>
   <style>
     /* Fondo oscuro y estilo general */
@@ -70,8 +71,8 @@
 </head>
 <body>
   <h1>Automatic Life</h1>
-  <button id="startBtn">Grabar</button>
-  <p>Texto: <span id="transcribedText"></span></p>
+  <button id="startBtn">GO</button>
+  <p>Vos: <span id="transcribedText"></span></p>
 
   <script>
     let mediaRecorder;
@@ -98,7 +99,7 @@
         }
       } else {
         mediaRecorder.stop();
-        startBtn.textContent = "Grabar";
+        startBtn.textContent = "GO";
         console.log("Audio detenido, enviando...");
       }
     };
