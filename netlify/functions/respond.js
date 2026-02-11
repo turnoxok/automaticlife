@@ -32,7 +32,7 @@ export const handler = async (event) => {
     // Generar audio usando el modelo de TTS
     const response = await openai.audio.speech.create({
       model: "gpt-4o-mini-tts",   // modelo de texto a voz
-      voice: "aria",             // voz predeterminada
+      voice: "verse",             // voz predeterminada
       input: text,
     });
 
