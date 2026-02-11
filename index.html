@@ -1,51 +1,83 @@
-<button id="recordBtn">Grabar</button>
-<p id="status"></p>
-<script>
-let mediaRecorder;
-let audioChunks = [];
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Automatic Life</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background: #f0f0f0; }
+    #userText { margin-top: 1rem; padding: 1rem; background: #fff; border-radius: 8px; }
+    button { padding: 1rem 2rem; font-size: 1rem; margin-top: 1rem; cursor: pointer; }
+  </style>
+</head>
+<body>
 
-const recordBtn = document.getElementById("recordBtn");
-const status = document.getElementById("status");
+  <h1>Automatic Life</h1>
+  <button id="recordBtn">🎤 Grabar</button>
+  <div id="status">Esperando...</div>
+  <div id="userText"></div>
 
-recordBtn.addEventListener("click", async () => {
-  if (!mediaRecorder || mediaRecorder.state === "inactive") {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
+  <script>
+    const recordBtn = document.getElementById("recordBtn");
+    const status = document.getElementById("status");
+    const userTextDiv = document.getElementById("userText");
+    let mediaRecorder;
+    let audioChunks = [];
 
-    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    recordBtn.onclick = async () => {
+      if (!mediaRecorder) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
 
-    mediaRecorder.onstop = async () => {
-      status.textContent = "Enviando audio...";
-      const blob = new Blob(audioChunks, { type: "audio/webm" });
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+          audioChunks = [];
+          status.innerText = "Enviando audio...";
+          await processAudio(audioBlob);
+          status.innerText = "Esperando...";
+        };
+      }
 
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64Audio = reader.result.split(",")[1]; // sacamos 'data:audio/webm;base64,'
-
-        try {
-          const res = await fetch("/.netlify/functions/transcribe", {
-            method: "POST",
-            headers: { "Content-Type": "text/plain" },
-            body: base64Audio,
-          });
-          const data = await res.json();
-          console.log(data);
-          status.textContent = "Texto: " + data.text;
-        } catch (err) {
-          console.error(err);
-          status.textContent = "Error al enviar audio";
-        }
-      };
-      reader.readAsDataURL(blob);
+      if (mediaRecorder.state === "recording") {
+        mediaRecorder.stop();
+        recordBtn.innerText = "🎤 Grabar";
+      } else {
+        mediaRecorder.start();
+        recordBtn.innerText = "⏹ Detener";
+      }
     };
 
-    mediaRecorder.start();
-    status.textContent = "Grabando...";
-    recordBtn.textContent = "Detener";
-  } else if (mediaRecorder.state === "recording") {
-    mediaRecorder.stop();
-    recordBtn.textContent = "Grabar";
-  }
-});
-</script>
+    async function processAudio(audioBlob) {
+      try {
+        // 1️⃣ Enviar audio a transcribe.js
+        const formData = new FormData();
+        formData.append("file", audioBlob);
+
+        const transRes = await fetch("/.netlify/functions/transcribe", {
+          method: "POST",
+          body: formData
+        });
+        const transData = await transRes.json();
+        const userText = transData.text || "";
+        userTextDiv.innerText = userText; // mostrar texto en pantalla
+
+        if (!userText) return;
+
+        // 2️⃣ Enviar texto a respond.js para TTS
+        const ttsRes = await fetch("/.netlify/functions/respond", {
+          method: "POST",
+          body: JSON.stringify({ text: userText })
+        });
+        const audioBase64 = await ttsRes.text();
+        const audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`);
+        audio.play();
+
+      } catch (err) {
+        console.error(err);
+        status.innerText = "Error procesando audio";
+      }
+    }
+  </script>
+
+</body>
+</html>
