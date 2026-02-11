@@ -8,22 +8,15 @@ export const handler = async (event) => {
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ ok: false, error: "OPENAI_API_KEY no definida" }),
-      };
+      return { statusCode: 500, body: "OPENAI_API_KEY no definida" };
     }
 
     const { text } = JSON.parse(event.body);
     if (!text) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ ok: false, error: "No text provided" }),
-      };
+      return { statusCode: 400, body: "No hay texto para responder" };
     }
 
-    // Llamada a la API de OpenAI TTS
-    const response = await fetch("https://api.openai.com/v1/audio/speech", {
+    const res = await fetch("https://api.openai.com/v1/audio/speech", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -31,33 +24,20 @@ export const handler = async (event) => {
       },
       body: JSON.stringify({
         model: "gpt-4o-mini-tts",
-        voice: "alloy",   // voz predeterminada
-        input: text
+        voice: "alloy",
+        input: text,
       }),
     });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error("TTS error:", errText);
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ ok: false, error: "Error generando audio" }),
-      };
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
+    const arrayBuffer = await res.arrayBuffer();
     const audioBase64 = Buffer.from(arrayBuffer).toString("base64");
 
     return {
       statusCode: 200,
       body: JSON.stringify({ ok: true, audioBase64 }),
     };
-
   } catch (err) {
     console.error(err);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ ok: false, error: err.message }),
-    };
+    return { statusCode: 500, body: JSON.stringify({ ok: false, error: err.message }) };
   }
 };
