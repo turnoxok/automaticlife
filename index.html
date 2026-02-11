@@ -1,140 +1,83 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Text ↔ Audio con OpenAI</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 2rem;
-      background-color: #f8f8f8;
-    }
-    textarea {
-      width: 100%;
-      height: 120px;
-      padding: 0.5rem;
-      font-size: 1rem;
-    }
-    button {
-      padding: 0.6rem 1.2rem;
-      font-size: 1rem;
-      margin-top: 0.5rem;
-      cursor: pointer;
-    }
-    audio {
-      display: block;
-      margin-top: 1rem;
-      width: 100%;
-    }
-    #transcribedText {
-      margin-top: 1rem;
-      padding: 0.5rem;
-      background: #fff;
-      border: 1px solid #ccc;
-      min-height: 50px;
-    }
-  </style>
+  <title>Automatic Life</title>
 </head>
 <body>
-  <h1>Text ↔ Audio con OpenAI</h1>
-
-  <!-- Generar TTS -->
-  <h2>Generar Audio desde Texto</h2>
-  <textarea id="textInput" placeholder="Escribí tu texto aquí..."></textarea>
-  <button id="generateBtn">Generar Audio</button>
-  <audio id="audioPlayer" controls></audio>
-
-  <!-- Transcribir audio -->
-  <h2>Transcribir Audio desde Micrófono</h2>
-  <button id="recordBtn">Grabar Audio</button>
-  <p id="recordStatus">Estado: Inactivo</p>
-  <div id="transcribedText" placeholder="Aquí aparecerá la transcripción..."></div>
+  <h1>Automatic Life</h1>
+  <button id="startBtn">Grabar</button>
+  <p>Texto: <span id="transcribedText"></span></p>
 
   <script>
-    // --- TTS ---
-    const generateBtn = document.getElementById("generateBtn");
-    const textInput = document.getElementById("textInput");
-    const audioPlayer = document.getElementById("audioPlayer");
+    let mediaRecorder;
+    let audioChunks = [];
 
-    generateBtn.addEventListener("click", async () => {
-      const text = textInput.value.trim();
-      if (!text) return alert("Escribí algo para generar audio.");
-
-      generateBtn.disabled = true;
-      generateBtn.textContent = "Generando...";
-
-      try {
-        const response = await fetch("/api/respond", { // ruta de respond.js
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text })
-        });
-        const data = await response.json();
-        if (data.ok && data.audioBase64) {
-          audioPlayer.src = "data:audio/mpeg;base64," + data.audioBase64;
-          audioPlayer.play();
-        } else {
-          alert("Error al generar audio: " + (data.error || "desconocido"));
-        }
-      } catch (err) {
-        alert("Error en la conexión: " + err.message);
-      } finally {
-        generateBtn.disabled = false;
-        generateBtn.textContent = "Generar Audio";
-      }
-    });
-
-    // --- Grabación y Transcripción ---
-    const recordBtn = document.getElementById("recordBtn");
-    const recordStatus = document.getElementById("recordStatus");
+    const startBtn = document.getElementById("startBtn");
     const transcribedText = document.getElementById("transcribedText");
 
-    let mediaRecorder, audioChunks = [];
-
-    recordBtn.addEventListener("click", async () => {
+    startBtn.onclick = async () => {
       if (!mediaRecorder || mediaRecorder.state === "inactive") {
-        // Iniciar grabación
+        // Obtener audio del micrófono
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorder = new MediaRecorder(stream);
         audioChunks = [];
 
         mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = async () => {
-          recordStatus.textContent = "Estado: Procesando...";
-          const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-          const arrayBuffer = await audioBlob.arrayBuffer();
-          const base64Audio = btoa(
-            new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-          );
-
-          try {
-            const response = await fetch("/api/transcribe", { // ruta de transcribe.js
-              method: "POST",
-              body: base64Audio
-            });
-            const data = await response.json();
-            if (data.ok && data.text) {
-              transcribedText.textContent = data.text;
-            } else {
-              transcribedText.textContent = "Error: " + (data.error || "sin transcripción");
-            }
-          } catch (err) {
-            transcribedText.textContent = "Error al conectar: " + err.message;
-          } finally {
-            recordStatus.textContent = "Estado: Inactivo";
-          }
-        };
-
+        mediaRecorder.onstop = sendAudio;
         mediaRecorder.start();
-        recordStatus.textContent = "Estado: Grabando...";
-        recordBtn.textContent = "Detener Grabación";
-      } else if (mediaRecorder.state === "recording") {
-        // Detener grabación
+        startBtn.textContent = "Detener";
+        console.log("Grabando audio...");
+      } else {
         mediaRecorder.stop();
-        recordBtn.textContent = "Grabar Audio";
+        startBtn.textContent = "Grabar";
+        console.log("Audio detenido, enviando...");
       }
-    });
+    };
+
+    async function sendAudio() {
+      const blob = new Blob(audioChunks, { type: "audio/webm" });
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+
+      reader.onloadend = async () => {
+        const base64 = reader.result.split(",")[1];
+        console.log("Audio base64:", base64);
+
+        try {
+          // 1️⃣ Transcribir audio
+          const resTrans = await fetch("/.netlify/functions/transcribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: base64 // transcribe.js espera solo el base64
+          });
+
+          const dataTrans = await resTrans.json();
+          console.log("Respuesta transcribe:", dataTrans);
+
+          const texto = dataTrans.text || "[Error de transcripción]";
+          transcribedText.textContent = texto;
+
+          // 2️⃣ Enviar a respond.js para TTS y guardado en Google Sheets
+          const resResp = await fetch("/.netlify/functions/respond", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: texto })
+          });
+
+          const dataResp = await resResp.json();
+          console.log("Respuesta respond:", dataResp);
+
+          if (dataResp.ok && dataResp.audioBase64) {
+            const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
+            audio.play();
+          }
+        } catch (err) {
+          console.error("Error en la transcripción o respuesta:", err);
+          transcribedText.textContent = "[Error de transcripción]";
+        }
+      };
+    }
   </script>
 </body>
 </html>
