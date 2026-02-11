@@ -18,7 +18,6 @@
 
     startBtn.onclick = async () => {
       if (!mediaRecorder || mediaRecorder.state === "inactive") {
-        // Obtener audio del micrófono
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorder = new MediaRecorder(stream);
         audioChunks = [];
@@ -27,11 +26,9 @@
         mediaRecorder.onstop = sendAudio;
         mediaRecorder.start();
         startBtn.textContent = "Detener";
-        console.log("Grabando audio...");
       } else {
         mediaRecorder.stop();
         startBtn.textContent = "Grabar";
-        console.log("Audio detenido, enviando...");
       }
     };
 
@@ -39,27 +36,28 @@
       const blob = new Blob(audioChunks, { type: "audio/webm" });
       const reader = new FileReader();
       reader.readAsDataURL(blob);
-
       reader.onloadend = async () => {
-        // 1️⃣ Sacar el prefijo "data:audio/webm;base64,"
         const base64 = reader.result.split(",")[1];
-        console.log("Audio base64:", base64);
 
-        // 2️⃣ Enviar a tu transcribe.js
-        try {
-          const resTrans = await fetch("/.netlify/functions/transcribe", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ audioBase64: base64 })
-          });
+        // 1️⃣ Transcribir
+        const resTrans = await fetch("/.netlify/functions/transcribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ audioBase64: base64 })
+        });
+        const dataTrans = await resTrans.json();
+        transcribedText.textContent = dataTrans.text || "";
 
-          const dataTrans = await resTrans.json();
-          console.log("Respuesta transcribe:", dataTrans);
-
-          transcribedText.textContent = dataTrans.text || "[Error de transcripción]";
-        } catch (err) {
-          console.error("Error al transcribir:", err);
-          transcribedText.textContent = "[Error de transcripción]";
+        // 2️⃣ Responder con voz
+        const resResp = await fetch("/.netlify/functions/respond", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: `Te agendé: ${dataTrans.text}` })
+        });
+        const dataResp = await resResp.json();
+        if (dataResp.ok && dataResp.audioBase64) {
+          const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
+          audio.play();
         }
       };
     }
