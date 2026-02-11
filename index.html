@@ -1,51 +1,71 @@
-<button id="recordBtn">Grabar</button>
-<p id="status"></p>
-<script>
-let mediaRecorder;
-let audioChunks = [];
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Automatic Life</title>
+</head>
+<body>
+  <h1>Automatic Life</h1>
+  <button id="startBtn">Grabar</button>
+  <p>Texto: <span id="transcribedText"></span></p>
 
-const recordBtn = document.getElementById("recordBtn");
-const status = document.getElementById("status");
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
 
-recordBtn.addEventListener("click", async () => {
-  if (!mediaRecorder || mediaRecorder.state === "inactive") {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
-    audioChunks = [];
+    const startBtn = document.getElementById("startBtn");
+    const transcribedText = document.getElementById("transcribedText");
 
-    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    startBtn.onclick = async () => {
+      if (!mediaRecorder || mediaRecorder.state === "inactive") {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
 
-    mediaRecorder.onstop = async () => {
-      status.textContent = "Enviando audio...";
-      const blob = new Blob(audioChunks, { type: "audio/webm" });
-
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64Audio = reader.result.split(",")[1]; // sacamos 'data:audio/webm;base64,'
-
-        try {
-          const res = await fetch("/.netlify/functions/transcribe", {
-            method: "POST",
-            headers: { "Content-Type": "text/plain" },
-            body: base64Audio,
-          });
-          const data = await res.json();
-          console.log(data);
-          status.textContent = "Texto: " + data.text;
-        } catch (err) {
-          console.error(err);
-          status.textContent = "Error al enviar audio";
-        }
-      };
-      reader.readAsDataURL(blob);
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = sendAudio;
+        mediaRecorder.start();
+        startBtn.textContent = "Detener";
+      } else {
+        mediaRecorder.stop();
+        startBtn.textContent = "Grabar";
+      }
     };
 
-    mediaRecorder.start();
-    status.textContent = "Grabando...";
-    recordBtn.textContent = "Detener";
-  } else if (mediaRecorder.state === "recording") {
-    mediaRecorder.stop();
-    recordBtn.textContent = "Grabar";
-  }
-});
-</script>
+    async function sendAudio() {
+      const blob = new Blob(audioChunks, { type: "audio/webm" });
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = async () => {
+        const base64 = reader.result.split(",")[1];
+
+        // 1️⃣ Transcribir
+        const resTrans = await fetch("/.netlify/functions/transcribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/base64" },
+          body: base64
+        });
+        const dataTrans = await resTrans.json();
+        transcribedText.textContent = dataTrans.text || "[Error de transcripción]";
+        console.log("Texto transcrito:", dataTrans.text);
+
+        if (!dataTrans.text) return;
+
+        // 2️⃣ Responder con voz
+        const resResp = await fetch("/.netlify/functions/respond", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: `Te agendé: ${dataTrans.text}` })
+        });
+        const dataResp = await resResp.json();
+        console.log("Respuesta TTS:", dataResp);
+
+        if (dataResp.ok && dataResp.audioBase64) {
+          const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
+          audio.play();
+        }
+      };
+    }
+  </script>
+</body>
+</html>
