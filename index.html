@@ -10,76 +10,45 @@
   <p>Texto: <span id="transcribedText"></span></p>
 
   <script>
-    let mediaRecorder;
-    let audioChunks = [];
+async function sendAudio() {
+  const blob = new Blob(audioChunks, { type: "audio/webm" });
+  const reader = new FileReader();
+  reader.readAsDataURL(blob);
+  reader.onloadend = async () => {
+    console.log("Audio base64:", reader.result?.slice(0,100), "..."); // debug
 
-    const startBtn = document.getElementById("startBtn");
-    const transcribedText = document.getElementById("transcribedText");
+    if (!reader.result) return console.error("Error leyendo audio");
 
-    startBtn.onclick = async () => {
-      if (!mediaRecorder || mediaRecorder.state === "inactive") {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
+    const base64 = reader.result.split(",")[1];
 
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = sendAudio;
-        mediaRecorder.start();
-        startBtn.textContent = "Detener";
-        console.log("Grabando audio...");
-      } else {
-        mediaRecorder.stop();
-        startBtn.textContent = "Grabar";
-        console.log("Audio detenido, enviando...");
-      }
-    };
+    // 1️⃣ Transcribir
+    const resTrans = await fetch("/.netlify/functions/transcribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ audioBase64: base64 })
+    });
 
-    async function sendAudio() {
-      try {
-        const blob = new Blob(audioChunks, { type: "audio/webm" });
-        const reader = new FileReader();
+    const dataTrans = await resTrans.json();
+    console.log("Respuesta transcribe:", dataTrans);
 
-        reader.readAsDataURL(blob);
-        reader.onloadend = async () => {
-          const base64 = reader.result.split(",")[1];
-          console.log("Audio base64:", base64.slice(0, 50), "..."); // Solo los primeros 50 chars
+    transcribedText.textContent = dataTrans.text || "[Error de transcripción]";
 
-          // 1️⃣ Transcribir
-          const resTrans = await fetch("/.netlify/functions/transcribe", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ audioBase64: base64 })
-          });
-          const dataTrans = await resTrans.json();
-          console.log("Respuesta transcribe:", dataTrans);
-
-          transcribedText.textContent = dataTrans.text || "[Error de transcripción]";
-
-          // 2️⃣ Responder con voz
-          if (dataTrans.text) {
-            try {
-              const resResp = await fetch("/.netlify/functions/respond", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ text: dataTrans.text })
-              });
-              const dataResp = await resResp.json();
-              console.log("Respuesta respond:", dataResp);
-
-              if (dataResp.ok && dataResp.audioBase64) {
-                const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
-                audio.play();
-                console.log("Reproduciendo respuesta de voz...");
-              }
-            } catch (err) {
-              console.error("Error en respond.js:", err);
-            }
-          }
-        };
-      } catch (err) {
-        console.error("Error en sendAudio:", err);
+    // 2️⃣ Responder con voz solo si hay texto
+    if (dataTrans.text) {
+      console.log("Enviando a respond.js:", dataTrans.text);
+      const resResp = await fetch("/.netlify/functions/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: `Te agendé: ${dataTrans.text}` })
+      });
+      const dataResp = await resResp.json();
+      console.log("Respuesta respond:", dataResp);
+      if (dataResp.ok && dataResp.audioBase64) {
+        const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
+        audio.play();
       }
     }
-  </script>
-</body>
+  };
+}
+</script></body>
 </html>
