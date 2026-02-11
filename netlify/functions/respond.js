@@ -1,6 +1,7 @@
 import { OpenAI } from "openai";
 
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxatBVP9kJAaB4jABdGq3CixrJhi99kaMEaKjKNng26kEPGHmuL1tmSClN5LXG_CzF3/exec"; // <-- tu URL real
+// PONÉ TU URL DE WEB APP DE APPS SCRIPT AQUÍ
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxatBVP9kJAaB4jABdGq3CixrJhi99kaMEaKjKNng26kEPGHmuL1tmSClN5LXG_CzF3/exec";
 
 export const handler = async (event) => {
   try {
@@ -14,33 +15,40 @@ export const handler = async (event) => {
     }
 
     const body = JSON.parse(event.body);
-    const text = body.text;
+    const text = body.text?.trim();
     if (!text) {
       return { statusCode: 400, body: JSON.stringify({ error: "No se proporcionó texto" }) };
     }
 
-    // 🔹 Filtrar si el texto es acción de agenda
-    const acciones = ["agendame", "recordame", "borrá", "borra"];
-    const esAccion = acciones.some(palabra => text.toLowerCase().includes(palabra));
-
-    if (esAccion) {
-      // 1️⃣ Guardar en Google Sheets
-      await fetch(SHEETS_WEBAPP_URL, {
+    // 1️⃣ Guardar en Google Sheets vía Apps Script
+    try {
+      const resSheet = await fetch(SHEETS_WEBAPP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "add", text })
       });
+      const dataSheet = await resSheet.json();
+      if (!dataSheet.ok) {
+        console.warn("No se pudo guardar en la hoja:", dataSheet.error);
+      }
+    } catch (err) {
+      console.warn("Error guardando en la hoja:", err.message);
     }
 
-    // 2️⃣ Generar audio con TTS usando prompt refinado
+    // 2️⃣ Generar respuesta de la IA con prompt refinado
     const openai = new OpenAI({ apiKey });
     const prompt = `
 Eres un asistente que interpreta comandos de agenda de forma natural.
 Responde solo con lo necesario y de manera resumida.
 Si el usuario dice "agendame...", "recordame...", "pasame..." o "borrá...", formula la respuesta diciendo:
-"Te agendé ...", "Te recuerdo ..., "Te paso ... " o "He borrado ...", sin agregar saludos innecesarios.
-Si dice Agendame: Guardas. Si dice Recordame: Guardas con alerta recordatorio. Si dice Borra: Borras el item en cuestión. Y si dice Pasame: Buscas lo que necesita saber previamente guardado.
+"Te agendé ...", "Te recuerdo ...", "Te paso ...", o "He borrado ...", sin agregar saludos innecesarios.
+Si dice "Agendame": Guarda.
+Si dice "Recordame": Guarda con alerta recordatorio.
+Si dice "Borrá": Borra el item en cuestión.
+Si dice "Pasame": Busca lo que necesita saber previamente guardado.
 Si es solo una consulta (p.ej. "qué día cae el lunes"), responde de manera directa sin guardar nada.
+Al iniciar la sesión, di: "Bienvenido a Automatic Life, yo lo ordeno por ti".
+Si no entiendes algo o no se puede guardar/borrar, dilo claramente.
 Texto del usuario: "${text}"
 `;
 
