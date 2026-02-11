@@ -20,6 +20,7 @@ export const handler = async (event) => {
       return { statusCode: 400, body: JSON.stringify({ error: "No se proporcionó texto" }) };
     }
 
+    // Determinar acción según palabras clave
     let action = "query";   // por defecto solo consulta
     if (/agendame/i.test(userText)) action = "add";
     else if (/recordame/i.test(userText)) action = "add";
@@ -29,15 +30,13 @@ export const handler = async (event) => {
     let responseText = "";
 
     if (action === "add") {
-      // Guardar en hoja
       await fetch(SHEETS_WEBAPP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "add", text: userText })
       });
-      responseText = userText.match(/borr[áa]/i) ? "He borrado ..." : `Te agendé: ${userText}`;
+      responseText = `Te agendé: ${userText}`;
     } else if (action === "delete") {
-      // Aquí solo podemos borrar por texto exacto, o luego agregar lógica más avanzada
       await fetch(SHEETS_WEBAPP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -45,26 +44,34 @@ export const handler = async (event) => {
       });
       responseText = "He borrado el item solicitado.";
     } else if (action === "query") {
-      // Consultar hoja
       const resSheet = await fetch(SHEETS_WEBAPP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "query", text: userText })
       });
       const dataSheet = await resSheet.json();
-      if (dataSheet.ok && dataSheet.result) {
-        responseText = dataSheet.result; // texto exacto de la hoja
-      } else {
-        responseText = "No encontré datos guardados para eso.";
-      }
+      responseText = dataSheet.ok && dataSheet.result
+        ? dataSheet.result
+        : "No encontré datos guardados para eso.";
     }
 
-    // Generar audio TTS
+    // Prompt refinado
+    const prompt = `
+Eres un asistente que interpreta comandos de agenda de forma natural.
+Al iniciar sesión, di: "Bienvenido a Automatic Life, yo lo ordeno por ti".
+Responde solo con lo necesario y de manera resumida.
+Si el usuario dice "agendame...", "recordame...", "pasame..." o "borrá...", formula la respuesta diciendo:
+"Te agendé ...", "Te recuerdo ...", "Te paso ...", "He borrado ...", sin agregar saludos innecesarios.
+Si es solo una consulta, responde de manera directa sin guardar nada.
+Texto de la acción a responder: "${responseText}"
+`;
+
+    // Generar audio con TTS
     const openai = new OpenAI({ apiKey });
     const responseAudio = await openai.audio.speech.create({
       model: "gpt-4o-mini-tts",
       voice: "coral",
-      input: responseText
+      input: prompt
     });
 
     const arrayBuffer = await responseAudio.arrayBuffer();
