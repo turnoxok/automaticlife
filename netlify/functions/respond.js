@@ -110,7 +110,7 @@ else if (/^(pasame|pásame|pasá|pasa|dame|decime|decíme|buscar|buscá|traeme|t
       }
 
     } else {
-      respuestaFinal = "No entiendo! Las palabras claves son: Agendame, Recordame, Pasame, Decime, Borrá, Eliminá.. Que hago?";
+      respuestaFinal = "No entiendo! Las palabras claves son: Agendame, Recordame, Pasame, Decime, Borrá, Eliminá - Que hago?";
     }
 
 
