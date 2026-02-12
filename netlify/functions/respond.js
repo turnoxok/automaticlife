@@ -45,7 +45,9 @@ export const handler = async (event) => {
 
     else if (
       textoLower.includes("pasame") ||
+      textoLower.includes("pásame") ||
       textoLower.includes("pasá") ||
+      textoLower.includes("pasa") ||
       textoLower.includes("dame") ||
       textoLower.includes("buscar") ||
       textoLower.includes("buscá") ||
