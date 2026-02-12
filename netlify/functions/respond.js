@@ -24,17 +24,16 @@ export const handler = async (event) => {
     let respuestaFinal = "";
     let action = null;
 
-    // 🔹 Detectar intención
-    // 🔹 Detectar intención (solo si la palabra está al inicio)
-if (/^(agendame|agendá|recordame|guarda|guardá)\b/i.test(text)) {
+    // 🔹 Detectar intención (inicio + espacio o puntuación)
+if (/^(agendame|agendá|recordame|guarda|guardá)(?=\s|,|\.|$)/i.test(text)) {
   action = "add";
 }
 
-else if (/^(borra|borrá|elimina)\b/i.test(text)) {
+else if (/^(borra|borrá|elimina)(?=\s|,|\.|$)/i.test(text)) {
   action = "delete";
 }
 
-else if (/^(pasame|pásame|pasá|pasa|dame|decime|decíme|buscar|buscá|traeme|traé|cual|cuál|que|qué)\b/i.test(text)) {
+else if (/^(pasame|pásame|pasá|pasa|dame|decime|decíme|buscar|buscá|traeme|traé|cual|cuál|que|qué)(?=\s|,|\.|$)/i.test(text)) {
   action = "get";
 }
 
