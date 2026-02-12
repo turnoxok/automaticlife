@@ -1,6 +1,6 @@
 import { OpenAI } from "openai";
 
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxYN6AMFa6RWCYfx1ub0y7NWIvjPm_GLoWttWSqDA8PGqqvLTtsm-2rDrsQlF3U06pq/exec";
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbySPqrUKG6ziI7sl0S7cdtOMH6DySJVUyQWlnOjLTbvVpQn52GtLwRh8meSD9WNsW4W/exec";
 
 export const handler = async (event) => {
   try {
