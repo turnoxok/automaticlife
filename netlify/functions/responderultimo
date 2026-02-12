@@ -1,6 +1,6 @@
 import { OpenAI } from "openai";
 
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxatBVP9kJAaB4jABdGq3CixrJhi99kaMEaKjKNng26kEPGHmuL1tmSClN5LXG_CzF3/exec"; // <-- tu URL real
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbySPqrUKG6ziI7sl0S7cdtOMH6DySJVUyQWlnOjLTbvVpQn52GtLwRh8meSD9WNsW4W/exec";
 
 export const handler = async (event) => {
   try {
@@ -13,44 +13,73 @@ export const handler = async (event) => {
       return { statusCode: 500, body: JSON.stringify({ error: "OPENAI_API_KEY no definida" }) };
     }
 
-    const body = JSON.parse(event.body);
-    const text = body.text;
+    const { text } = JSON.parse(event.body);
     if (!text) {
       return { statusCode: 400, body: JSON.stringify({ error: "No se proporcionó texto" }) };
     }
 
-    // 🔹 Filtrar si el texto es acción de agenda
-    const acciones = ["agendame", "recordame", "borrá", "borra"];
-    const esAccion = acciones.some(palabra => text.toLowerCase().includes(palabra));
+    const textoLower = text.toLowerCase();
+    const openai = new OpenAI({ apiKey });
 
-    if (esAccion) {
-      // 1️⃣ Guardar en Google Sheets
+    let respuestaFinal = "";
+
+    // 🔹 AGENDAR
+    if (textoLower.includes("agendame") || textoLower.includes("recordame")) {
+
       await fetch(SHEETS_WEBAPP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "add", text })
       });
+
+      respuestaFinal = "Listo, lo guardé.";
+
     }
 
-    // 2️⃣ Generar audio con TTS usando prompt refinado
-    const openai = new OpenAI({ apiKey });
-    const prompt = `
-Eres un asistente que interpreta comandos de agenda de forma natural.
-Responde solo con lo necesario y de manera resumida.
-Si el usuario dice "agendame...", "recordame...", "pasame..." o "borrá...", formula la respuesta diciendo:
-"Te agendé ...", "Te recuerdo ..., "Te paso ... " o "He borrado ...", sin agregar saludos innecesarios.
-Si dice Agendame: Guardas. Si dice Recordame: Guardas con alerta recordatorio. Si dice Borra: Borras el item en cuestión. Y si dice Pasame: Buscas lo que necesita saber previamente guardado.
-Si es solo una consulta (p.ej. "qué día cae el lunes"), responde de manera directa sin guardar nada.
-Texto del usuario: "${text}"
-`;
+    // 🔹 BORRAR
+    else if (textoLower.includes("borra") || textoLower.includes("borrá")) {
 
-    const response = await openai.audio.speech.create({
+      await fetch(SHEETS_WEBAPP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", text })
+      });
+
+      respuestaFinal = "He borrado el dato si existía.";
+
+    }
+
+    // 🔹 PASAME (BUSCAR REAL)
+    else if (textoLower.includes("pasame")) {
+
+      const res = await fetch(SHEETS_WEBAPP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get", text })
+      });
+
+      const data = await res.json();
+
+      if (data.ok && data.result) {
+        respuestaFinal = data.result;
+      } else {
+        respuestaFinal = "No encontré ese dato.";
+      }
+    }
+
+    // 🔹 CONSULTA NORMAL
+    else {
+      respuestaFinal = "No es una acción válida.";
+    }
+
+    // 🎤 Generar audio con TTS
+    const audioResponse = await openai.audio.speech.create({
       model: "gpt-4o-mini-tts",
       voice: "coral",
-      input: prompt
+      input: respuestaFinal
     });
 
-    const arrayBuffer = await response.arrayBuffer();
+    const arrayBuffer = await audioResponse.arrayBuffer();
     const base64Audio = Buffer.from(arrayBuffer).toString("base64");
 
     return {
@@ -60,6 +89,9 @@ Texto del usuario: "${text}"
 
   } catch (err) {
     console.error(err);
-    return { statusCode: 500, body: JSON.stringify({ ok: false, error: err.message }) };
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ ok: false, error: err.message })
+    };
   }
 };
