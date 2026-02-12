@@ -137,25 +137,9 @@ export const handler = async (event) => {
     } else {
       respuestaFinal = "No es una acción válida.";
     }
-// 🎭 Reescribir en tono misterioso canchero
-    const estiloResponse = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "Reescribe el texto con tono misterioso, seguro y relajado. Frases cortas. Con pausas naturales."
-        },
-        { role: "user", content: respuestaFinal }
-      ],
-      temperature: 0.4
-    });
 
-    respuestaFinal = estiloResponse.choices[0].message.content;
 
-    // 🔊 Pausas extra para sonar más lento
-    respuestaFinal = respuestaFinal
-      .replace(/\./g, "...")
-      .replace(/,/g, ", ");
+   
     
     // 🎤 Generar audio
     const audioResponse = await openai.audio.speech.create({
