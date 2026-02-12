@@ -44,6 +44,12 @@ export const handler = async (event) => {
     }
 
     else if (
+      textoLower.includes("cual") ||
+      textoLower.includes("cuál") ||
+      textoLower.includes("que") ||
+      textoLower.includes("qué") ||
+      textoLower.includes("decíme") ||
+      textoLower.includes("decime") ||
       textoLower.includes("pasame") ||
       textoLower.includes("pásame") ||
       textoLower.includes("pasá") ||
