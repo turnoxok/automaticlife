@@ -66,35 +66,9 @@ export const handler = async (event) => {
 
       const data = await res.json();
 
-      if (intent === "add") {
-
-  // 🔥 limpiar texto con IA
-  const cleanResponse = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "system",
-        content: `Corrige errores de transcripción de voz.
-- No inventes datos.
-- Une números que fueron separados con puntos.
-- Si dice "A mayúscula", conviértelo en A.
-- Devuelve solo el texto corregido.`
-      },
-      { role: "user", content: text }
-    ],
-    temperature: 0
-  });
-
-  const textoLimpio = cleanResponse.choices[0].message.content;
-
-  await fetch(SHEETS_WEBAPP_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "add", text: textoLimpio })
-  });
-
-  respuestaFinal = "Listo, lo guardé.";
-}
+      if (action === "add") {
+        respuestaFinal = "Listo, lo guardé.";
+      }
 
       else if (action === "delete") {
         respuestaFinal = data.ok
