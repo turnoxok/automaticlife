@@ -57,6 +57,7 @@ else if (/^(pasame|pásame|pasá|pasa|dame|decime|decíme|buscar|buscá|traeme|t
 - No inventes datos.
 - Une números separados por puntos.
 - Convierte "A mayúscula" en A.
+- Convierte "B larga minuscula" en b.
 - Devuelve solo el texto corregido.`
           },
           { role: "user", content: textoProcesado }
@@ -98,7 +99,7 @@ else if (/^(pasame|pásame|pasá|pasa|dame|decime|decíme|buscar|buscá|traeme|t
 
       else if (action === "delete") {
         respuestaFinal = data.ok
-          ? "He borrado el dato."
+          ? "Dato eliminado."
           : "No encontré ese dato para borrar.";
       }
 
