@@ -18,75 +18,75 @@ export const handler = async (event) => {
       return { statusCode: 400, body: JSON.stringify({ error: "No se proporcionó texto" }) };
     }
 
-    const textoLower = text.toLowerCase();
     const openai = new OpenAI({ apiKey });
 
     let respuestaFinal = "";
-    let action = null;
 
-    // 🔹 Detectar intención
-    if (
-      textoLower.includes("agendame") ||
-      textoLower.includes("agendá") ||
-      textoLower.includes("recordame") ||
-      textoLower.includes("guardá") ||
-      textoLower.includes("guarda")
-    ) {
-      action = "add";
-    }
+    // 🔥 1️⃣ GPT decide intención
+    const intentResponse = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `Clasificá la intención del usuario.
+Devuelve SOLO JSON válido con este formato:
+{ "intent": "add" | "get" | "delete" | "question" }
 
-    else if (
-      textoLower.includes("borra") ||
-      textoLower.includes("borrá") ||
-      textoLower.includes("elimina")
-    ) {
-      action = "delete";
-    }
+Reglas:
+- Si quiere guardar algo → add
+- Si quiere recuperar algo → get
+- Si quiere borrar algo → delete
+- Si es pregunta general (clima, fecha, info, etc) → question`
+        },
+        { role: "user", content: text }
+      ],
+      temperature: 0
+    });
 
-    else if (
-      textoLower.includes("pasame") ||
-      textoLower.includes("pasá") ||
-      textoLower.includes("dame") ||
-      textoLower.includes("buscar") ||
-      textoLower.includes("buscá") ||
-      textoLower.includes("traeme") ||
-      textoLower.includes("traé")
-    ) {
-      action = "get";
-    }
+    const intentJson = JSON.parse(intentResponse.choices[0].message.content);
+    const intent = intentJson.intent;
 
-    // 🔹 Ejecutar acción contra Sheets
-    if (action) {
+    // 🔥 2️⃣ Ejecutar según intención
+    if (intent === "add" || intent === "get" || intent === "delete") {
 
       const res = await fetch(SHEETS_WEBAPP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, text })
+        body: JSON.stringify({ action: intent, text })
       });
 
       const data = await res.json();
 
-      if (action === "add") {
+      if (intent === "add") {
         respuestaFinal = "Listo, lo guardé.";
       }
 
-      else if (action === "delete") {
+      else if (intent === "delete") {
         respuestaFinal = data.ok
           ? "He borrado el dato."
-          : "No encontré ese dato para borrar.";
+          : "No encontré ese dato.";
       }
 
-      else if (action === "get") {
+      else if (intent === "get") {
         respuestaFinal = data.ok && data.result
           ? data.result
           : "No encontré ese dato.";
       }
 
     } else {
-      respuestaFinal = "No es una acción válida.";
+      // 🔥 3️⃣ Pregunta normal → GPT responde
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "Respondé breve, claro y natural." },
+          { role: "user", content: text }
+        ]
+      });
+
+      respuestaFinal = completion.choices[0].message.content;
     }
 
-    // 🎤 Generar audio con TTS
+    // 🔥 4️⃣ Generar audio
     const audioResponse = await openai.audio.speech.create({
       model: "gpt-4o-mini-tts",
       voice: "coral",
