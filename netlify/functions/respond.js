@@ -141,7 +141,7 @@ export const handler = async (event) => {
     // 🎤 Generar audio
     const audioResponse = await openai.audio.speech.create({
       model: "gpt-4o-mini-tts",
-      voice: "coral",
+      voice: "marin",
       input: respuestaFinal
     });
 
