@@ -25,7 +25,7 @@ export const handler = async (event) => {
     let action = null;
 
     // 🔹 Detectar intención (inicio + espacio o puntuación)
-if (/^(agendame|agendá|recordame|guardar|guarda|guardá)(?=\s|,|\.|$)/i.test(text)) {
+if (/^(agendame|recordame|guardame)(?=\s|,|\.|$)/i.test(text)) {
   action = "add";
 }
 
@@ -110,7 +110,7 @@ else if (/^(pasame|pásame|pasá|pasa|dame|decime|decíme|buscar|buscá|traeme|t
       }
 
     } else {
-      respuestaFinal = "No es una acción válida.";
+      respuestaFinal = "No entiendo! Las palabras claves son: Agendame, Recordame, Pasame, Decime, Borrá, Eliminá.. Que hago?";
     }
 
 
