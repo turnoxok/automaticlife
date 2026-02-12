@@ -7,9 +7,13 @@
 </head>
 <body>
   <h1>Automatic Life</h1>
+
+  <!-- Google Login -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <div id="g_id_onload"
        data-client_id="687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com"
-       data-login_uri="javascript:handleCredentialResponse()"
+       data-callback="handleCredentialResponse"
        data-auto_prompt="true">
   </div>
 
@@ -18,14 +22,12 @@
   <button id="startBtn" disabled>GO</button>
   <p>Texto: <span id="transcribedText"></span></p>
 
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script>
     let userEmail = null;
     let mediaRecorder;
     let audioChunks = [];
 
     function handleCredentialResponse(response) {
-      // Aquí obtendrías el JWT, podés decodificar para extraer email
       const payload = JSON.parse(atob(response.credential.split('.')[1]));
       userEmail = payload.email;
       document.getElementById("startBtn").disabled = false;
@@ -62,6 +64,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ audio: base64 })
         });
+
         const dataTrans = await resTrans.json();
         const texto = dataTrans.text || "[Error]";
         transcribedText.textContent = texto;
