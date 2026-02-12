@@ -34,32 +34,14 @@ export const handler = async (event) => {
 
     // 2️⃣ Generar audio con TTS usando prompt refinado
     const openai = new OpenAI({ apiKey });
-    const prompt =  `
-Eres un clasificador de intenciones.
-Devuelve SOLO JSON válido, sin texto extra.
-
-Intenciones posibles:
-- add
-- delete
-- recall
-- query
-- none
-
-Reglas:
-- "agendá", "guardá", "recordame" → add
-- "borrá", "eliminá" → delete
-- "pasame", "cuando es", "qué tenía" → recall
-- preguntas generales → query
-- charla → none
-
-Formato:
-{
-  "intent": "add|delete|recall|query|none",
-  "summary": "frase corta para responder al usuario"
-}
-
-Texto:
-"""${text}"""
+    const prompt = `
+Eres un asistente que interpreta comandos de agenda de forma natural.
+Responde solo con lo necesario y de manera resumida.
+Si el usuario dice "agendame...", "recordame...", "pasame..." o "borrá...", formula la respuesta diciendo:
+"Te agendé ...", "Te recuerdo ..., "Te paso ... " o "He borrado ...", sin agregar saludos innecesarios.
+Si dice Agendame: Guardas. Si dice Recordame: Guardas con alerta recordatorio. Si dice Borra: Borras el item en cuestión. Y si dice Pasame: Buscas lo que necesita saber previamente guardado.
+Si es solo una consulta (p.ej. "qué día cae el lunes"), responde de manera directa sin guardar nada.
+Texto del usuario: "${text}"
 `;
 
     const response = await openai.audio.speech.create({
