@@ -18,75 +18,101 @@ export const handler = async (event) => {
       return { statusCode: 400, body: JSON.stringify({ error: "No se proporcionó texto" }) };
     }
 
+    const textoLower = text.toLowerCase();
     const openai = new OpenAI({ apiKey });
 
     let respuestaFinal = "";
+    let action = null;
 
-    // 🔥 1️⃣ GPT decide intención
-    const intentResponse = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: `Clasificá la intención del usuario.
-Devuelve SOLO JSON válido con este formato:
-{ "intent": "add" | "get" | "delete" | "question" }
+    // 🔹 Detectar intención
+    if (
+      textoLower.includes("agendame") ||
+      textoLower.includes("agendá") ||
+      textoLower.includes("recordame") ||
+      textoLower.includes("guardá") ||
+      textoLower.includes("guarda")
+    ) {
+      action = "add";
+    }
 
-Reglas:
-- Si quiere guardar algo → add
-- Si quiere recuperar algo → get
-- Si quiere borrar algo → delete
-- Si es pregunta general (clima, fecha, info, etc) → question`
-        },
-        { role: "user", content: text }
-      ],
-      temperature: 0
-    });
+    else if (
+      textoLower.includes("borra") ||
+      textoLower.includes("borrá") ||
+      textoLower.includes("elimina")
+    ) {
+      action = "delete";
+    }
 
-    const intentJson = JSON.parse(intentResponse.choices[0].message.content);
-    const intent = intentJson.intent;
+    else if (
+      textoLower.includes("pasame") ||
+      textoLower.includes("pasá") ||
+      textoLower.includes("dame") ||
+      textoLower.includes("buscar") ||
+      textoLower.includes("buscá") ||
+      textoLower.includes("traeme") ||
+      textoLower.includes("traé")
+    ) {
+      action = "get";
+    }
 
-    // 🔥 2️⃣ Ejecutar según intención
-    if (intent === "add" || intent === "get" || intent === "delete") {
+    // 🔹 Ejecutar acción contra Sheets
+    if (action) {
 
       const res = await fetch(SHEETS_WEBAPP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: intent, text })
+        body: JSON.stringify({ action, text })
       });
 
       const data = await res.json();
 
       if (intent === "add") {
-        respuestaFinal = "Listo, lo guardé.";
-      }
 
-      else if (intent === "delete") {
+  // 🔥 limpiar texto con IA
+  const cleanResponse = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content: `Corrige errores de transcripción de voz.
+- No inventes datos.
+- Une números que fueron separados con puntos.
+- Si dice "A mayúscula", conviértelo en A.
+- Devuelve solo el texto corregido.`
+      },
+      { role: "user", content: text }
+    ],
+    temperature: 0
+  });
+
+  const textoLimpio = cleanResponse.choices[0].message.content;
+
+  await fetch(SHEETS_WEBAPP_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "add", text: textoLimpio })
+  });
+
+  respuestaFinal = "Listo, lo guardé.";
+}
+
+      else if (action === "delete") {
         respuestaFinal = data.ok
           ? "He borrado el dato."
-          : "No encontré ese dato.";
+          : "No encontré ese dato para borrar.";
       }
 
-      else if (intent === "get") {
+      else if (action === "get") {
         respuestaFinal = data.ok && data.result
           ? data.result
           : "No encontré ese dato.";
       }
 
     } else {
-      // 🔥 3️⃣ Pregunta normal → GPT responde
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: "Respondé breve, claro y natural." },
-          { role: "user", content: text }
-        ]
-      });
-
-      respuestaFinal = completion.choices[0].message.content;
+      respuestaFinal = "No es una acción válida.";
     }
 
-    // 🔥 4️⃣ Generar audio
+    // 🎤 Generar audio con TTS
     const audioResponse = await openai.audio.speech.create({
       model: "gpt-4o-mini-tts",
       voice: "coral",
