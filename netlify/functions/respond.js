@@ -25,11 +25,11 @@ export const handler = async (event) => {
     let action = null;
 
     // 🔹 Detectar intención (inicio + espacio o puntuación)
-if (/^(agendame|agendá|recordame|guarda|guardá)(?=\s|,|\.|$)/i.test(text)) {
+if (/^(agendame|agendá|recordame|guardar|guarda|guardá)(?=\s|,|\.|$)/i.test(text)) {
   action = "add";
 }
 
-else if (/^(borra|borrá|elimina)(?=\s|,|\.|$)/i.test(text)) {
+else if (/^(borra|borrá|borrar|eliminar|elimina|eliminár)(?=\s|,|\.|$)/i.test(text)) {
   action = "delete";
 }
 
