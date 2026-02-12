@@ -63,13 +63,57 @@ export const handler = async (event) => {
       action = "get";
     }
 
+    // 🔥 LIMPIAR TEXTO SEGÚN ACCIÓN
+    let textoProcesado = text;
+
+    if (action === "add") {
+      // Quitar palabra de acción al inicio
+      textoProcesado = text.replace(
+        /^(agendame|agendá|recordame|guarda|guardá)\s+/i,
+        ""
+      );
+
+      // Corregir errores típicos de voz
+      const cleanResponse = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: `Corrige errores de transcripción de voz.
+- No inventes datos.
+- Une números separados por puntos.
+- Convierte "A mayúscula" en A.
+- Devuelve solo el texto corregido.`
+          },
+          { role: "user", content: textoProcesado }
+        ],
+        temperature: 0
+      });
+
+      textoProcesado = cleanResponse.choices[0].message.content;
+    }
+
+    if (action === "get") {
+      textoProcesado = text.replace(
+        /^(pasame|pásame|pasá|pasa|dame|decime|decíme|buscar|buscá|traeme|traé|cual|cuál|que|qué)\s+/i,
+        ""
+      );
+    }
+
+    if (action === "delete") {
+      textoProcesado = text.replace(
+        /^(borra|borrá|elimina)\s+/i,
+        ""
+      );
+    }
+
     // 🔹 Ejecutar acción contra Sheets
     if (action) {
 
       const res = await fetch(SHEETS_WEBAPP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, text })
+        body: JSON.stringify({ action, text: textoProcesado })
       });
 
       const data = await res.json();
@@ -94,7 +138,7 @@ export const handler = async (event) => {
       respuestaFinal = "No es una acción válida.";
     }
 
-    // 🎤 Generar audio con TTS
+    // 🎤 Generar audio
     const audioResponse = await openai.audio.speech.create({
       model: "gpt-4o-mini-tts",
       voice: "coral",
