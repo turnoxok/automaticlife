@@ -3,7 +3,8 @@ import { OpenAI } from "openai";
 const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbznD0hS3maZytQn6GYmj7E7zQU0p0PuDKWKT4jQvKDbDNnY-60TZbtuyXV0rUjw-s9K/exec";
 
 export const handler = async (event) => {
-  const { text, userId } = JSON.parse(event.body);
+  const { text, email } = JSON.parse(event.body);
+const userId = email || "default";
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   let action = null;
   let respuestaFinal = "";
