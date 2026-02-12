@@ -25,43 +25,18 @@ export const handler = async (event) => {
     let action = null;
 
     // 🔹 Detectar intención
-    if (
-      textoLower.includes("agendame") ||
-      textoLower.includes("agendá") ||
-      textoLower.includes("recordame") ||
-      textoLower.includes("guardá") ||
-      textoLower.includes("guarda")
-    ) {
-      action = "add";
-    }
+    // 🔹 Detectar intención (solo si la palabra está al inicio)
+if (/^(agendame|agendá|recordame|guarda|guardá)\b/i.test(text)) {
+  action = "add";
+}
 
-    else if (
-      textoLower.includes("borra") ||
-      textoLower.includes("borrá") ||
-      textoLower.includes("elimina")
-    ) {
-      action = "delete";
-    }
+else if (/^(borra|borrá|elimina)\b/i.test(text)) {
+  action = "delete";
+}
 
-    else if (
-      textoLower.includes("cual") ||
-      textoLower.includes("cuál") ||
-      textoLower.includes("que") ||
-      textoLower.includes("qué") ||
-      textoLower.includes("decíme") ||
-      textoLower.includes("decime") ||
-      textoLower.includes("pasame") ||
-      textoLower.includes("pásame") ||
-      textoLower.includes("pasá") ||
-      textoLower.includes("pasa") ||
-      textoLower.includes("dame") ||
-      textoLower.includes("buscar") ||
-      textoLower.includes("buscá") ||
-      textoLower.includes("traeme") ||
-      textoLower.includes("traé")
-    ) {
-      action = "get";
-    }
+else if (/^(pasame|pásame|pasá|pasa|dame|decime|decíme|buscar|buscá|traeme|traé|cual|cuál|que|qué)\b/i.test(text)) {
+  action = "get";
+}
 
     // 🔥 LIMPIAR TEXTO SEGÚN ACCIÓN
     let textoProcesado = text;
