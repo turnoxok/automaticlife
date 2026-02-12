@@ -1,34 +1,40 @@
 import { OpenAI } from "openai";
 
-const SHEETS_WEBAPP_URL =
-  "https://script.google.com/macros/s/AKfycbxatBVP9kJAaB4jABdGq3CixrJhi99kaMEaKjKNng26kEPGHmuL1tmSClN5LXG_CzF3/exec";
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxatBVP9kJAaB4jABdGq3CixrJhi99kaMEaKjKNng26kEPGHmuL1tmSClN5LXG_CzF3/exec"; // <-- tu URL real
 
 export const handler = async (event) => {
   try {
     if (event.httpMethod !== "POST") {
-      return { statusCode: 405, body: "Method Not Allowed" };
+      return { statusCode: 405, body: JSON.stringify({ error: "Method not allowed" }) };
     }
 
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ error: "OPENAI_API_KEY no definida" }),
-      };
+      return { statusCode: 500, body: JSON.stringify({ error: "OPENAI_API_KEY no definida" }) };
     }
 
-    const { text } = JSON.parse(event.body || "{}");
+    const body = JSON.parse(event.body);
+    const text = body.text;
     if (!text) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: "Texto vacío" }),
-      };
+      return { statusCode: 400, body: JSON.stringify({ error: "No se proporcionó texto" }) };
     }
 
-    const openai = new OpenAI({ apiKey });
+    // 🔹 Filtrar si el texto es acción de agenda
+    const acciones = ["agendame", "recordame", "borrá", "borra"];
+    const esAccion = acciones.some(palabra => text.toLowerCase().includes(palabra));
 
-    // 🧠 1️⃣ CLASIFICAR INTENCIÓN (NO VOZ)
-    const intentPrompt = `
+    if (esAccion) {
+      // 1️⃣ Guardar en Google Sheets
+      await fetch(SHEETS_WEBAPP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "add", text })
+      });
+    }
+
+    // 2️⃣ Generar audio con TTS usando prompt refinado
+    const openai = new OpenAI({ apiKey });
+    const prompt =  `
 Eres un clasificador de intenciones.
 Devuelve SOLO JSON válido, sin texto extra.
 
@@ -56,92 +62,22 @@ Texto:
 """${text}"""
 `;
 
-    const intentResponse = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: intentPrompt }],
-      temperature: 0,
-    });
-
-    let intentData;
-    try {
-      intentData = JSON.parse(intentResponse.choices[0].message.content);
-    } catch {
-      intentData = {
-        intent: "none",
-        summary: "No entendí bien lo que me pediste",
-      };
-    }
-
-    const { intent, summary } = intentData;
-
-    let finalText = summary;
-
-    // 📄 2️⃣ EJECUTAR ACCIÓN
-    if (intent === "add") {
-      await fetch(SHEETS_WEBAPP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "add", text: summary }),
-      });
-      finalText = Te agendé ${summary};
-    }
-
-    if (intent === "delete") {
-      await fetch(SHEETS_WEBAPP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "deleteLast" }),
-      });
-      finalText = "He borrado el último registro";
-    }
-
-    if (intent === "recall") {
-      const res = await fetch(SHEETS_WEBAPP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "recall" }),
-      });
-
-      const data = await res.json();
-      finalText = data.text
-        ? Tenés agendado: ${data.text}
-        : "No encontré nada agendado";
-    }
-
-    if (intent === "query") {
-      finalText = summary;
-    }
-
-    if (intent === "none") {
-      finalText = "No estoy seguro de qué querés que haga";
-    }
-
-    // 🔊 3️⃣ TEXTO → VOZ
-    const speech = await openai.audio.speech.create({
+    const response = await openai.audio.speech.create({
       model: "gpt-4o-mini-tts",
       voice: "coral",
-      input: finalText,
+      input: prompt
     });
 
-    const buffer = Buffer.from(await speech.arrayBuffer()).toString("base64");
+    const arrayBuffer = await response.arrayBuffer();
+    const base64Audio = Buffer.from(arrayBuffer).toString("base64");
 
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        ok: true,
-        audioBase64: buffer,
-        intent,
-        text: finalText,
-      }),
+      body: JSON.stringify({ ok: true, audioBase64: base64Audio })
     };
+
   } catch (err) {
-    console.error("RESPOND ERROR:", err);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        ok: false,
-        error: err.message,
-      }),
-    };
+    console.error(err);
+    return { statusCode: 500, body: JSON.stringify({ ok: false, error: err.message }) };
   }
 };
