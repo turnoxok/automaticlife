@@ -22,53 +22,67 @@ export const handler = async (event) => {
     const openai = new OpenAI({ apiKey });
 
     let respuestaFinal = "";
+    let action = null;
 
-    // 🔹 AGENDAR
-    if (textoLower.includes("agendame") || textoLower.includes("recordame")) {
-
-      await fetch(SHEETS_WEBAPP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "add", text })
-      });
-
-      respuestaFinal = "Listo, lo guardé.";
-
+    // 🔹 Detectar intención
+    if (
+      textoLower.includes("agendame") ||
+      textoLower.includes("agendá") ||
+      textoLower.includes("recordame") ||
+      textoLower.includes("guardá") ||
+      textoLower.includes("guarda")
+    ) {
+      action = "add";
     }
 
-    // 🔹 BORRAR
-    else if (textoLower.includes("borra") || textoLower.includes("borrá")) {
-
-      await fetch(SHEETS_WEBAPP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete", text })
-      });
-
-      respuestaFinal = "He borrado el dato si existía.";
-
+    else if (
+      textoLower.includes("borra") ||
+      textoLower.includes("borrá") ||
+      textoLower.includes("elimina")
+    ) {
+      action = "delete";
     }
 
-    // 🔹 PASAME (BUSCAR REAL)
-    else if (textoLower.includes("pasame")) {
+    else if (
+      textoLower.includes("pasame") ||
+      textoLower.includes("pasá") ||
+      textoLower.includes("dame") ||
+      textoLower.includes("buscar") ||
+      textoLower.includes("buscá") ||
+      textoLower.includes("traeme") ||
+      textoLower.includes("traé")
+    ) {
+      action = "get";
+    }
+
+    // 🔹 Ejecutar acción contra Sheets
+    if (action) {
 
       const res = await fetch(SHEETS_WEBAPP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "get", text })
+        body: JSON.stringify({ action, text })
       });
 
       const data = await res.json();
 
-      if (data.ok && data.result) {
-        respuestaFinal = data.result;
-      } else {
-        respuestaFinal = "No encontré ese dato.";
+      if (action === "add") {
+        respuestaFinal = "Listo, lo guardé.";
       }
-    }
 
-    // 🔹 CONSULTA NORMAL
-    else {
+      else if (action === "delete") {
+        respuestaFinal = data.ok
+          ? "He borrado el dato."
+          : "No encontré ese dato para borrar.";
+      }
+
+      else if (action === "get") {
+        respuestaFinal = data.ok && data.result
+          ? data.result
+          : "No encontré ese dato.";
+      }
+
+    } else {
       respuestaFinal = "No es una acción válida.";
     }
 
