@@ -1,186 +1,293 @@
-
-       <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Automatic Life</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automatic Life</title>
 
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-      font-family: 'Orbitron', sans-serif;
-      color: #00ffea;
-      overflow: hidden;
-    }
+<!-- Google Identity -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 50px;
-      text-shadow: 0 0 10px #00ffea, 0 0 20px #00ffea, 0 0 40px #00ffea;
-      animation: glow 2s ease-in-out infinite alternate;
-    }
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  font-family: Arial, sans-serif;
+  color: #00ffea;
+  overflow: hidden;
+}
 
-    #startBtn {
-      background: transparent;
-      border: 2px solid #00ffea;
-      color: #00ffea;
-      padding: 20px 50px;
-      font-size: 1.5rem;
-      font-weight: bold;
-      border-radius: 12px;
-      cursor: pointer;
-      text-transform: uppercase;
-      box-shadow: 0 0 5px #00ffea, 0 0 20px #00ffea, 0 0 40px #00ffea;
-      transition: all 0.2s ease-in-out;
-      animation: pulse 1.5s infinite;
-    }
+/* Top Bar */
+#topBar {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
 
-    #startBtn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      animation: none;
-      box-shadow: none;
-    }
+#userPanel {
+  cursor: pointer;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 0.9rem;
+}
 
-    #startBtn:hover {
-      background: rgba(0,255,234,0.1);
-      box-shadow: 0 0 10px #00ffea, 0 0 30px #00ffea, 0 0 60px #00ffea;
-    }
+.planBadge {
+  background: rgba(0,255,234,0.15);
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #00ffea;
+  font-size: 0.7rem;
+}
 
-    p {
-      margin-top: 30px;
-      font-size: 1.2rem;
-      text-align: center;
-      max-width: 80%;
-      color: #00ffea;
-      text-shadow: 0 0 5px #00ffea;
-    }
+#userMenu {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  background: rgba(0,0,0,0.9);
+  border: 1px solid #00ffea;
+  padding: 10px;
+  border-radius: 8px;
+  min-width: 140px;
+}
 
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
+#userMenu div {
+  padding: 6px 0;
+  cursor: pointer;
+}
 
-    @keyframes glow {
-      0% { text-shadow: 0 0 5px #00ffea; }
-      100% { text-shadow: 0 0 20px #00ffea; }
-    }
-  </style>
+#userMenu div:hover {
+  opacity: 0.7;
+}
 
-  <!-- Google Login -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+.hidden { display: none; }
+
+/* Result panel */
+#resultPanel {
+  margin-bottom: 30px;
+  padding: 20px;
+  width: 60%;
+  min-height: 50px;
+  border: 1px solid rgba(0,255,234,0.3);
+  border-radius: 12px;
+  background: rgba(0,255,234,0.05);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  text-align: center;
+}
+
+#resultPanel.show { opacity: 1; }
+
+/* GO button */
+#startBtn {
+  position: relative;
+  background: radial-gradient(circle at center, #00ffea 0%, #00b3a4 40%, transparent 70%);
+  border: 2px solid #00ffea;
+  color: #001a18;
+  padding: 22px 60px;
+  font-size: 1.6rem;
+  font-weight: bold;
+  border-radius: 50px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  box-shadow:
+    0 0 10px #00ffea,
+    0 0 30px #00ffea,
+    0 0 60px rgba(0,255,234,0.6);
+}
+
+/* Hover */
+#startBtn:hover:not(:disabled) {
+  transform: scale(1.08);
+  box-shadow:
+    0 0 20px #00ffea,
+    0 0 60px #00ffea,
+    0 0 100px rgba(0,255,234,0.8);
+}
+
+/* Disabled */
+#startBtn:disabled {
+  background: transparent;
+  border: 2px solid rgba(0,255,234,0.2);
+  color: rgba(0,255,234,0.3);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Efecto pulso */
+#startBtn::after {
+  content: "";
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(0,255,234,0.4) 0%, transparent 60%);
+  top: -50%;
+  left: -50%;
+  animation: rotateEnergy 4s linear infinite;
+}
+
+@keyframes rotateEnergy {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
 </head>
 
 <body>
 
-  <div id="g_id_onload"
-       data-client_id="687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com"
-       data-callback="handleCredentialResponse"
-       data-auto_prompt="false">
+<!-- Google auto loader -->
+<div id="g_id_onload"
+     data-client_id="687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com"
+     data-callback="handleCredentialResponse"
+     data-auto_prompt="false">
+</div>
+
+<!-- TOP BAR -->
+<div id="topBar">
+
+  <!-- Google Button -->
+  <div class="g_id_signin"
+       data-type="standard"
+       data-theme="outline"
+       data-size="medium">
   </div>
 
-  <div class="g_id_signin" data-type="standard"></div>
+  <!-- User Panel -->
+  <div id="userPanel" class="hidden" onclick="toggleMenu()">
+    <span id="userEmail"></span>
+    <span class="planBadge">Free</span>
+  </div>
 
-  <h1>Automatic Life</h1>
+  <!-- User Menu -->
+  <div id="userMenu" class="hidden">
+    <div>Ver Plan</div>
+    <div onclick="logout()">Cerrar sesión</div>
+  </div>
 
-  <button id="startBtn" disabled>GO</button>
-  <p>... <span id="transcribedText"></span></p>
+</div>
 
-  <script>
-    let userEmail = null;
-    let mediaRecorder;
-    let audioChunks = [];
+<div id="resultPanel"></div>
 
-    const startBtn = document.getElementById("startBtn");
-    const transcribedText = document.getElementById("transcribedText");
+<button id="startBtn" disabled>GO</button>
+<p>... <span id="transcribedText"></span></p>
 
-    // 🔐 Login Google
-    function handleCredentialResponse(response) {
-      const payload = JSON.parse(atob(response.credential.split('.')[1]));
-      userEmail = payload.email;
+<script>
+let userEmail = null;
+let mediaRecorder;
+let audioChunks = [];
 
-      startBtn.disabled = false;
+const startBtn = document.getElementById("startBtn");
+const transcribedText = document.getElementById("transcribedText");
+const resultPanel = document.getElementById("resultPanel");
+const userEmailSpan = document.getElementById("userEmail");
 
-      console.log("Usuario logueado:", userEmail);
+/* 🔐 Login Google */
+function handleCredentialResponse(response) {
+  const payload = JSON.parse(atob(response.credential.split('.')[1]));
+  userEmail = payload.email;
+
+  startBtn.disabled = false;
+  userEmailSpan.textContent = userEmail;
+
+  document.querySelector(".g_id_signin").classList.add("hidden");
+  document.getElementById("userPanel").classList.remove("hidden");
+}
+
+/* 👤 Menú */
+function toggleMenu() {
+  document.getElementById("userMenu").classList.toggle("hidden");
+}
+
+function logout() {
+  userEmail = null;
+  startBtn.disabled = true;
+  userEmailSpan.textContent = "";
+
+  document.getElementById("userPanel").classList.add("hidden");
+  document.querySelector(".g_id_signin").classList.remove("hidden");
+  document.getElementById("userMenu").classList.add("hidden");
+}
+
+/* 🎤 Grabación */
+startBtn.onclick = async () => {
+  if (!mediaRecorder || mediaRecorder.state === "inactive") {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = sendAudio;
+      mediaRecorder.start();
+
+      startBtn.textContent = "Detener";
+    } catch(err) {
+      alert("Error al acceder al micrófono.");
     }
+  } else {
+    mediaRecorder.stop();
+    startBtn.textContent = "GO";
+  }
+};
 
-    // 🎤 Grabación
-    startBtn.onclick = async () => {
-      if (!mediaRecorder || mediaRecorder.state === "inactive") {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          mediaRecorder = new MediaRecorder(stream);
-          audioChunks = [];
+async function sendAudio() {
+  const blob = new Blob(audioChunks, { type: "audio/webm" });
+  const reader = new FileReader();
+  reader.readAsDataURL(blob);
 
-          mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-          mediaRecorder.onstop = sendAudio;
-          mediaRecorder.start();
+  reader.onloadend = async () => {
+    const base64 = reader.result.split(",")[1];
 
-          startBtn.textContent = "Detener";
-          console.log("Grabando audio...");
-        } catch(err) {
-          console.error("No se pudo acceder al micrófono:", err);
-          alert("Error al acceder al micrófono.");
-        }
-      } else {
-        mediaRecorder.stop();
-        startBtn.textContent = "GO";
-        console.log("Audio detenido, enviando...");
+    try {
+      const resTrans = await fetch("/.netlify/functions/transcribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: base64
+      });
+
+      const dataTrans = await resTrans.json();
+      const texto = dataTrans.text || "[Error]";
+      transcribedText.textContent = texto;
+
+      const resResp = await fetch("/.netlify/functions/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: texto,
+          email: userEmail
+        })
+      });
+
+      const dataResp = await resResp.json();
+
+      if (dataResp.result) {
+        resultPanel.textContent = dataResp.result;
+        resultPanel.classList.add("show");
       }
-    };
 
-    async function sendAudio() {
-      const blob = new Blob(audioChunks, { type: "audio/webm" });
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
+      if (dataResp.ok && dataResp.audioBase64) {
+        const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
+        audio.play();
+      }
 
-      reader.onloadend = async () => {
-        const base64 = reader.result.split(",")[1];
-
-        try {
-          // 1️⃣ Transcribir
-          const resTrans = await fetch("/.netlify/functions/transcribe", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: base64
-          });
-
-          const dataTrans = await resTrans.json();
-          const texto = dataTrans.text || "[Error de transcripción]";
-          transcribedText.textContent = texto;
-
-          // 2️⃣ Responder + guardar email
-          const resResp = await fetch("/.netlify/functions/respond", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              text: texto,
-              email: userEmail
-            })
-          });
-
-          const dataResp = await resResp.json();
-
-          if (dataResp.ok && dataResp.audioBase64) {
-            const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
-            audio.play();
-          }
-
-        } catch (err) {
-          console.error("Error:", err);
-          transcribedText.textContent = "[Error]";
-        }
-      };
+    } catch (err) {
+      transcribedText.textContent = "[Error]";
     }
-  </script>
+  };
+}
+</script>
 
 </body>
 </html>
