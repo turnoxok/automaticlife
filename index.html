@@ -133,25 +133,14 @@
 
 <body>
 <div id="topBar">
-  <div id="userPanel" onclick="toggleMenu()">
-    <span id="userEmail"></span>
-   
-  </div>
 
-  <div id="userMenu" class="hidden">
-    <div>Ver Plan</div>
-    <div onclick="logout()">Cerrar sesión</div>
-  </div>
-</div>
-       
   <div id="g_id_onload"
        data-client_id="687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com"
        data-callback="handleCredentialResponse"
        data-auto_prompt="false">
   </div>
 
-  <div id="topBar">
-
+  <!-- Botón Google (solo visible si NO está logueado) -->
   <div id="loginContainer">
     <div class="g_id_signin"
          data-type="icon"
@@ -160,6 +149,7 @@
     </div>
   </div>
 
+  <!-- Panel usuario (oculto hasta login) -->
   <div id="userPanel" class="hidden" onclick="toggleMenu()">
     <span id="userEmail"></span>
     <span class="planBadge">Free</span>
@@ -172,12 +162,10 @@
 
 </div>
 
- 
 <div id="resultPanel"></div>
-        <h1></h1>
-  <button id="startBtn" disabled>GO</button>
-  <p>... <span id="transcribedText"></span></p>
 
+<button id="startBtn" disabled>GO</button>
+<p>... <span id="transcribedText"></span></p>
 <script>
 let userEmail = null;
 let mediaRecorder;
