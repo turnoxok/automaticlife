@@ -50,9 +50,9 @@ body {
 
 #userMenu {
   position: absolute;
-  top: 50px;
+  top: 25px;
   right: 0;
-  background: rgba(0,0,0,0.9);
+  background: rgba(0,255,234,0.15);
   border: 1px solid #00ffea;
   padding: 10px;
   border-radius: 8px;
@@ -72,12 +72,12 @@ body {
 
 /* Result panel */
 #resultPanel {
-  margin-bottom: 30px;
-  padding: 20px;
-  width: 60%;
-  min-height: 50px;
-  border: 1px solid rgba(0,255,234,0.3);
-  border-radius: 12px;
+  margin-bottom: 150px;
+  padding: 10px;
+  width: 92%;
+  min-height: 20px;
+  border: 2px solid rgba(0,255,234,0.3);
+  border-radius: 50px;
   background: rgba(0,255,234,0.05);
   backdrop-filter: blur(10px);
   opacity: 0;
@@ -88,59 +88,66 @@ body {
 #resultPanel.show { opacity: 1; }
 
 /* GO button */
-#startBtn {
+#aiCore {
   position: relative;
-  background: radial-gradient(circle at center, #00ffea 0%, #00b3a4 40%, transparent 70%);
-  border: 2px solid #00ffea;
-  color: #001a18;
-  padding: 22px 60px;
-  font-size: 1.6rem;
-  font-weight: bold;
-  border-radius: 50px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #00ffea 99%, #003a38 99%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  transition: all 0.3s ease;
-  overflow: hidden;
-  box-shadow:
-    0 0 10px #00ffea,
-    0 0 30px #00ffea,
-    0 0 60px rgba(0,255,234,0.6);
-}
-
-/* Hover */
-#startBtn:hover:not(:disabled) {
-  transform: scale(1.08);
   box-shadow:
     0 0 20px #00ffea,
-    0 0 60px #00ffea,
-    0 0 100px rgba(0,255,234,0.8);
+    0 0 60px rgba(0,255,234,0.7);
+  transition: 0.3s ease;
 }
 
-/* Disabled */
-#startBtn:disabled {
-  background: transparent;
-  border: 2px solid rgba(0,255,234,0.2);
-  color: rgba(0,255,234,0.3);
-  box-shadow: none;
-  cursor: not-allowed;
+#coreText {
+  color: #001a18;
+  font-weight: bold;
+  font-size: 1.4rem;
+  letter-spacing: 3px;
 }
 
-/* Efecto pulso */
-#startBtn::after {
-  content: "";
+.pulseRing {
   position: absolute;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(0,255,234,0.4) 0%, transparent 60%);
-  top: -50%;
-  left: -50%;
-  animation: rotateEnergy 4s linear infinite;
+  width: 150px;
+  height: 150px;
+  border: 2px solid #00ffea;
+  border-radius: 50%;
+  opacity: 0;
 }
 
-@keyframes rotateEnergy {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.ai-active .pulseRing {
+  animation: pulseWave 1.5s infinite;
+}
+
+.pulseRing:nth-child(1) {
+  animation-delay: 0s;
+}
+.pulseRing:nth-child(2) {
+  animation-delay: 0.7s;
+}
+
+@keyframes pulseWave {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+  #transcribedText {
+  display: block;
+  margin-top: 50px;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  opacity: 0.7;
+  color: #00ffea;
 }
 </style>
 </head>
@@ -157,12 +164,7 @@ body {
 <!-- TOP BAR -->
 <div id="topBar">
 
-  <!-- Google Button -->
-  <div class="g_id_signin"
-       data-type="standard"
-       data-theme="outline"
-       data-size="medium">
-  </div>
+  
 
   <!-- User Panel -->
   <div id="userPanel" class="hidden" onclick="toggleMenu()">
@@ -172,23 +174,35 @@ body {
 
   <!-- User Menu -->
   <div id="userMenu" class="hidden">
+    
     <div>Ver Plan</div>
     <div onclick="logout()">Cerrar sesión</div>
+    <!-- Google Button -->
+  <div class="g_id_signin"
+       data-type="standard"
+       data-theme="outline"
+       data-size="medium">
+  </div>
   </div>
 
 </div>
 
 <div id="resultPanel"></div>
 
-<button id="startBtn" disabled>GO</button>
-<p>... <span id="transcribedText"></span></p>
+<div id="aiCore">
+  <div class="pulseRing"></div>
+  <div class="pulseRing"></div>
+  <div id="coreText">INICIA SESION</div>
+</div>
+<p><span id="transcribedText"></span></p>
 
 <script>
 let userEmail = null;
 let mediaRecorder;
 let audioChunks = [];
 
-const startBtn = document.getElementById("startBtn");
+const aiCore = document.getElementById("aiCore");
+const coreText = document.getElementById("coreText");
 const transcribedText = document.getElementById("transcribedText");
 const resultPanel = document.getElementById("resultPanel");
 const userEmailSpan = document.getElementById("userEmail");
@@ -198,11 +212,11 @@ function handleCredentialResponse(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
   userEmail = payload.email;
 
-  startBtn.disabled = false;
   userEmailSpan.textContent = userEmail;
 
   document.querySelector(".g_id_signin").classList.add("hidden");
   document.getElementById("userPanel").classList.remove("hidden");
+  document.getElementById("userMenu").classList.add("hidden");
 }
 
 /* 👤 Menú */
@@ -212,16 +226,33 @@ function toggleMenu() {
 
 function logout() {
   userEmail = null;
-  startBtn.disabled = true;
   userEmailSpan.textContent = "";
 
   document.getElementById("userPanel").classList.add("hidden");
   document.querySelector(".g_id_signin").classList.remove("hidden");
   document.getElementById("userMenu").classList.add("hidden");
+
+  stopCoreAnimation();
+  coreText.textContent = "GO";
 }
 
-/* 🎤 Grabación */
-startBtn.onclick = async () => {
+/* 🔘 Activar / Desactivar animación núcleo */
+
+function startCoreAnimation(label) {
+  aiCore.classList.add("ai-active");
+  coreText.textContent = label;
+}
+
+function stopCoreAnimation() {
+  aiCore.classList.remove("ai-active");
+  coreText.textContent = "GO";
+}
+
+/* 🎤 Click en núcleo */
+aiCore.onclick = async () => {
+
+  if (!userEmail) return;
+
   if (!mediaRecorder || mediaRecorder.state === "inactive") {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -230,18 +261,21 @@ startBtn.onclick = async () => {
 
       mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
       mediaRecorder.onstop = sendAudio;
-      mediaRecorder.start();
 
-      startBtn.textContent = "Detener";
+      mediaRecorder.start();
+      startCoreAnimation("REC");
+
     } catch(err) {
       alert("Error al acceder al micrófono.");
     }
+
   } else {
     mediaRecorder.stop();
-    startBtn.textContent = "GO";
+    stopCoreAnimation();
   }
 };
 
+/* 📤 Enviar audio */
 async function sendAudio() {
   const blob = new Blob(audioChunks, { type: "audio/webm" });
   const reader = new FileReader();
@@ -251,6 +285,9 @@ async function sendAudio() {
     const base64 = reader.result.split(",")[1];
 
     try {
+
+      startCoreAnimation("...");
+
       const resTrans = await fetch("/.netlify/functions/transcribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -278,12 +315,24 @@ async function sendAudio() {
       }
 
       if (dataResp.ok && dataResp.audioBase64) {
+
         const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
+
+        startCoreAnimation("AI");
+
         audio.play();
+
+        audio.onended = () => {
+          stopCoreAnimation();
+        };
+
+      } else {
+        stopCoreAnimation();
       }
 
     } catch (err) {
       transcribedText.textContent = "[Error]";
+      stopCoreAnimation();
     }
   };
 }
