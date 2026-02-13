@@ -158,108 +158,28 @@
   <button id="startBtn" disabled>GO</button>
   <p>... <span id="transcribedText"></span></p>
 
-  <script>
-    let userEmail = null;
-    let mediaRecorder;
-    let audioChunks = [];
+<script>
+let userEmail = null;
+let mediaRecorder;
+let audioChunks = [];
 
-    const startBtn = document.getElementById("startBtn");
-    const transcribedText = document.getElementById("transcribedText");
-
-    // 🔐 Login Google
-    function handleCredentialResponse(response) {
-      const payload = JSON.parse(atob(response.credential.split('.')[1]));
-      userEmail = payload.email;
-
-      startBtn.disabled = false;
-
-      console.log("Usuario logueado:", userEmail);
-    }
-
-    // 🎤 Grabación
-    startBtn.onclick = async () => {
-      if (!mediaRecorder || mediaRecorder.state === "inactive") {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          mediaRecorder = new MediaRecorder(stream);
-          audioChunks = [];
-
-          mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-          mediaRecorder.onstop = sendAudio;
-          mediaRecorder.start();
-
-          startBtn.textContent = "Detener";
-          console.log("Grabando audio...");
-        } catch(err) {
-          console.error("No se pudo acceder al micrófono:", err);
-          alert("Error al acceder al micrófono.");
-        }
-      } else {
-        mediaRecorder.stop();
-        startBtn.textContent = "GO";
-        console.log("Audio detenido, enviando...");
-      }
-    };
-
-    async function sendAudio() {
-      const blob = new Blob(audioChunks, { type: "audio/webm" });
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-
-      reader.onloadend = async () => {
-        const base64 = reader.result.split(",")[1];
-if (dataResp.result) {
-  resultPanel.textContent = dataResp.result;
-  resultPanel.classList.add("show");
-}
-        try {
-          // 1️⃣ Transcribir
-          const resTrans = await fetch("/.netlify/functions/transcribe", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: base64
-          });
-
-          const dataTrans = await resTrans.json();
-          const texto = dataTrans.text || "[Error de transcripción]";
-          transcribedText.textContent = texto;
-
-          // 2️⃣ Responder + guardar email
-          const resResp = await fetch("/.netlify/functions/respond", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              text: texto,
-              email: userEmail
-            })
-          });
-
-          const dataResp = await resResp.json();
-
-          if (dataResp.ok && dataResp.audioBase64) {
-            const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
-            audio.play();
-          }
-
-        } catch (err) {
-          console.error("Error:", err);
-          transcribedText.textContent = "[Error]";
-        }
-      };
-    }
-  </script>
-       <script>
+const startBtn = document.getElementById("startBtn");
+const transcribedText = document.getElementById("transcribedText");
 const resultPanel = document.getElementById("resultPanel");
 const userEmailSpan = document.getElementById("userEmail");
 
+// 🔐 Login Google
 function handleCredentialResponse(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
   userEmail = payload.email;
 
   startBtn.disabled = false;
   userEmailSpan.textContent = userEmail;
+
+  console.log("Usuario logueado:", userEmail);
 }
 
+// 👤 Menú usuario
 function toggleMenu() {
   document.getElementById("userMenu").classList.toggle("hidden");
 }
@@ -269,6 +189,79 @@ function logout() {
   startBtn.disabled = true;
   userEmailSpan.textContent = "";
   document.getElementById("userMenu").classList.add("hidden");
+}
+
+// 🎤 Grabación
+startBtn.onclick = async () => {
+  if (!mediaRecorder || mediaRecorder.state === "inactive") {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+      mediaRecorder.onstop = sendAudio;
+      mediaRecorder.start();
+
+      startBtn.textContent = "Detener";
+    } catch(err) {
+      console.error("Mic error:", err);
+      alert("Error al acceder al micrófono.");
+    }
+  } else {
+    mediaRecorder.stop();
+    startBtn.textContent = "GO";
+  }
+};
+
+async function sendAudio() {
+  const blob = new Blob(audioChunks, { type: "audio/webm" });
+  const reader = new FileReader();
+  reader.readAsDataURL(blob);
+
+  reader.onloadend = async () => {
+    const base64 = reader.result.split(",")[1];
+
+    try {
+      // 1️⃣ Transcribir
+      const resTrans = await fetch("/.netlify/functions/transcribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: base64
+      });
+
+      const dataTrans = await resTrans.json();
+      const texto = dataTrans.text || "[Error de transcripción]";
+      transcribedText.textContent = texto;
+
+      // 2️⃣ Responder
+      const resResp = await fetch("/.netlify/functions/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: texto,
+          email: userEmail
+        })
+      });
+
+      const dataResp = await resResp.json();
+
+      // 🔥 Mostrar resultado arriba del botón
+      if (dataResp.result) {
+        resultPanel.textContent = dataResp.result;
+        resultPanel.classList.add("show");
+      }
+
+      if (dataResp.ok && dataResp.audioBase64) {
+        const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
+        audio.play();
+      }
+
+    } catch (err) {
+      console.error("Error:", err);
+      transcribedText.textContent = "[Error]";
+    }
+  };
 }
 </script>
 </body>
