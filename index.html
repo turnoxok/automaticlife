@@ -155,6 +155,11 @@ p {
 <p>... <span id="transcribedText"></span></p>
 
 <script>
+  google.accounts.id.initialize({
+  client_id: "687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com",
+  callback: handleCredentialResponse
+});
+  
 let userEmail = null;
 let mediaRecorder;
 let audioChunks = [];
@@ -178,16 +183,7 @@ function handleCredentialResponse(response) {
 }
 
 function startLogin() {
-  google.accounts.id.initialize({
-    client_id: "687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com",
-    callback: handleCredentialResponse
-  });
-
-  google.accounts.id.prompt((notification) => {
-    if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-      console.log("Login no mostrado:", notification.getNotDisplayedReason());
-    }
-  });
+  google.accounts.id.prompt();
 }
 
 function toggleMenu() {
