@@ -110,7 +110,7 @@ body {
 }
 </style>
 
-<script src="https://accounts.google.com/gsi/client" defer></script>
+<script src="https://accounts.google.com/gsi/client" async></script>
 </head>
 
 <body>
@@ -143,18 +143,19 @@ const resultPanel = document.getElementById("resultPanel");
 const userEmailSpan = document.getElementById("userEmail");
 
 /* 🔐 Esperar que cargue todo antes de inicializar Google */
-window.onload = function() {
-
-  if (typeof google !== "undefined") {
-    google.accounts.id.initialize({
-      client_id: "687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com",
-      callback: handleCredentialResponse
-    });
-  } else {
-    console.error("Google script no cargó.");
+function initGoogle() {
+  if (typeof google === "undefined") {
+    setTimeout(initGoogle, 100);
+    return;
   }
-};
 
+  google.accounts.id.initialize({
+    client_id: "687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com",
+    callback: handleCredentialResponse
+  });
+}
+
+initGoogle();
 function handleCredentialResponse(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
   userEmail = payload.email;
