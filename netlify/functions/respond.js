@@ -41,10 +41,11 @@ const userId = email || "default";
   const base64Audio = Buffer.from(arrayBuffer).toString("base64");
 
   return {
-  statusCode: 200,
-  body: JSON.stringify({
-    ok: true,
-    audioBase64: base64Audio,
-    result: respuestaFinal
-  })
+    statusCode: 200,
+    body: JSON.stringify({
+      ok: true,
+      audioBase64: base64Audio,
+      result: respuestaFinal
+    })
+  };
 };
