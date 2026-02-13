@@ -154,17 +154,17 @@ body {
 
 <body>
 
-
+<!-- Google auto loader -->
+<div id="g_id_onload"
+     data-client_id="687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com"
+     data-callback="handleCredentialResponse"
+     data-auto_prompt="false">
+</div>
 
 <!-- TOP BAR -->
 <div id="topBar">
 
-  <!-- Google Button -->
-  <div class="g_id_signin"
-       data-type="standard"
-       data-theme="outline"
-       data-size="medium">
-  </div>
+  
 
   <!-- User Panel -->
   <div id="userPanel" class="hidden" onclick="toggleMenu()">
@@ -174,12 +174,12 @@ body {
 
   <!-- User Menu -->
   <div id="userMenu" class="hidden">
-    <!-- Google auto loader -->
-<div id="g_id_onload"
-     data-client_id="687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com"
-     data-callback="handleCredentialResponse"
-     data-auto_prompt="false">
-</div>
+    <!-- Google Button -->
+  <div class="g_id_signin"
+       data-type="standard"
+       data-theme="outline"
+       data-size="medium">
+  </div>
     <div>Ver Plan</div>
     <div onclick="logout()">Cerrar sesión</div>
   </div>
