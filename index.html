@@ -191,7 +191,8 @@ let userEmail = null;
 let mediaRecorder;
 let audioChunks = [];
 
-const startBtn = document.getElementById("startBtn");
+const aiCore = document.getElementById("aiCore");
+const coreText = document.getElementById("coreText");
 const transcribedText = document.getElementById("transcribedText");
 const resultPanel = document.getElementById("resultPanel");
 const userEmailSpan = document.getElementById("userEmail");
@@ -201,7 +202,6 @@ function handleCredentialResponse(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
   userEmail = payload.email;
 
-  startBtn.disabled = false;
   userEmailSpan.textContent = userEmail;
 
   document.querySelector(".g_id_signin").classList.add("hidden");
@@ -215,16 +215,33 @@ function toggleMenu() {
 
 function logout() {
   userEmail = null;
-  startBtn.disabled = true;
   userEmailSpan.textContent = "";
 
   document.getElementById("userPanel").classList.add("hidden");
   document.querySelector(".g_id_signin").classList.remove("hidden");
   document.getElementById("userMenu").classList.add("hidden");
+
+  stopCoreAnimation();
+  coreText.textContent = "GO";
 }
 
-/* 🎤 Grabación */
-startBtn.onclick = async () => {
+/* 🔘 Activar / Desactivar animación núcleo */
+
+function startCoreAnimation(label) {
+  aiCore.classList.add("ai-active");
+  coreText.textContent = label;
+}
+
+function stopCoreAnimation() {
+  aiCore.classList.remove("ai-active");
+  coreText.textContent = "GO";
+}
+
+/* 🎤 Click en núcleo */
+aiCore.onclick = async () => {
+
+  if (!userEmail) return;
+
   if (!mediaRecorder || mediaRecorder.state === "inactive") {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -233,18 +250,21 @@ startBtn.onclick = async () => {
 
       mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
       mediaRecorder.onstop = sendAudio;
-      mediaRecorder.start();
 
-      startBtn.textContent = "Detener";
+      mediaRecorder.start();
+      startCoreAnimation("REC");
+
     } catch(err) {
       alert("Error al acceder al micrófono.");
     }
+
   } else {
     mediaRecorder.stop();
-    startBtn.textContent = "GO";
+    stopCoreAnimation();
   }
 };
 
+/* 📤 Enviar audio */
 async function sendAudio() {
   const blob = new Blob(audioChunks, { type: "audio/webm" });
   const reader = new FileReader();
@@ -254,6 +274,9 @@ async function sendAudio() {
     const base64 = reader.result.split(",")[1];
 
     try {
+
+      startCoreAnimation("...");
+
       const resTrans = await fetch("/.netlify/functions/transcribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -281,12 +304,24 @@ async function sendAudio() {
       }
 
       if (dataResp.ok && dataResp.audioBase64) {
+
         const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
+
+        startCoreAnimation("AI");
+
         audio.play();
+
+        audio.onended = () => {
+          stopCoreAnimation();
+        };
+
+      } else {
+        stopCoreAnimation();
       }
 
     } catch (err) {
       transcribedText.textContent = "[Error]";
+      stopCoreAnimation();
     }
   };
 }
