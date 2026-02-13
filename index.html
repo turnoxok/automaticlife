@@ -156,6 +156,7 @@
   </div>
 
   <div id="userMenu" class="hidden">
+       <div id="loginOption" onclick="startLogin()">Iniciar sesión</div>
     <div>Ver Plan</div>
     <div onclick="logout()">Cerrar sesión</div>
   </div>
@@ -188,7 +189,9 @@ function handleCredentialResponse(response) {
   document.getElementById("loginContainer").classList.add("hidden");
   document.getElementById("userPanel").classList.remove("hidden");
 }
-
+function startLogin() {
+  google.accounts.id.prompt(); 
+}
 // 👤 Menú usuario
 function toggleMenu() {
   document.getElementById("userMenu").classList.toggle("hidden");
