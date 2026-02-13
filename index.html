@@ -150,7 +150,27 @@
        data-auto_prompt="false">
   </div>
 
-  <div class="g_id_signin" data-type="standard"></div>
+  <div id="topBar">
+
+  <div id="loginContainer">
+    <div class="g_id_signin"
+         data-type="icon"
+         data-size="medium"
+         data-theme="outline">
+    </div>
+  </div>
+
+  <div id="userPanel" class="hidden" onclick="toggleMenu()">
+    <span id="userEmail"></span>
+    <span class="planBadge">Free</span>
+  </div>
+
+  <div id="userMenu" class="hidden">
+    <div>Ver Plan</div>
+    <div onclick="logout()">Cerrar sesión</div>
+  </div>
+
+</div>
 
  
 <div id="resultPanel"></div>
@@ -174,9 +194,11 @@ function handleCredentialResponse(response) {
   userEmail = payload.email;
 
   startBtn.disabled = false;
+
   userEmailSpan.textContent = userEmail;
 
-  console.log("Usuario logueado:", userEmail);
+  document.getElementById("loginContainer").classList.add("hidden");
+  document.getElementById("userPanel").classList.remove("hidden");
 }
 
 // 👤 Menú usuario
@@ -187,7 +209,11 @@ function toggleMenu() {
 function logout() {
   userEmail = null;
   startBtn.disabled = true;
+
   userEmailSpan.textContent = "";
+
+  document.getElementById("userPanel").classList.add("hidden");
+  document.getElementById("loginContainer").classList.remove("hidden");
   document.getElementById("userMenu").classList.add("hidden");
 }
 
