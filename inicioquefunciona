@@ -1,11 +1,12 @@
-<!DOCTYPE html>
+
+       <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Automatic Life</title>
+
   <style>
-    /* Fondo oscuro y estilo general */
     body {
       margin: 0;
       height: 100vh;
@@ -26,7 +27,6 @@
       animation: glow 2s ease-in-out infinite alternate;
     }
 
-    /* Botón central neon */
     #startBtn {
       background: transparent;
       border: 2px solid #00ffea;
@@ -40,6 +40,13 @@
       box-shadow: 0 0 5px #00ffea, 0 0 20px #00ffea, 0 0 40px #00ffea;
       transition: all 0.2s ease-in-out;
       animation: pulse 1.5s infinite;
+    }
+
+    #startBtn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      animation: none;
+      box-shadow: none;
     }
 
     #startBtn:hover {
@@ -56,31 +63,56 @@
       text-shadow: 0 0 5px #00ffea;
     }
 
-    /* Animaciones */
     @keyframes pulse {
-      0% { transform: scale(1); box-shadow: 0 0 5px #00ffea, 0 0 20px #00ffea; }
-      50% { transform: scale(1.05); box-shadow: 0 0 15px #00ffea, 0 0 40px #00ffea; }
-      100% { transform: scale(1); box-shadow: 0 0 5px #00ffea, 0 0 20px #00ffea; }
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
     }
 
     @keyframes glow {
-      0% { text-shadow: 0 0 5px #00ffea, 0 0 10px #00ffea; }
-      100% { text-shadow: 0 0 20px #00ffea, 0 0 40px #00ffea; }
+      0% { text-shadow: 0 0 5px #00ffea; }
+      100% { text-shadow: 0 0 20px #00ffea; }
     }
   </style>
+
+  <!-- Google Login -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
+
 <body>
-  <h1></h1>
-  <button id="startBtn">GO</button>
+
+  <div id="g_id_onload"
+       data-client_id="687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com"
+       data-callback="handleCredentialResponse"
+       data-auto_prompt="false">
+  </div>
+
+  <div class="g_id_signin" data-type="standard"></div>
+
+  <h1>Automatic Life</h1>
+
+  <button id="startBtn" disabled>GO</button>
   <p>... <span id="transcribedText"></span></p>
 
   <script>
+    let userEmail = null;
     let mediaRecorder;
     let audioChunks = [];
 
     const startBtn = document.getElementById("startBtn");
     const transcribedText = document.getElementById("transcribedText");
 
+    // 🔐 Login Google
+    function handleCredentialResponse(response) {
+      const payload = JSON.parse(atob(response.credential.split('.')[1]));
+      userEmail = payload.email;
+
+      startBtn.disabled = false;
+
+      console.log("Usuario logueado:", userEmail);
+    }
+
+    // 🎤 Grabación
     startBtn.onclick = async () => {
       if (!mediaRecorder || mediaRecorder.state === "inactive") {
         try {
@@ -91,6 +123,7 @@
           mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
           mediaRecorder.onstop = sendAudio;
           mediaRecorder.start();
+
           startBtn.textContent = "Detener";
           console.log("Grabando audio...");
         } catch(err) {
@@ -111,10 +144,9 @@
 
       reader.onloadend = async () => {
         const base64 = reader.result.split(",")[1];
-        console.log("Audio base64:", base64);
 
         try {
-          // 1️⃣ Transcribir audio
+          // 1️⃣ Transcribir
           const resTrans = await fetch("/.netlify/functions/transcribe", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -122,20 +154,20 @@
           });
 
           const dataTrans = await resTrans.json();
-          console.log("Respuesta transcribe:", dataTrans);
-
           const texto = dataTrans.text || "[Error de transcripción]";
           transcribedText.textContent = texto;
 
-          // 2️⃣ Enviar a respond.js para TTS y Google Sheets
+          // 2️⃣ Responder + guardar email
           const resResp = await fetch("/.netlify/functions/respond", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ text: texto })
+            body: JSON.stringify({
+              text: texto,
+              email: userEmail
+            })
           });
 
           const dataResp = await resResp.json();
-          console.log("Respuesta respond:", dataResp);
 
           if (dataResp.ok && dataResp.audioBase64) {
             const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
@@ -143,11 +175,12 @@
           }
 
         } catch (err) {
-          console.error("Error en la transcripción o respuesta:", err);
-          transcribedText.textContent = "[Error de transcripción]";
+          console.error("Error:", err);
+          transcribedText.textContent = "[Error]";
         }
       };
     }
   </script>
+
 </body>
 </html>
