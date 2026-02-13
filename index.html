@@ -149,6 +149,11 @@ body {
   opacity: 0.7;
   color: #00ffea;
 }
+  #loginHint {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 15px;
+}
 </style>
 </head>
 
@@ -195,7 +200,7 @@ body {
   <div id="coreText">INICIA SESION</div>
 </div>
 <p><span id="transcribedText"></span></p>
-
+<p id="loginHint" class="hidden">Inicia sesión para usar Automatic Life</p>
 <script>
 let userEmail = null;
 let mediaRecorder;
@@ -206,6 +211,20 @@ const coreText = document.getElementById("coreText");
 const transcribedText = document.getElementById("transcribedText");
 const resultPanel = document.getElementById("resultPanel");
 const userEmailSpan = document.getElementById("userEmail");
+
+/* 🔊 Voz IA */
+function speak(text) {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "es-AR";
+
+  startCoreAnimation("AI");
+
+  utterance.onend = () => {
+    stopCoreAnimation();
+  };
+
+  speechSynthesis.speak(utterance);
+}
 
 /* 🔐 Login Google */
 function handleCredentialResponse(response) {
@@ -236,8 +255,7 @@ function logout() {
   coreText.textContent = "GO";
 }
 
-/* 🔘 Activar / Desactivar animación núcleo */
-
+/* 🔘 Animación núcleo */
 function startCoreAnimation(label) {
   aiCore.classList.add("ai-active");
   coreText.textContent = label;
@@ -251,9 +269,16 @@ function stopCoreAnimation() {
 /* 🎤 Click en núcleo */
 aiCore.onclick = async () => {
 
-  if (!userEmail) return;
+  // 🚫 NO LOGUEADO
+  if (!userEmail) {
+    document.getElementById("userMenu").classList.remove("hidden");
+    speak("Debes iniciar sesión con Google para continuar.");
+    return;
+  }
 
+  // 🎙 LOGUEADO
   if (!mediaRecorder || mediaRecorder.state === "inactive") {
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorder = new MediaRecorder(stream);
@@ -337,6 +362,5 @@ async function sendAudio() {
   };
 }
 </script>
-
 </body>
 </html>
