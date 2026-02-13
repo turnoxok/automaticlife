@@ -1,83 +1,29 @@
-
-       <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Automatic Life</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automatic Life</title>
 
-  <style>
-    body {
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-      font-family: 'Orbitron', sans-serif;
-      color: #00ffea;
-      overflow: hidden;
-    }
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  font-family: 'Orbitron', sans-serif;
+  color: #00ffea;
+  overflow: hidden;
+}
 
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 50px;
-      text-shadow: 0 0 10px #00ffea, 0 0 20px #00ffea, 0 0 40px #00ffea;
-      animation: glow 2s ease-in-out infinite alternate;
-    }
-
-    #startBtn {
-      background: transparent;
-      border: 2px solid #00ffea;
-      color: #00ffea;
-      padding: 20px 50px;
-      font-size: 1.5rem;
-      font-weight: bold;
-      border-radius: 12px;
-      cursor: pointer;
-      text-transform: uppercase;
-      box-shadow: 0 0 5px #00ffea, 0 0 20px #00ffea, 0 0 40px #00ffea;
-      transition: all 0.2s ease-in-out;
-      animation: pulse 1.5s infinite;
-    }
-
-    #startBtn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      animation: none;
-      box-shadow: none;
-    }
-
-    #startBtn:hover {
-      background: rgba(0,255,234,0.1);
-      box-shadow: 0 0 10px #00ffea, 0 0 30px #00ffea, 0 0 60px #00ffea;
-    }
-
-    p {
-      margin-top: 30px;
-      font-size: 1.2rem;
-      text-align: center;
-      max-width: 80%;
-      color: #00ffea;
-      text-shadow: 0 0 5px #00ffea;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
-
-    @keyframes glow {
-      0% { text-shadow: 0 0 5px #00ffea; }
-      100% { text-shadow: 0 0 20px #00ffea; }
-    }
-         #topBar {
+/* TOP BAR */
+#topBar {
   position: absolute;
   top: 20px;
   right: 30px;
-  text-align: right;
 }
 
 #userPanel {
@@ -86,7 +32,6 @@
   gap: 10px;
   align-items: center;
   font-size: 0.9rem;
-  color: #00ffea;
 }
 
 .planBadge {
@@ -99,16 +44,27 @@
 
 #userMenu {
   margin-top: 10px;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.8);
   border: 1px solid #00ffea;
   padding: 10px;
   border-radius: 8px;
+  min-width: 140px;
+}
+
+#userMenu div {
+  padding: 5px 0;
+  cursor: pointer;
+}
+
+#userMenu div:hover {
+  opacity: 0.7;
 }
 
 .hidden {
   display: none;
 }
 
+/* RESULT PANEL */
 #resultPanel {
   margin-bottom: 30px;
   padding: 20px;
@@ -120,52 +76,88 @@
   backdrop-filter: blur(10px);
   opacity: 0;
   transition: opacity 0.4s ease;
+  text-align: center;
 }
 
 #resultPanel.show {
   opacity: 1;
 }
-  </style>
 
-  <!-- Google Login -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+/* BUTTON */
+#startBtn {
+  background: transparent;
+  border: 2px solid #00ffea;
+  color: #00ffea;
+  padding: 20px 50px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  border-radius: 12px;
+  cursor: pointer;
+  text-transform: uppercase;
+  box-shadow: 0 0 5px #00ffea, 0 0 20px #00ffea, 0 0 40px #00ffea;
+  transition: all 0.2s ease-in-out;
+  animation: pulse 1.5s infinite;
+}
+
+#startBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  animation: none;
+  box-shadow: none;
+}
+
+#startBtn:hover {
+  background: rgba(0,255,234,0.1);
+  box-shadow: 0 0 10px #00ffea, 0 0 30px #00ffea, 0 0 60px #00ffea;
+}
+
+p {
+  margin-top: 30px;
+  font-size: 1.2rem;
+  text-align: center;
+  max-width: 80%;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+</style>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
+
+<!-- TOP BAR -->
 <div id="topBar">
 
   <div id="g_id_onload"
-       data-client_id="687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com"
+       data-client_id="TU_CLIENT_ID"
        data-callback="handleCredentialResponse"
        data-auto_prompt="false">
   </div>
 
-  <!-- Botón Google (solo visible si NO está logueado) -->
-  <div id="loginContainer">
-    <div class="g_id_signin"
-         data-type="icon"
-         data-size="medium"
-         data-theme="outline">
-    </div>
+  <div id="userPanel" onclick="toggleMenu()">
+    <span id="userEmail">Free</span>
+    <span class="planBadge">Free</span>
   </div>
 
-  <!-- Panel usuario (oculto hasta login) -->
-  <div id="userPanel" onclick="toggleMenu()">
-  <span id="userEmail">Free</span>
-  <span class="planBadge">Free</span>
+  <div id="userMenu" class="hidden">
+    <div id="loginOption" onclick="startLogin()">Iniciar sesión</div>
+    <div>Ver Plan</div>
+    <div onclick="logout()">Cerrar sesión</div>
+  </div>
+
 </div>
 
-<div id="userMenu" class="hidden">
-  <div id="loginOption" onclick="startLogin()">Iniciar sesión</div>
-  <div>Ver Plan</div>
-  <div onclick="logout()">Cerrar sesión</div>
-</div>
-
-
+<!-- RESULT -->
 <div id="resultPanel"></div>
 
 <button id="startBtn" disabled>GO</button>
 <p>... <span id="transcribedText"></span></p>
+
 <script>
 let userEmail = null;
 let mediaRecorder;
@@ -176,7 +168,8 @@ const transcribedText = document.getElementById("transcribedText");
 const resultPanel = document.getElementById("resultPanel");
 const userEmailSpan = document.getElementById("userEmail");
 
-// 🔐 Login Google
+/* LOGIN */
+
 function handleCredentialResponse(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
   userEmail = payload.email;
@@ -184,6 +177,7 @@ function handleCredentialResponse(response) {
   startBtn.disabled = false;
   userEmailSpan.textContent = userEmail;
 
+  document.getElementById("loginOption").classList.add("hidden");
   document.getElementById("userMenu").classList.add("hidden");
 }
 
@@ -200,12 +194,12 @@ function logout() {
   startBtn.disabled = true;
 
   userEmailSpan.textContent = "Free";
+  document.getElementById("loginOption").classList.remove("hidden");
   document.getElementById("userMenu").classList.add("hidden");
 }
 
-  
+/* RECORDING */
 
-// 🎤 Grabación
 startBtn.onclick = async () => {
   if (!mediaRecorder || mediaRecorder.state === "inactive") {
     try {
@@ -219,7 +213,6 @@ startBtn.onclick = async () => {
 
       startBtn.textContent = "Detener";
     } catch(err) {
-      console.error("Mic error:", err);
       alert("Error al acceder al micrófono.");
     }
   } else {
@@ -237,7 +230,7 @@ async function sendAudio() {
     const base64 = reader.result.split(",")[1];
 
     try {
-      // 1️⃣ Transcribir
+
       const resTrans = await fetch("/.netlify/functions/transcribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -248,7 +241,6 @@ async function sendAudio() {
       const texto = dataTrans.text || "[Error de transcripción]";
       transcribedText.textContent = texto;
 
-      // 2️⃣ Responder
       const resResp = await fetch("/.netlify/functions/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -260,7 +252,6 @@ async function sendAudio() {
 
       const dataResp = await resResp.json();
 
-      // 🔥 Mostrar resultado arriba del botón
       if (dataResp.result) {
         resultPanel.textContent = dataResp.result;
         resultPanel.classList.add("show");
@@ -272,11 +263,11 @@ async function sendAudio() {
       }
 
     } catch (err) {
-      console.error("Error:", err);
       transcribedText.textContent = "[Error]";
     }
   };
 }
 </script>
+
 </body>
 </html>
