@@ -73,6 +73,58 @@
       0% { text-shadow: 0 0 5px #00ffea; }
       100% { text-shadow: 0 0 20px #00ffea; }
     }
+         #topBar {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  text-align: right;
+}
+
+#userPanel {
+  cursor: pointer;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #00ffea;
+}
+
+.planBadge {
+  background: rgba(0,255,234,0.15);
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #00ffea;
+  font-size: 0.7rem;
+}
+
+#userMenu {
+  margin-top: 10px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid #00ffea;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.hidden {
+  display: none;
+}
+
+#resultPanel {
+  margin-bottom: 30px;
+  padding: 20px;
+  width: 60%;
+  min-height: 50px;
+  border: 1px solid rgba(0,255,234,0.3);
+  border-radius: 12px;
+  background: rgba(0,255,234,0.05);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+#resultPanel.show {
+  opacity: 1;
+}
   </style>
 
   <!-- Google Login -->
@@ -80,7 +132,18 @@
 </head>
 
 <body>
+<div id="topBar">
+  <div id="userPanel" onclick="toggleMenu()">
+    <span id="userEmail"></span>
+    <span class="planBadge">Free</span>
+  </div>
 
+  <div id="userMenu" class="hidden">
+    <div>Ver Plan</div>
+    <div onclick="logout()">Cerrar sesión</div>
+  </div>
+</div>
+       
   <div id="g_id_onload"
        data-client_id="687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com"
        data-callback="handleCredentialResponse"
@@ -89,8 +152,9 @@
 
   <div class="g_id_signin" data-type="standard"></div>
 
-  <h1>Automatic Life</h1>
-
+ 
+<div id="resultPanel"></div>
+        <h1></h1>
   <button id="startBtn" disabled>GO</button>
   <p>... <span id="transcribedText"></span></p>
 
@@ -144,7 +208,10 @@
 
       reader.onloadend = async () => {
         const base64 = reader.result.split(",")[1];
-
+if (dataResp.result) {
+  resultPanel.textContent = dataResp.result;
+  resultPanel.classList.add("show");
+}
         try {
           // 1️⃣ Transcribir
           const resTrans = await fetch("/.netlify/functions/transcribe", {
@@ -181,6 +248,28 @@
       };
     }
   </script>
+       <script>
+const resultPanel = document.getElementById("resultPanel");
+const userEmailSpan = document.getElementById("userEmail");
 
+function handleCredentialResponse(response) {
+  const payload = JSON.parse(atob(response.credential.split('.')[1]));
+  userEmail = payload.email;
+
+  startBtn.disabled = false;
+  userEmailSpan.textContent = userEmail;
+}
+
+function toggleMenu() {
+  document.getElementById("userMenu").classList.toggle("hidden");
+}
+
+function logout() {
+  userEmail = null;
+  startBtn.disabled = true;
+  userEmailSpan.textContent = "";
+  document.getElementById("userMenu").classList.add("hidden");
+}
+</script>
 </body>
 </html>
