@@ -150,18 +150,17 @@
   </div>
 
   <!-- Panel usuario (oculto hasta login) -->
-  <div id="userPanel" class="hidden" onclick="toggleMenu()">
-    <span id="userEmail"></span>
-    <span class="planBadge">Free</span>
-  </div>
-
-  <div id="userMenu" class="hidden">
-       <div id="loginOption" onclick="startLogin()">Iniciar sesión</div>
-    <div>Ver Plan</div>
-    <div onclick="logout()">Cerrar sesión</div>
-  </div>
-
+  <div id="userPanel" onclick="toggleMenu()">
+  <span id="userEmail">Free</span>
+  <span class="planBadge">Free</span>
 </div>
+
+<div id="userMenu" class="hidden">
+  <div id="loginOption" onclick="startLogin()">Iniciar sesión</div>
+  <div>Ver Plan</div>
+  <div onclick="logout()">Cerrar sesión</div>
+</div>
+
 
 <div id="resultPanel"></div>
 
@@ -183,16 +182,15 @@ function handleCredentialResponse(response) {
   userEmail = payload.email;
 
   startBtn.disabled = false;
-
   userEmailSpan.textContent = userEmail;
 
-  document.getElementById("loginContainer").classList.add("hidden");
-  document.getElementById("userPanel").classList.remove("hidden");
+  document.getElementById("userMenu").classList.add("hidden");
 }
+
 function startLogin() {
-  google.accounts.id.prompt(); 
+  google.accounts.id.prompt();
 }
-// 👤 Menú usuario
+
 function toggleMenu() {
   document.getElementById("userMenu").classList.toggle("hidden");
 }
@@ -201,12 +199,11 @@ function logout() {
   userEmail = null;
   startBtn.disabled = true;
 
-  userEmailSpan.textContent = "";
-
-  document.getElementById("userPanel").classList.add("hidden");
-  document.getElementById("loginContainer").classList.remove("hidden");
+  userEmailSpan.textContent = "Free";
   document.getElementById("userMenu").classList.add("hidden");
 }
+
+  
 
 // 🎤 Grabación
 startBtn.onclick = async () => {
