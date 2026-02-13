@@ -25,7 +25,7 @@ const userId = email || "default";
     const data = await res.json();
 
     if (action === "add") respuestaFinal = "Listo, lo guardé.";
-    else if (action === "delete") respuestaFinal = data.ok ? "He borrado el dato." : "No encontré ese dato para borrar.";
+    else if (action === "delete") respuestaFinal = data.ok ? "Eliminado." : "No encontré ese dato para borrar.";
     else if (action === "get") respuestaFinal = data.ok && data.result ? data.result : "No encontré ese dato.";
   } else {
     respuestaFinal = "No es una acción válida.";
