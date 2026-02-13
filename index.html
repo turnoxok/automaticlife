@@ -197,7 +197,7 @@ body {
 <div id="aiCore">
   <div class="pulseRing"></div>
   <div class="pulseRing"></div>
-  <div id="coreText">INICIA SESION</div>
+  <div id="coreText"></div>
 </div>
 <p><span id="transcribedText"></span></p>
 <p id="loginHint" class="hidden">Inicia sesión para usar Automatic Life</p>
@@ -211,6 +211,7 @@ const coreText = document.getElementById("coreText");
 const transcribedText = document.getElementById("transcribedText");
 const resultPanel = document.getElementById("resultPanel");
 const userEmailSpan = document.getElementById("userEmail");
+  
 
 /* 🔊 Voz IA */
 function speak(text) {
@@ -236,6 +237,8 @@ function handleCredentialResponse(response) {
   document.querySelector(".g_id_signin").classList.add("hidden");
   document.getElementById("userPanel").classList.remove("hidden");
   document.getElementById("userMenu").classList.add("hidden");
+  document.getElementById("loginHint").classList.remove("hidden");
+  document.getElementById("loginHint").classList.add("hidden");
 }
 
 /* 👤 Menú */
