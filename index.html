@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Automatic Life</title>
 
+<!-- Google Identity -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
 <style>
 body {
   margin: 0;
@@ -14,15 +17,19 @@ body {
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-  font-family: 'Orbitron', sans-serif;
+  font-family: Arial, sans-serif;
   color: #00ffea;
   overflow: hidden;
 }
 
+/* Top Bar */
 #topBar {
   position: absolute;
   top: 20px;
   right: 30px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 #userPanel {
@@ -42,8 +49,10 @@ body {
 }
 
 #userMenu {
-  margin-top: 10px;
-  background: rgba(0,0,0,0.8);
+  position: absolute;
+  top: 50px;
+  right: 0;
+  background: rgba(0,0,0,0.9);
   border: 1px solid #00ffea;
   padding: 10px;
   border-radius: 8px;
@@ -51,7 +60,7 @@ body {
 }
 
 #userMenu div {
-  padding: 5px 0;
+  padding: 6px 0;
   cursor: pointer;
 }
 
@@ -61,6 +70,7 @@ body {
 
 .hidden { display: none; }
 
+/* Result panel */
 #resultPanel {
   margin-bottom: 30px;
   padding: 20px;
@@ -77,6 +87,7 @@ body {
 
 #resultPanel.show { opacity: 1; }
 
+/* GO button */
 #startBtn {
   background: transparent;
   border: 2px solid #00ffea;
@@ -109,26 +120,43 @@ body {
   100% { transform: scale(1); }
 }
 </style>
-
-<script src="https://accounts.google.com/gsi/client" async></script>
 </head>
 
 <body>
 
+<!-- Google auto loader -->
+<div id="g_id_onload"
+     data-client_id="687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com"
+     data-callback="handleCredentialResponse"
+     data-auto_prompt="false">
+</div>
+
+<!-- TOP BAR -->
 <div id="topBar">
-  <div id="userPanel" onclick="toggleMenu()">
+
+  <!-- Google Button -->
+  <div class="g_id_signin"
+       data-type="standard"
+       data-theme="outline"
+       data-size="medium">
+  </div>
+
+  <!-- User Panel -->
+  <div id="userPanel" class="hidden" onclick="toggleMenu()">
     <span id="userEmail"></span>
     <span class="planBadge">Free</span>
   </div>
 
+  <!-- User Menu -->
   <div id="userMenu" class="hidden">
-    <div id="loginOption" onclick="startLogin()">Iniciar sesión</div>
     <div>Ver Plan</div>
     <div onclick="logout()">Cerrar sesión</div>
   </div>
+
 </div>
 
 <div id="resultPanel"></div>
+
 <button id="startBtn" disabled>GO</button>
 <p>... <span id="transcribedText"></span></p>
 
@@ -142,20 +170,7 @@ const transcribedText = document.getElementById("transcribedText");
 const resultPanel = document.getElementById("resultPanel");
 const userEmailSpan = document.getElementById("userEmail");
 
-/* 🔐 Esperar que cargue todo antes de inicializar Google */
-function initGoogle() {
-  if (typeof google === "undefined") {
-    setTimeout(initGoogle, 100);
-    return;
-  }
-
-  google.accounts.id.initialize({
-    client_id: "687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com",
-    callback: handleCredentialResponse
-  });
-}
-
-initGoogle();
+/* 🔐 Login Google */
 function handleCredentialResponse(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
   userEmail = payload.email;
@@ -163,18 +178,11 @@ function handleCredentialResponse(response) {
   startBtn.disabled = false;
   userEmailSpan.textContent = userEmail;
 
-  document.getElementById("loginOption").classList.add("hidden");
-  document.getElementById("userMenu").classList.add("hidden");
+  document.querySelector(".g_id_signin").classList.add("hidden");
+  document.getElementById("userPanel").classList.remove("hidden");
 }
 
-function startLogin() {
-  if (typeof google !== "undefined") {
-    google.accounts.id.prompt();
-  } else {
-    alert("Google aún no cargó.");
-  }
-}
-
+/* 👤 Menú */
 function toggleMenu() {
   document.getElementById("userMenu").classList.toggle("hidden");
 }
@@ -183,12 +191,13 @@ function logout() {
   userEmail = null;
   startBtn.disabled = true;
   userEmailSpan.textContent = "";
-  document.getElementById("loginOption").classList.remove("hidden");
+
+  document.getElementById("userPanel").classList.add("hidden");
+  document.querySelector(".g_id_signin").classList.remove("hidden");
   document.getElementById("userMenu").classList.add("hidden");
 }
 
-/* 🎤 GRABACIÓN */
-
+/* 🎤 Grabación */
 startBtn.onclick = async () => {
   if (!mediaRecorder || mediaRecorder.state === "inactive") {
     try {
@@ -226,7 +235,7 @@ async function sendAudio() {
       });
 
       const dataTrans = await resTrans.json();
-      const texto = dataTrans.text || "[Error de transcripción]";
+      const texto = dataTrans.text || "[Error]";
       transcribedText.textContent = texto;
 
       const resResp = await fetch("/.netlify/functions/respond", {
