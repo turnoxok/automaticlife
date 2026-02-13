@@ -19,7 +19,6 @@ body {
   overflow: hidden;
 }
 
-/* TOP BAR */
 #topBar {
   position: absolute;
   top: 20px;
@@ -60,11 +59,8 @@ body {
   opacity: 0.7;
 }
 
-.hidden {
-  display: none;
-}
+.hidden { display: none; }
 
-/* RESULT PANEL */
 #resultPanel {
   margin-bottom: 30px;
   padding: 20px;
@@ -79,11 +75,8 @@ body {
   text-align: center;
 }
 
-#resultPanel.show {
-  opacity: 1;
-}
+#resultPanel.show { opacity: 1; }
 
-/* BUTTON */
 #startBtn {
   background: transparent;
   border: 2px solid #00ffea;
@@ -108,14 +101,6 @@ body {
 
 #startBtn:hover {
   background: rgba(0,255,234,0.1);
-  box-shadow: 0 0 10px #00ffea, 0 0 30px #00ffea, 0 0 60px #00ffea;
-}
-
-p {
-  margin-top: 30px;
-  font-size: 1.2rem;
-  text-align: center;
-  max-width: 80%;
 }
 
 @keyframes pulse {
@@ -125,16 +110,12 @@ p {
 }
 </style>
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://accounts.google.com/gsi/client" defer></script>
 </head>
 
 <body>
 
-<!-- TOP BAR -->
 <div id="topBar">
-
-  
-
   <div id="userPanel" onclick="toggleMenu()">
     <span id="userEmail"></span>
     <span class="planBadge">Free</span>
@@ -145,21 +126,13 @@ p {
     <div>Ver Plan</div>
     <div onclick="logout()">Cerrar sesión</div>
   </div>
-
 </div>
 
-<!-- RESULT -->
 <div id="resultPanel"></div>
-
 <button id="startBtn" disabled>GO</button>
 <p>... <span id="transcribedText"></span></p>
 
 <script>
-  google.accounts.id.initialize({
-  client_id: "687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com",
-  callback: handleCredentialResponse
-});
-  
 let userEmail = null;
 let mediaRecorder;
 let audioChunks = [];
@@ -169,7 +142,18 @@ const transcribedText = document.getElementById("transcribedText");
 const resultPanel = document.getElementById("resultPanel");
 const userEmailSpan = document.getElementById("userEmail");
 
-/* LOGIN */
+/* 🔐 Esperar que cargue todo antes de inicializar Google */
+window.onload = function() {
+
+  if (typeof google !== "undefined") {
+    google.accounts.id.initialize({
+      client_id: "687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com",
+      callback: handleCredentialResponse
+    });
+  } else {
+    console.error("Google script no cargó.");
+  }
+};
 
 function handleCredentialResponse(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
@@ -183,7 +167,11 @@ function handleCredentialResponse(response) {
 }
 
 function startLogin() {
-  google.accounts.id.prompt();
+  if (typeof google !== "undefined") {
+    google.accounts.id.prompt();
+  } else {
+    alert("Google aún no cargó.");
+  }
 }
 
 function toggleMenu() {
@@ -193,13 +181,12 @@ function toggleMenu() {
 function logout() {
   userEmail = null;
   startBtn.disabled = true;
-
-  userEmailSpan.textContent = "Free";
+  userEmailSpan.textContent = "";
   document.getElementById("loginOption").classList.remove("hidden");
   document.getElementById("userMenu").classList.add("hidden");
 }
 
-/* RECORDING */
+/* 🎤 GRABACIÓN */
 
 startBtn.onclick = async () => {
   if (!mediaRecorder || mediaRecorder.state === "inactive") {
@@ -231,7 +218,6 @@ async function sendAudio() {
     const base64 = reader.result.split(",")[1];
 
     try {
-
       const resTrans = await fetch("/.netlify/functions/transcribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
