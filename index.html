@@ -469,8 +469,7 @@ sendTextBtn.onclick = async () => {
 
     if (dataResp.result) {
 
-  // Si NO estamos editando y el texto original no fue "editar"
-  const esBusqueda = !modoEdicion && texto.toLowerCase() !== "editar";
+  const esBusqueda = dataResp.action === "get";
 
   mostrarResultado(dataResp.result, esBusqueda);
 }
@@ -553,7 +552,7 @@ async function sendAudio() {
 
     if (dataResp.result) {
 
-  const esBusqueda = texto.toLowerCase() !== "editar";
+  const esBusqueda = dataResp.action === "get";
 
   mostrarResultado(dataResp.result, esBusqueda);
 }
