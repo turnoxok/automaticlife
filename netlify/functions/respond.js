@@ -60,31 +60,17 @@ export const handler = async (event) => {
       const data = await res.json();
 
       if (action === "add") respuestaFinal = "Listo, lo guardé.";
-      else if (action === "delete") respuestaFinal = data.ok ? "Eliminado." : "No encontré ese dato para borrar.";
-      else if (action === "get") {
-  respuestaFinal = data.ok && data.result
-    ? `Encontré esta infirmación: ${data.result}`
-    : "No encontré ese dato.";
-}
-    }
-
-    else {
-      respuestaFinal = "No es una acción válida.";
-    }
-
-  } catch (error) {
-    console.error(error);
-    respuestaFinal = "Ocurrió un error.";
+    else if (action === "delete") respuestaFinal = data.ok ? "Eliminado." : "No encontré ese dato para borrar.";
+    else if (action === "get") respuestaFinal = data.ok && data.result ? data.result : "No encontré ese dato.";
+  } else {
+    respuestaFinal = "No es una acción válida.";
   }
 
-  
-
-const audioResponse = await openai.audio.speech.create({
-  model: "gpt-4o-mini-tts",
-  voice: "marin",
-  input: respuestaFinal
-});
-
+  const audioResponse = await openai.audio.speech.create({
+    model: "gpt-4o-mini-tts",
+    voice: "marin",
+    input: respuestaFinal
+  });
   const arrayBuffer = await audioResponse.arrayBuffer();
   const base64Audio = Buffer.from(arrayBuffer).toString("base64");
 
