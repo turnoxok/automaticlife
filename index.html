@@ -154,6 +154,48 @@ body {
   opacity: 0.7;
   margin-top: 15px;
 }
+  /* Floating button */
+#textFAB {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: #00ffea;
+  color: #001a18;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: 0 0 20px #00ffea;
+}
+
+/* Modal */
+#textModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#textBox {
+  background: #111;
+  padding: 20px;
+  border-radius: 12px;
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#textInput {
+  height: 80px;
+  resize: none;
+}
 </style>
 </head>
 
@@ -201,6 +243,17 @@ body {
 </div>
 <p><span id="transcribedText"></span></p>
 <p id="loginHint" class="hidden">Inicia sesión para usar Automatic Life</p>
+
+  <!-- ✏️ Botón flotante -->
+<div id="textFAB">✏</div>
+
+<!-- 📝 Modal escritura -->
+<div id="textModal" class="hidden">
+  <div id="textBox">
+    <textarea id="textInput" placeholder="Escribe tu solicitud..."></textarea>
+    <button id="sendTextBtn">Enviar</button>
+  </div>
+</div>
 <script>
 let userEmail = null;
 let mediaRecorder;
@@ -211,6 +264,10 @@ const coreText = document.getElementById("coreText");
 const transcribedText = document.getElementById("transcribedText");
 const resultPanel = document.getElementById("resultPanel");
 const userEmailSpan = document.getElementById("userEmail");
+  const textFAB = document.getElementById("textFAB");
+const textModal = document.getElementById("textModal");
+const textInput = document.getElementById("textInput");
+const sendTextBtn = document.getElementById("sendTextBtn");
   
 
 /* 🔊 Voz IA */
@@ -276,7 +333,77 @@ function stopCoreAnimation() {
   aiCore.classList.remove("ai-active");
   coreText.textContent = "GO";
 }
+  /* solicitud de accion por texto */
+textFAB.onclick = () => {
 
+  if (!userEmail) {
+    document.getElementById("userMenu").classList.remove("hidden");
+    document.getElementById("loginHint").classList.remove("hidden");
+    speak("Debes iniciar sesión con Google para continuar.");
+    return;
+  }
+
+  textModal.classList.remove("hidden");
+};
+/* solicitud de accion por texto - cerrar modal*/
+  textModal.onclick = (e) => {
+  if (e.target === textModal) {
+    textModal.classList.add("hidden");
+  }
+};
+
+  /* Enviar texto*/
+sendTextBtn.onclick = async () => {
+
+  const texto = textInput.value.trim();
+  if (!texto) return;
+
+  textModal.classList.add("hidden");
+  textInput.value = "";
+
+  transcribedText.textContent = texto;
+
+  try {
+
+    startCoreAnimation("...");
+
+    const resResp = await fetch("/.netlify/functions/respond", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: texto,
+        email: userEmail
+      })
+    });
+
+    const dataResp = await resResp.json();
+
+    if (dataResp.result) {
+      resultPanel.textContent = dataResp.result;
+      resultPanel.classList.add("show");
+    }
+
+    if (dataResp.ok && dataResp.audioBase64) {
+
+      const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
+
+      startCoreAnimation("AI");
+
+      audio.play();
+
+      audio.onended = () => {
+        stopCoreAnimation();
+      };
+
+    } else {
+      stopCoreAnimation();
+    }
+
+  } catch (err) {
+    stopCoreAnimation();
+  }
+};
+  
 /* 🎤 Click en núcleo */
 aiCore.onclick = async () => {
 
