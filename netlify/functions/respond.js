@@ -12,6 +12,7 @@ export const handler = async (event) => {
 
     let action = null;
     let respuestaFinal = "";
+    let textoParaVoz = "";
 
     // 🔹 Detectar acción
     if (/^(agendame|agendá|recordame|guarda|guardá)([,\s]+|$)/i.test(text))
@@ -34,6 +35,7 @@ export const handler = async (event) => {
 
       if (!oldText || !newText) {
         respuestaFinal = "Faltan datos para editar.";
+        textoParaVoz = respuestaFinal;
       } else {
 
         // 1️⃣ BORRAR
@@ -50,7 +52,8 @@ export const handler = async (event) => {
           body: JSON.stringify({ action: "add", text: newText, userId })
         });
 
-        respuestaFinal = "Listo, lo actualicé.";
+        respuestaFinal = newText; // 👈 guardamos solo el dato limpio
+        textoParaVoz = "Listo, lo actualicé.";
       }
 
     }
@@ -66,36 +69,40 @@ export const handler = async (event) => {
 
       const data = await res.json();
 
-      if (action === "add")
-        respuestaFinal = "Listo, lo guardé.";
+      if (action === "add") {
+        respuestaFinal = textoProcesado;
+        textoParaVoz = "Listo, lo guardé.";
+      }
 
-      else if (action === "delete")
-        respuestaFinal = data.ok
+      else if (action === "delete") {
+        respuestaFinal = "";
+        textoParaVoz = data.ok
           ? "Eliminado."
           : "No encontré ese dato para borrar.";
+      }
 
-      else if (action === "get")
-        respuestaFinal = data.ok && data.result
-          ? data.result
-          : "No encontré ese dato.";
-    }
+      else if (action === "get") {
 
-    else {
-      respuestaFinal = "No es una acción válida.";
+        if (data.ok && data.result) {
+          respuestaFinal = data.result; // 👈 SOLO el dato
+          textoParaVoz = `Encontré esta información: ${data.result}`; // 👈 Solo para voz
+        } else {
+          respuestaFinal = "";
+          textoParaVoz = "No encontré ese dato.";
+        }
+      }
+
+    } else {
+      respuestaFinal = "";
+      textoParaVoz = "No es una acción válida.";
     }
 
     // 🔊 Generar audio
-    let textoParaVoz = respuestaFinal;
-
-if (action === "get" && data.ok && data.result) {
-  textoParaVoz = `Encontré esta información: ${respuestaFinal}`;
-}
-
-const audioResponse = await openai.audio.speech.create({
-  model: "gpt-4o-mini-tts",
-  voice: "marin",
-  input: textoParaVoz
-});
+    const audioResponse = await openai.audio.speech.create({
+      model: "gpt-4o-mini-tts",
+      voice: "marin",
+      input: textoParaVoz
+    });
 
     const arrayBuffer = await audioResponse.arrayBuffer();
     const base64Audio = Buffer.from(arrayBuffer).toString("base64");
@@ -106,7 +113,7 @@ const audioResponse = await openai.audio.speech.create({
         ok: true,
         action,
         audioBase64: base64Audio,
-        result: respuestaFinal
+        result: respuestaFinal // 👈 limpio para UI / editar
       })
     };
 
