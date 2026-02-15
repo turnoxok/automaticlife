@@ -61,10 +61,7 @@ export const handler = async (event) => {
 
       if (action === "add") respuestaFinal = "Listo, lo guardé.";
       else if (action === "delete") respuestaFinal = data.ok ? "Eliminado." : "No encontré ese dato para borrar.";
-      else if (action === "get") {
-  respuestaFinal = data.ok && data.result
-    ? data.result
-    : "No encontré ese dato.";
+      else if (action === "get") respuestaFinal = data.ok && data.result ? data.result : "No encontré ese dato.";
 
     }
 
