@@ -65,7 +65,7 @@ export const handler = async (event) => {
   respuestaFinal = data.ok && data.result
     ? data.result
     : "No encontré ese dato.";
-}
+
     }
 
     else {
