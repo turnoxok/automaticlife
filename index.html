@@ -254,6 +254,14 @@ function logout() {
   document.querySelector(".g_id_signin").classList.remove("hidden");
   document.getElementById("userMenu").classList.add("hidden");
 
+  // 🧹 LIMPIAR TEXTOS
+  transcribedText.textContent = "";
+  resultPanel.textContent = "";
+  resultPanel.classList.remove("show");
+
+  // 🔒 Mostrar hint nuevamente
+  document.getElementById("loginHint").classList.remove("hidden");
+
   stopCoreAnimation();
   coreText.textContent = "GO";
 }
