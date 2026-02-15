@@ -63,7 +63,7 @@ export const handler = async (event) => {
       else if (action === "delete") respuestaFinal = data.ok ? "Eliminado." : "No encontré ese dato para borrar.";
       else if (action === "get") {
   respuestaFinal = data.ok && data.result
-    ? `El dato es: ${data.result}`
+    ? data.result
     : "No encontré ese dato.";
 }
     }
@@ -79,10 +79,14 @@ export const handler = async (event) => {
 
   
 
+const respuestaParaVoz = data?.ok && action === "get"
+  ? `Información registrada: ${respuestaFinal}`
+  : respuestaFinal;
+
 const audioResponse = await openai.audio.speech.create({
   model: "gpt-4o-mini-tts",
   voice: "marin",
-  input: respuestaFinal
+  input: respuestaParaVoz
 });
 
   const arrayBuffer = await audioResponse.arrayBuffer();
