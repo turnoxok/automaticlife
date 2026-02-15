@@ -419,12 +419,18 @@ textFAB.onclick = () => {
     speak("Debes iniciar sesión con Google para continuar.");
     return;
   }
+
+  // 🔥 IMPORTANTE: forzar modo nuevo comando
+  modoEdicion = false;
+  textInput.value = "";   // limpiar cualquier autocompletado viejo
+
   textModal.classList.remove("hidden");
 };
 
 textModal.onclick = (e) => {
   if (e.target === textModal) {
     textModal.classList.add("hidden");
+    modoEdicion = false; // seguridad extra
   }
 };
 
