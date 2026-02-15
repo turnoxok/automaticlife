@@ -85,11 +85,17 @@ export const handler = async (event) => {
     }
 
     // 🔊 Generar audio
-    const audioResponse = await openai.audio.speech.create({
-      model: "gpt-4o-mini-tts",
-      voice: "marin",
-      input: respuestaFinal
-    });
+    let textoParaVoz = respuestaFinal;
+
+if (action === "get" && data.ok && data.result) {
+  textoParaVoz = `Encontré esta información: ${respuestaFinal}`;
+}
+
+const audioResponse = await openai.audio.speech.create({
+  model: "gpt-4o-mini-tts",
+  voice: "marin",
+  input: textoParaVoz
+});
 
     const arrayBuffer = await audioResponse.arrayBuffer();
     const base64Audio = Buffer.from(arrayBuffer).toString("base64");
