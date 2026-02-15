@@ -73,11 +73,18 @@ export const handler = async (event) => {
     respuestaFinal = "Ocurrió un error.";
   }
 
-  const audioResponse = await openai.audio.speech.create({
-    model: "gpt-4o-mini-tts",
-    voice: "marin",
-    input: respuestaFinal
-  });
+  const textoParaLeer = `
+Idioma: Español latino.
+No traduzcas nombres propios.
+Texto:
+${respuestaFinal}
+`;
+
+const audioResponse = await openai.audio.speech.create({
+  model: "gpt-4o-mini-tts",
+  voice: "marin",
+  input: textoParaLeer
+});
 
   const arrayBuffer = await audioResponse.arrayBuffer();
   const base64Audio = Buffer.from(arrayBuffer).toString("base64");
