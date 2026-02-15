@@ -377,32 +377,40 @@ function stopCoreAnimation() {
 }
 
 /* 🧠 FUNCIÓN PARA MOSTRAR RESULTADO CON EDITAR */
-function mostrarResultado(texto) {
+function mostrarResultado(texto, mostrarEditar = false) {
+
   ultimoResultado = texto;
 
-  resultPanel.innerHTML = `
-    <div>${texto}</div>
-    <button id="editBtn" style="
-      margin-top:10px;
-      padding:6px 14px;
-      border-radius:20px;
-      border:none;
-      background:#00ffea;
-      cursor:pointer;
-      font-weight:bold;
-      color:#001a18;
-    ">Editar</button>
-  `;
+  if (mostrarEditar) {
+
+    resultPanel.innerHTML = `
+      <div>${texto}</div>
+      <button id="editBtn" style="
+        margin-top:10px;
+        padding:6px 14px;
+        border-radius:20px;
+        border:none;
+        background:#00ffea;
+        cursor:pointer;
+        font-weight:bold;
+        color:#001a18;
+      ">Editar</button>
+    `;
+
+    document.getElementById("editBtn").onclick = () => {
+      modoEdicion = true;
+      textInput.value = ultimoResultado;
+      textModal.classList.remove("hidden");
+    };
+
+  } else {
+
+    resultPanel.innerHTML = `<div>${texto}</div>`;
+
+  }
 
   resultPanel.classList.add("show");
-
-  document.getElementById("editBtn").onclick = () => {
-    modoEdicion = true;
-    textInput.value = ultimoResultado;
-    textModal.classList.remove("hidden");
-  };
 }
-
 /* ✏️ Texto manual */
 textFAB.onclick = () => {
   if (!userEmail) {
@@ -460,8 +468,12 @@ sendTextBtn.onclick = async () => {
     const dataResp = await resResp.json();
 
     if (dataResp.result) {
-      mostrarResultado(dataResp.result);
-    }
+
+  // Si NO estamos editando y el texto original no fue "editar"
+  const esBusqueda = !modoEdicion && texto.toLowerCase() !== "editar";
+
+  mostrarResultado(dataResp.result, esBusqueda);
+}
 
     if (dataResp.ok && dataResp.audioBase64) {
       const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
@@ -539,9 +551,12 @@ async function sendAudio() {
 
       const dataResp = await resResp.json();
 
-      if (dataResp.result) {
-        mostrarResultado(dataResp.result);
-      }
+    if (dataResp.result) {
+
+  const esBusqueda = texto.toLowerCase() !== "editar";
+
+  mostrarResultado(dataResp.result, esBusqueda);
+}
 
       if (dataResp.ok && dataResp.audioBase64) {
         const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
