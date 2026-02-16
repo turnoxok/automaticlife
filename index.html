@@ -1272,15 +1272,20 @@ sendTextBtn.onclick = async () => {
 
     // Si es edición de recordatorio, primero borrar el anterior
     if (modoEdicion && ultimoReminderData && ultimoReminderData.isReminder) {
-      console.log("Editando recordatorio. Borrando:", ultimoResultadoTexto);
+      console.log("Editando recordatorio. Datos guardados:", ultimoReminderData);
       
-      // Intentar borrar el recordatorio anterior
+      // Usar la descripción exacta que está guardada en la hoja
+      const textoExacto = ultimoReminderData.description || ultimoResultadoTexto;
+      
+      console.log("Borrando con texto exacto:", textoExacto);
+      
+      // Borrar el recordatorio anterior (esto borra de ambas hojas en el backend)
       const deleteRes = await fetch("/.netlify/functions/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "delete",
-          text: ultimoReminderData.description || ultimoResultadoTexto,
+          text: textoExacto,  // Usar descripción exacta
           email: userEmail
         })
       });
@@ -1288,7 +1293,7 @@ sendTextBtn.onclick = async () => {
       const deleteData = await deleteRes.json();
       console.log("Respuesta delete:", deleteData);
       
-      // Crear el nuevo (como recordatorio o nota normal según el texto)
+      // Crear el nuevo (como recordatorio o nota según el texto editado)
       bodyData = {
         text: texto,
         email: userEmail
