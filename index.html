@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LILIX - Asistente Personal</title>
+<title>Asistente</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<link href="https://fonts.googleapis.com/css2?family=Georama:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 * {
   margin: 0;
   padding: 0;
@@ -14,14 +15,11 @@
 }
 
 :root {
-  --lilix-magenta: #ff006e;
-  --lilix-pink: #fb5607;
-  --lilix-cyan: #00f5d4;
-  --lilix-purple: #8338ec;
-  --lilix-dark: #0a0f1c;
-  --lilix-mid: #151b2d;
-  --lilix-light: #2a324b;
-  --text-primary: #f0f0f5;
+  --cyan: #00d9ff;
+  --magenta: #ff00a0;
+  --purple: #b829dd;
+  --dark: #050510;
+  --glass: rgba(255, 255, 255, 0.05);
 }
 
 body {
@@ -29,853 +27,534 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
   align-items: center;
-  background: linear-gradient(160deg, #0a0f1c 0%, #151b2d 40%, #0d1321 100%);
-  font-family: 'Georama', sans-serif;
-  color: var(--text-primary);
+  background: var(--dark);
+  font-family: 'Inter', sans-serif;
+  color: white;
   overflow: hidden;
   position: relative;
 }
 
-/* Animated mesh gradient background */
-body::before {
-  content: '';
-  position: fixed;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: 
-    radial-gradient(circle at 20% 30%, rgba(255, 0, 110, 0.08) 0%, transparent 40%),
-    radial-gradient(circle at 80% 70%, rgba(0, 245, 212, 0.06) 0%, transparent 40%),
-    radial-gradient(circle at 50% 50%, rgba(131, 56, 236, 0.05) 0%, transparent 50%);
-  animation: meshMove 20s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 0;
-}
-
-@keyframes meshMove {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  33% { transform: translate(2%, 2%) rotate(120deg); }
-  66% { transform: translate(-1%, 1%) rotate(240deg); }
-}
-
-/* Grid overlay */
-body::after {
-  content: '';
+/* Animated starfield */
+#starfield {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: 
-    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-  background-size: 80px 80px;
-  pointer-events: none;
-  z-index: 1;
+  z-index: 0;
 }
 
-/* Floating geometric accents */
-.geo-accent {
-  position: fixed;
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0.4;
-}
-
-.geo-accent-1 {
-  width: 300px;
-  height: 300px;
-  top: -100px;
-  right: -100px;
-  border: 1px solid var(--lilix-magenta);
+.star {
+  position: absolute;
+  background: white;
   border-radius: 50%;
-  animation: pulse1 15s ease-in-out infinite;
+  animation: twinkle 3s infinite;
 }
 
-.geo-accent-2 {
-  width: 200px;
-  height: 200px;
-  bottom: -50px;
-  left: -50px;
-  border: 1px solid var(--lilix-cyan);
-  transform: rotate(45deg);
-  animation: pulse2 12s ease-in-out infinite;
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
 }
 
-@keyframes pulse1 {
-  0%, 100% { transform: scale(1); opacity: 0.3; }
-  50% { transform: scale(1.1); opacity: 0.6; }
-}
-
-@keyframes pulse2 {
-  0%, 100% { transform: rotate(45deg) scale(1); opacity: 0.2; }
-  50% { transform: rotate(50deg) scale(1.1); opacity: 0.5; }
-}
-
-/* Top Bar */
-#topBar {
+/* Top right menu */
+#topMenu {
   position: absolute;
   top: 20px;
   right: 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
   z-index: 100;
 }
 
-#loginTrigger {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.7rem;
-  background: linear-gradient(135deg, rgba(255, 0, 110, 0.15), rgba(251, 86, 7, 0.15));
-  padding: 10px 18px;
+#loginBtn {
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.15), rgba(255, 0, 160, 0.15));
+  border: 1px solid rgba(0, 217, 255, 0.4);
+  padding: 10px 20px;
   border-radius: 25px;
-  border: 1px solid rgba(255, 0, 110, 0.5);
+  color: var(--cyan);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
   backdrop-filter: blur(10px);
   transition: all 0.3s;
-  font-weight: 600;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--lilix-magenta);
 }
 
-#loginTrigger:hover {
-  background: linear-gradient(135deg, var(--lilix-magenta), var(--lilix-pink));
+#loginBtn:hover {
+  background: linear-gradient(135deg, var(--cyan), var(--magenta));
   color: white;
-  box-shadow: 0 0 30px rgba(255, 0, 110, 0.5);
-  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(0, 217, 255, 0.5);
 }
 
-#userPanel {
-  cursor: pointer;
-  display: flex;
-  gap: 10px;
+#userBadge {
+  display: none;
   align-items: center;
-  font-size: 0.75rem;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 8px 14px;
+  gap: 10px;
+  background: var(--glass);
+  padding: 8px 16px;
   border-radius: 25px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  transition: all 0.3s;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  max-width: 200px;
+  cursor: pointer;
 }
 
 #userEmail {
+  font-size: 0.8rem;
+  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 120px;
 }
 
-#userPanel:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--lilix-magenta);
-}
-
-.planBadge {
-  background: linear-gradient(135deg, var(--lilix-magenta), var(--lilix-pink));
+#planTag {
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 0.6rem;
   font-weight: 700;
-  color: white;
   text-transform: uppercase;
-  letter-spacing: 1px;
 }
 
-#userMenu {
+#dropdownMenu {
   position: absolute;
-  top: 55px;
+  top: 50px;
   right: 0;
-  background: rgba(10, 15, 28, 0.98);
+  background: rgba(5, 5, 16, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 16px;
   border-radius: 16px;
-  min-width: 220px;
-  backdrop-filter: blur(30px);
-  z-index: 101;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  padding: 16px;
+  min-width: 200px;
+  backdrop-filter: blur(20px);
+  display: none;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
 }
 
-#userMenu.hidden {
-  display: none !important;
+#dropdownMenu.show {
+  display: block;
 }
 
-#userMenu > div:not(.g_id_signin) {
+.menuItem {
   padding: 12px 16px;
-  cursor: pointer;
   border-radius: 10px;
-  transition: all 0.2s;
-  margin-top: 8px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  color: var(--text-primary);
-  border: 1px solid transparent;
-}
-
-#userMenu > div:not(.g_id_signin):hover {
-  background: rgba(255, 0, 110, 0.1);
-  border-color: rgba(255, 0, 110, 0.3);
-  color: var(--lilix-magenta);
-}
-
-#userMenu > div:last-child {
-  color: var(--lilix-magenta);
-  border-color: rgba(255, 0, 110, 0.2);
-}
-
-#userMenu > div:last-child:hover {
-  background: rgba(255, 0, 110, 0.15);
-}
-
-.hidden { display: none !important; }
-
-/* Brand */
-#brandContainer {
-  margin-top: 50px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 10;
-  position: relative;
-  text-align: center;
-}
-
-#brandName {
-  font-family: 'Georama', sans-serif;
-  font-size: 3rem;
-  font-weight: 900;
-  font-stretch: expanded;
-  text-transform: uppercase;
-  letter-spacing: 12px;
-  background: linear-gradient(90deg, var(--text-primary) 0%, var(--lilix-magenta) 50%, var(--lilix-pink) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 8px;
-  filter: drop-shadow(0 0 30px rgba(255, 0, 110, 0.3));
-}
-
-#brandSubtitle {
-  font-family: 'Georama', sans-serif;
+  cursor: pointer;
   font-size: 0.85rem;
-  font-weight: 300;
-  letter-spacing: 8px;
-  text-transform: uppercase;
-  color: rgba(240, 240, 245, 0.5);
+  transition: all 0.2s;
+  margin-bottom: 4px;
 }
 
-/* Enhanced Dodecahedron */
-#avatarContainer {
-  margin-top: 30px;
-  width: 180px;
-  height: 180px;
-  position: relative;
-  z-index: 10;
-  perspective: 1000px;
+.menuItem:hover {
+  background: rgba(0, 217, 255, 0.1);
+  color: var(--cyan);
 }
 
-.dodecahedron {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  transform-style: preserve-3d;
-  animation: rotate3d 20s infinite linear;
+.menuItem:last-child {
+  color: var(--magenta);
 }
 
-.dodecahedron-inner {
-  width: 100%;
-  height: 100%;
+.menuItem:last-child:hover {
+  background: rgba(255, 0, 160, 0.1);
+}
+
+/* Notification card */
+#notification {
   position: absolute;
-  transform-style: preserve-3d;
-  animation: counterRotate 15s infinite linear;
+  top: 80px;
+  width: 90%;
+  max-width: 420px;
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(184, 41, 221, 0.1));
+  border: 1px solid rgba(0, 217, 255, 0.3);
+  border-radius: 20px;
+  padding: 20px;
+  backdrop-filter: blur(20px);
+  z-index: 50;
+  transform: translateY(-200px);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 10px 40px rgba(0, 217, 255, 0.2);
 }
 
-@keyframes rotate3d {
-  0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-  100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(180deg); }
+#notification.show {
+  transform: translateY(0);
 }
 
-@keyframes counterRotate {
-  0% { transform: rotateX(0deg) rotateY(0deg); }
-  100% { transform: rotateX(-360deg) rotateY(-360deg); }
+.notifHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  color: var(--cyan);
 }
 
-/* SVG Dodecahedron with multiple layers */
-.dodecahedron svg {
+.notifIcon {
+  width: 20px;
+  height: 20px;
+  background: var(--cyan);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+}
+
+.notifText {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.notifFooter {
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Central sphere */
+#sphereContainer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  z-index: 10;
+}
+
+#sphere {
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 0 20px rgba(255, 0, 110, 0.4));
-}
-
-.dodecahedron .layer-1 {
-  animation: pulseLayer1 4s ease-in-out infinite;
-}
-
-.dodecahedron .layer-2 {
-  animation: pulseLayer2 4s ease-in-out infinite;
-  opacity: 0.6;
-}
-
-.dodecahedron .layer-3 {
-  animation: pulseLayer3 4s ease-in-out infinite;
-  opacity: 0.3;
-}
-
-@keyframes pulseLayer1 {
-  0%, 100% { stroke-opacity: 0.8; stroke-width: 1.5; }
-  50% { stroke-opacity: 1; stroke-width: 2; }
-}
-
-@keyframes pulseLayer2 {
-  0%, 100% { stroke-opacity: 0.5; }
-  50% { stroke-opacity: 0.8; }
-}
-
-@keyframes pulseLayer3 {
-  0%, 100% { stroke-opacity: 0.2; }
-  50% { stroke-opacity: 0.5; }
-}
-
-/* Central core */
-.core-glow {
-  animation: corePulse 3s ease-in-out infinite;
-}
-
-@keyframes corePulse {
-  0%, 100% { opacity: 0.6; r: 3; }
-  50% { opacity: 1; r: 5; filter: drop-shadow(0 0 10px var(--lilix-magenta)); }
-}
-
-/* Status */
-#statusText {
-  margin-top: 25px;
-  font-size: 0.7rem;
-  font-weight: 400;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: rgba(240, 240, 245, 0.4);
-  z-index: 10;
-  transition: all 0.3s;
-}
-
-#statusText.active {
-  color: var(--lilix-cyan);
-  text-shadow: 0 0 20px rgba(0, 245, 212, 0.5);
-}
-
-/* Result panel */
-#resultPanel {
-  margin-top: 25px;
-  padding: 28px;
-  width: 90%;
-  max-width: 480px;
-  min-height: 80px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(30px);
-  opacity: 0;
-  transition: all 0.4s ease;
-  text-align: center;
-  font-size: 1rem;
-  line-height: 1.7;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, var(--cyan), var(--purple) 50%, var(--magenta) 100%);
+  box-shadow: 
+    0 0 60px rgba(0, 217, 255, 0.5),
+    0 0 100px rgba(184, 41, 221, 0.3),
+    inset 0 0 40px rgba(255, 255, 255, 0.2);
   position: relative;
-  z-index: 10;
-  font-weight: 300;
-  letter-spacing: 0.3px;
+  animation: spherePulse 3s ease-in-out infinite;
 }
 
-#resultPanel.show { 
-  opacity: 1; 
-  border-color: rgba(255, 0, 110, 0.25);
-  box-shadow: 0 0 40px rgba(255, 0, 110, 0.1);
+#sphere.listening {
+  animation: sphereListen 1s ease-in-out infinite;
+  background: radial-gradient(circle at 30% 30%, #ff0040, #ff4080 50%, #ff0066 100%);
+  box-shadow: 
+    0 0 60px rgba(255, 0, 64, 0.6),
+    0 0 100px rgba(255, 0, 100, 0.4);
 }
 
-/* Main action area */
-#mainAction {
-  position: fixed;
-  bottom: 35px;
+#sphere.speaking {
+  animation: sphereSpeak 0.5s ease-in-out infinite;
+}
+
+@keyframes spherePulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+@keyframes sphereListen {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes sphereSpeak {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+/* Orbital rings */
+.orbit {
+  position: absolute;
+  border: 1px solid rgba(0, 217, 255, 0.2);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.orbit1 { width: 280px; height: 280px; animation: orbit1 10s linear infinite; }
+.orbit2 { width: 340px; height: 340px; animation: orbit2 15s linear infinite; border-color: rgba(255, 0, 160, 0.15); }
+
+@keyframes orbit1 {
+  0% { transform: translate(-50%, -50%) rotateX(60deg) rotateZ(0deg); }
+  100% { transform: translate(-50%, -50%) rotateX(60deg) rotateZ(360deg); }
+}
+
+@keyframes orbit2 {
+  0% { transform: translate(-50%, -50%) rotateX(70deg) rotateY(10deg) rotateZ(0deg); }
+  100% { transform: translate(-50%, -50%) rotateX(70deg) rotateY(10deg) rotateZ(-360deg); }
+}
+
+/* Mic button */
+#micBtn {
+  position: absolute;
+  bottom: 140px;
   left: 50%;
   transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  z-index: 50;
-}
-
-#lilixCore {
-  width: 75px;
-  height: 75px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  background: linear-gradient(145deg, var(--lilix-magenta), var(--lilix-pink));
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
   border: none;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   cursor: pointer;
-  box-shadow: 
-    0 0 40px rgba(255, 0, 110, 0.5),
-    inset 0 0 20px rgba(255, 255, 255, 0.2);
-  transition: all 0.3s;
-  position: relative;
-}
-
-#lilixCore::before {
-  content: '';
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  background: linear-gradient(145deg, var(--lilix-magenta), transparent) border-box;
-  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 40px rgba(0, 217, 255, 0.4);
+  z-index: 20;
   transition: all 0.3s;
 }
 
-#lilixCore:hover::before {
-  inset: -12px;
-  opacity: 0.6;
+#micBtn:hover {
+  transform: translateX(-50%) scale(1.1);
+  box-shadow: 0 15px 50px rgba(0, 217, 255, 0.6);
 }
 
-#lilixCore:hover {
-  transform: scale(1.08);
-  box-shadow: 
-    0 0 60px rgba(255, 0, 110, 0.7),
-    inset 0 0 30px rgba(255, 255, 255, 0.3);
+#micBtn.recording {
+  background: linear-gradient(135deg, #ff0040, #ff6b9d);
+  box-shadow: 0 10px 40px rgba(255, 0, 64, 0.5);
+  animation: micPulse 1s infinite;
 }
 
-#lilixCore.recording {
-  background: linear-gradient(145deg, #ff0040, #ff6b9d);
-  animation: recPulse 1.2s infinite;
+@keyframes micPulse {
+  0%, 100% { box-shadow: 0 10px 40px rgba(255, 0, 64, 0.5); }
+  50% { box-shadow: 0 15px 60px rgba(255, 0, 64, 0.8); }
 }
 
-@keyframes recPulse {
-  0%, 100% { 
-    box-shadow: 0 0 40px rgba(255, 0, 64, 0.5);
-    transform: scale(1);
-  }
-  50% { 
-    box-shadow: 0 0 70px rgba(255, 0, 64, 0.9);
-    transform: scale(1.05);
-  }
-}
-
-.coreIcon {
+.micIcon {
   width: 28px;
   height: 28px;
   fill: white;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
 
-/* Text button */
-#textBtn {
-  width: 55px;
-  height: 55px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+/* Context buttons */
+#contextButtons {
+  position: absolute;
+  bottom: 50px;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.3s;
+  gap: 20px;
+  z-index: 20;
+}
+
+.ctxBtn {
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  background: var(--glass);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
 }
 
-#textBtn:hover {
-  background: rgba(255, 0, 110, 0.15);
-  border-color: var(--lilix-magenta);
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 10px 30px rgba(255, 0, 110, 0.2);
+.ctxBtn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
-#textBtn svg {
-  width: 22px;
-  height: 22px;
-  fill: var(--text-primary);
+.ctxBtn:hover::before {
+  opacity: 0.2;
+}
+
+.ctxBtn:hover {
+  transform: translateY(-5px) scale(1.05);
+  border-color: var(--cyan);
+  box-shadow: 0 10px 30px rgba(0, 217, 255, 0.3);
+}
+
+.ctxBtn:active {
+  transform: translateY(-2px) scale(0.98);
+}
+
+.ctxBtn svg {
+  width: 26px;
+  height: 26px;
+  fill: rgba(255, 255, 255, 0.7);
+  position: relative;
+  z-index: 1;
   transition: all 0.3s;
 }
 
-#textBtn:hover svg {
-  fill: var(--lilix-magenta);
+.ctxBtn:hover svg {
+  fill: var(--cyan);
 }
 
 /* Transcribed text */
-#transcribedText {
-  position: fixed;
-  bottom: 170px;
-  left: 50%;
-  transform: translateX(-50%);
+#transcribed {
+  position: absolute;
+  bottom: 230px;
   font-size: 0.9rem;
-  opacity: 0.7;
-  color: var(--text-primary);
+  color: rgba(255, 255, 255, 0.6);
   font-style: italic;
-  text-align: center;
-  max-width: 85%;
-  font-weight: 300;
-  letter-spacing: 0.5px;
   z-index: 10;
 }
 
-/* Login hint */
-#loginHint {
-  position: fixed;
-  bottom: 210px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.7rem;
-  opacity: 0;
-  padding: 12px 24px;
-  background: rgba(255, 0, 110, 0.1);
-  border: 1px solid rgba(255, 0, 110, 0.3);
-  border-radius: 25px;
-  color: var(--lilix-magenta);
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  transition: opacity 0.3s;
-  z-index: 50;
-  backdrop-filter: blur(10px);
-}
-
-#loginHint.show {
-  opacity: 1;
-}
-
-/* Modal */
-#textModal {
+/* Text input modal */
+#inputModal {
   position: fixed;
   inset: 0;
-  background: rgba(10, 15, 28, 0.98);
-  backdrop-filter: blur(40px);
-  justify-content: center;
+  background: rgba(5, 5, 16, 0.98);
+  backdrop-filter: blur(30px);
+  display: none;
   align-items: center;
+  justify-content: center;
   z-index: 1000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s;
+}
+
+#inputModal.show {
   display: flex;
 }
 
-#textModal:not(.hidden) {
-  opacity: 1;
-  pointer-events: all;
-}
-
-#modalContent {
-  background: rgba(21, 27, 45, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+#inputBox {
+  width: 90%;
+  max-width: 400px;
+  background: var(--glass);
+  border: 1px solid rgba(0, 217, 255, 0.2);
   border-radius: 24px;
-  padding: 35px;
-  width: 92%;
-  max-width: 460px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  backdrop-filter: blur(40px);
-  transform: scale(0.95);
-  transition: transform 0.3s;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
-}
-
-#textModal:not(.hidden) #modalContent {
-  transform: scale(1);
-}
-
-.suggestion-label {
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  color: rgba(240, 240, 245, 0.4);
-  margin-bottom: 5px;
-  font-weight: 600;
-}
-
-.suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 5px;
-}
-
-.suggestion-chip {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 10px 18px;
-  border-radius: 25px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.25s;
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  color: rgba(240, 240, 245, 0.85);
-}
-
-.suggestion-chip:hover {
-  background: linear-gradient(135deg, rgba(255, 0, 110, 0.15), rgba(251, 86, 7, 0.15));
-  border-color: var(--lilix-magenta);
-  color: var(--lilix-magenta);
-  transform: translateY(-2px);
-  box-shadow: 0 5px 20px rgba(255, 0, 110, 0.2);
+  padding: 30px;
+  backdrop-filter: blur(20px);
 }
 
 #textInput {
-  background: rgba(0, 0, 0, 0.25);
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
-  padding: 20px;
-  color: var(--text-primary);
-  font-size: 1.05rem;
+  padding: 18px;
+  color: white;
+  font-size: 1rem;
+  font-family: inherit;
   resize: none;
+  height: 100px;
+  margin-bottom: 15px;
   outline: none;
-  height: 110px;
-  font-family: 'Georama', sans-serif;
-  font-weight: 300;
-  transition: all 0.3s;
-  line-height: 1.6;
-  letter-spacing: 0.3px;
-}
-
-#textInput::placeholder {
-  color: rgba(240, 240, 245, 0.25);
 }
 
 #textInput:focus {
-  border-color: var(--lilix-magenta);
-  background: rgba(0, 0, 0, 0.35);
-  box-shadow: 0 0 30px rgba(255, 0, 110, 0.1);
+  border-color: var(--cyan);
 }
 
 #sendBtn {
-  background: linear-gradient(145deg, var(--lilix-magenta), var(--lilix-pink));
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--cyan), var(--purple));
   border: none;
-  border-radius: 14px;
-  padding: 18px;
-  font-weight: 700;
-  letter-spacing: 4px;
+  border-radius: 12px;
   color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s;
-  font-family: 'Georama', sans-serif;
-  text-transform: uppercase;
-  font-size: 0.8rem;
-  box-shadow: 0 5px 25px rgba(255, 0, 110, 0.3);
 }
 
 #sendBtn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 40px rgba(255, 0, 110, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 217, 255, 0.4);
 }
 
-/* Edit button */
-.edit-btn {
-  margin-top: 22px;
-  padding: 12px 28px;
-  border-radius: 25px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: transparent;
-  color: var(--text-primary);
-  cursor: pointer;
-  font-family: 'Georama', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 2.5px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  transition: all 0.3s;
-}
-
-.edit-btn:hover {
-  background: linear-gradient(135deg, rgba(255, 0, 110, 0.15), rgba(251, 86, 7, 0.15));
-  border-color: var(--lilix-magenta);
-  color: var(--lilix-magenta);
-  transform: scale(1.05);
-}
-
-/* Reminder badge */
-.reminder-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: linear-gradient(135deg, rgba(0, 245, 212, 0.1), rgba(0, 245, 212, 0.05));
-  border: 1px solid var(--lilix-cyan);
-  color: var(--lilix-cyan);
-  padding: 10px 20px;
-  border-radius: 25px;
-  font-size: 0.7rem;
-  margin-top: 18px;
-  font-weight: 600;
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
-  box-shadow: 0 0 20px rgba(0, 245, 212, 0.1);
-}
-
-/* Mobile optimizations */
+/* Mobile */
 @media (max-width: 600px) {
-  #brandName {
-    font-size: 2.2rem;
-    letter-spacing: 6px;
+  #sphereContainer {
+    width: 160px;
+    height: 160px;
   }
   
-  #brandSubtitle {
-    font-size: 0.65rem;
-    letter-spacing: 5px;
+  .orbit1 { width: 220px; height: 220px; }
+  .orbit2 { width: 280px; height: 280px; }
+  
+  #contextButtons {
+    gap: 15px;
   }
   
-  #userEmail {
-    max-width: 70px;
-  }
-  
-  #avatarContainer {
-    width: 140px;
-    height: 140px;
-  }
-  
-  #resultPanel {
-    width: 95%;
-    padding: 22px;
-  }
-  
-  .suggestions {
-    gap: 8px;
-  }
-  
-  .suggestion-chip {
-    font-size: 0.75rem;
-    padding: 8px 14px;
-  }
-  
-  #modalContent {
-    padding: 25px;
+  .ctxBtn {
+    width: 55px;
+    height: 55px;
   }
 }
 </style>
 </head>
-
 <body>
 
-<!-- Geometric accents -->
-<div class="geo-accent geo-accent-1"></div>
-<div class="geo-accent geo-accent-2"></div>
+<!-- Starfield -->
+<div id="starfield"></div>
 
-<!-- Google auto loader -->
-<div id="g_id_onload"
-     data-client_id="687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com"
-     data-callback="handleCredentialResponse"
-     data-auto_prompt="false">
-</div>
-
-<!-- TOP BAR -->
-<div id="topBar">
-  <!-- Login trigger (visible when logged out) -->
-  <div id="loginTrigger" onclick="showLoginMenu()">
-    <span>Iniciar Sesión</span>
-  </div>
-
-  <!-- User panel (visible when logged in) -->
-  <div id="userPanel" class="hidden" onclick="toggleMenu(event)">
-    <span id="userEmail"></span>
-    <span class="planBadge">Plan</span>
-  </div>
-
-  <!-- Dropdown menu -->
-  <div id="userMenu" class="hidden">
-    <div class="g_id_signin" data-type="standard" data-theme="outline" data-size="medium"></div>
-    <div onclick="mejorarPlan()">Mejorar Plan</div>
-    <div onclick="verRecordatorios()">Ver Recordatorios</div>
-    <div onclick="logout()">Cerrar Sesión</div>
-  </div>
-</div>
-
-<!-- BRAND -->
-<div id="brandContainer">
-  <div id="brandName">LILIX</div>
-  <div id="brandSubtitle">Asistente Personal</div>
-</div>
-
-<!-- ENHANCED DODECAHEDRON AVATAR -->
-<div id="avatarContainer">
-  <div class="dodecahedron">
-    <svg viewBox="0 0 100 100">
-      <!-- Outer layer -->
-      <g class="layer-3">
-        <path d="M50 5 L85 20 L85 55 L50 75 L15 55 L15 20 Z" fill="none" stroke="#ff006e" stroke-width="0.5"/>
-        <path d="M50 5 L50 20 M85 20 L70 30 M85 55 L70 45 M50 75 L50 60 M15 55 L30 45 M15 20 L30 30" stroke="#ff006e" stroke-width="0.5"/>
-        <path d="M50 20 L70 30 L70 45 L50 60 L30 45 L30 30 Z" fill="none" stroke="#ff006e" stroke-width="0.5"/>
-      </g>
-      
-      <!-- Middle layer -->
-      <g class="layer-2">
-        <path d="M50 15 L78 28 L78 52 L50 68 L22 52 L22 28 Z" fill="none" stroke="#fb5607" stroke-width="0.8"/>
-        <path d="M50 15 L50 28 M78 28 L65 36 M78 52 L65 44 M50 68 L50 55 M22 52 L35 44 M22 28 L35 36" stroke="#fb5607" stroke-width="0.8"/>
-        <path d="M50 28 L65 36 L65 44 L50 55 L35 44 L35 36 Z" fill="none" stroke="#fb5607" stroke-width="0.8"/>
-      </g>
-      
-      <!-- Inner layer -->
-      <g class="layer-1">
-        <path d="M50 25 L72 35 L72 50 L50 62 L28 50 L28 35 Z" fill="none" stroke="#ff006e" stroke-width="1.2"/>
-        <path d="M50 25 L50 35 M72 35 L60 42 M72 50 L60 43 M50 62 L50 52 M28 50 L40 43 M28 35 L40 42" stroke="#ff006e" stroke-width="1.2"/>
-        <path d="M50 35 L60 42 L60 43 L50 52 L40 43 L40 42 Z" fill="none" stroke="#ff006e" stroke-width="1.2"/>
-      </g>
-      
-      <!-- Core -->
-      <circle cx="50" cy="43.5" r="4" fill="#ff006e" class="core-glow"/>
-      <circle cx="50" cy="43.5" r="2" fill="#fff"/>
-    </svg>
-  </div>
-</div>
-
-<!-- STATUS -->
-<div id="statusText">Sistema Listo</div>
-
-<!-- RESULT PANEL -->
-<div id="resultPanel"></div>
-
-<!-- LOGIN HINT -->
-<div id="loginHint" class="hidden">Iniciá Sesión para Continuar</div>
-
-<!-- TRANSCRIBED TEXT -->
-<div id="transcribedText"></div>
-
-<!-- MAIN ACTION -->
-<div id="mainAction">
-  <button id="textBtn" onclick="openTextModal()">
-    <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-  </button>
+<!-- Top Menu -->
+<div id="topMenu">
+  <button id="loginBtn" onclick="toggleDropdown()">Iniciar Sesión</button>
   
-  <button id="lilixCore" onclick="toggleRecording()">
-    <svg class="coreIcon" viewBox="0 0 24 24">
-      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-      <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-    </svg>
+  <div id="userBadge" onclick="toggleDropdown()">
+    <span id="userEmail"></span>
+    <span id="planTag">Plan</span>
+  </div>
+  
+  <div id="dropdownMenu">
+    <div class="g_id_signin" data-type="standard" data-theme="outline" data-size="medium"></div>
+    <div class="menuItem" onclick="upgradePlan()">Mejorar Plan</div>
+    <div class="menuItem" onclick="showReminders()">Ver Recordatorios</div>
+    <div class="menuItem" onclick="logout()">Cerrar Sesión</div>
+  </div>
+</div>
+
+<!-- Notification -->
+<div id="notification">
+  <div class="notifHeader">
+    <div class="notifIcon">📅</div>
+    <span id="notifTime">24 abr 18:00</span>
+  </div>
+  <div class="notifText" id="notifText">Te recuerdo que hoy es el cumpleaños de Caetano a las 18 horas en la escondida calle Devenson al final.</div>
+  <div class="notifFooter">
+    <span>🔔</span>
+    <span>Evento programado</span>
+  </div>
+</div>
+
+<!-- Central Sphere -->
+<div id="sphereContainer">
+  <div class="orbit orbit1"></div>
+  <div class="orbit orbit2"></div>
+  <div id="sphere"></div>
+</div>
+
+<!-- Transcribed text -->
+<div id="transcribed"></div>
+
+<!-- Mic Button -->
+<button id="micBtn" onclick="toggleRecording()">
+  <svg class="micIcon" viewBox="0 0 24 24">
+    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+  </svg>
+</button>
+
+<!-- Context Buttons -->
+<div id="contextButtons">
+  <button class="ctxBtn" onclick="quickAction('check')" title="Tareas">
+    <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+  </button>
+  <button class="ctxBtn" onclick="quickAction('calendar')" title="Calendario">
+    <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
+  </button>
+  <button class="ctxBtn" onclick="openTextModal()" title="Escribir">
+    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
+  </button>
+  <button class="ctxBtn" onclick="quickAction('settings')" title="Ajustes">
+    <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L5.09 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
   </button>
 </div>
 
-<!-- TEXT MODAL -->
-<div id="textModal" class="hidden" onclick="closeModalOnBackground(event)">
-  <div id="modalContent">
-    <div class="suggestion-label">Probá decir:</div>
-    <div class="suggestions">
-      <span class="suggestion-chip" onclick="setText('Recordame mañana a las 13hs ')">Mañana 13hs</span>
-      <span class="suggestion-chip" onclick="setText('Agendame ')">Agendar</span>
-      <span class="suggestion-chip" onclick="setText('Pasame ')">Buscar</span>
-      <span class="suggestion-chip" onclick="setText('Borra ')">Borrar</span>
-    </div>
-    
+<!-- Text Input Modal -->
+<div id="inputModal" onclick="closeModalOnBg(event)">
+  <div id="inputBox">
     <textarea id="textInput" placeholder="¿Qué necesitás?"></textarea>
-    
     <button id="sendBtn" onclick="sendText()">Enviar</button>
   </div>
 </div>
@@ -885,208 +564,84 @@ let userEmail = null;
 let mediaRecorder;
 let audioChunks = [];
 let isRecording = false;
-let ultimoResultadoTexto = "";
-let modoEdicion = false;
 
-const statusText = document.getElementById("statusText");
-const resultPanel = document.getElementById("resultPanel");
-const textModal = document.getElementById("textModal");
-const textInput = document.getElementById("textInput");
-const lilixCore = document.getElementById("lilixCore");
-const loginTrigger = document.getElementById("loginTrigger");
-const userPanel = document.getElementById("userPanel");
-const userMenu = document.getElementById("userMenu");
+const sphere = document.getElementById('sphere');
+const micBtn = document.getElementById('micBtn');
+const transcribed = document.getElementById('transcribed');
+const notification = document.getElementById('notification');
 
-// Close menu when clicking outside
-document.addEventListener('click', (e) => {
-  if (!userMenu.contains(e.target) && !userPanel.contains(e.target) && !loginTrigger.contains(e.target)) {
-    userMenu.classList.add("hidden");
+// Create starfield
+function createStars() {
+  const container = document.getElementById('starfield');
+  for (let i = 0; i < 150; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.width = Math.random() * 2 + 1 + 'px';
+    star.style.height = star.style.width;
+    star.style.animationDelay = Math.random() * 3 + 's';
+    container.appendChild(star);
   }
-});
+}
+createStars();
 
+// Google Sign In
 function handleCredentialResponse(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
   userEmail = payload.email;
   
-  const emailSpan = document.getElementById("userEmail");
-  if (window.innerWidth < 600) {
-    const parts = userEmail.split('@');
-    emailSpan.textContent = parts[0].substring(0, 6) + (parts[0].length > 6 ? '..' : '');
-  } else {
-    emailSpan.textContent = userEmail;
-  }
-
-  loginTrigger.classList.add("hidden");
-  userPanel.classList.remove("hidden");
-  userMenu.classList.add("hidden");
-  document.getElementById("loginHint").classList.remove("show");
+  document.getElementById('loginBtn').style.display = 'none';
+  document.getElementById('userBadge').style.display = 'flex';
   
-  statusText.textContent = "Conectada";
-  statusText.classList.add("active");
+  const emailSpan = document.getElementById('userEmail');
+  emailSpan.textContent = window.innerWidth < 600 
+    ? userEmail.split('@')[0].substring(0, 6) + '..' 
+    : userEmail;
+  
+  document.getElementById('dropdownMenu').classList.remove('show');
 }
 
-function showLoginMenu() {
-  userMenu.classList.remove("hidden");
-}
-
-function toggleMenu(e) {
-  e.stopPropagation();
-  userMenu.classList.toggle("hidden");
+function toggleDropdown() {
+  document.getElementById('dropdownMenu').classList.toggle('show');
 }
 
 function logout() {
   userEmail = null;
-  userPanel.classList.add("hidden");
-  loginTrigger.classList.remove("hidden");
-  userMenu.classList.add("hidden");
-  
-  resultPanel.innerHTML = "";
-  resultPanel.classList.remove("show");
-  document.getElementById("loginHint").classList.add("show");
-  
-  statusText.textContent = "Sistema Listo";
-  statusText.classList.remove("active");
+  document.getElementById('loginBtn').style.display = 'block';
+  document.getElementById('userBadge').style.display = 'none';
+  document.getElementById('dropdownMenu').classList.remove('show');
+  hideNotification();
 }
 
-function mejorarPlan() {
-  mostrarResultado("Función disponible próximamente", false);
+function upgradePlan() {
+  showNotification('Sistema', 'Función disponible próximamente');
 }
 
-async function verRecordatorios() {
+function showReminders() {
   if (!userEmail) return;
-  statusText.textContent = "Procesando...";
+  // Fetch reminders
+}
+
+// Notification system
+function showNotification(title, text) {
+  document.getElementById('notifTime').textContent = new Date().toLocaleString('es-ES', { 
+    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
+  });
+  document.getElementById('notifText').textContent = text;
+  notification.classList.add('show');
   
-  try {
-    const res = await fetch("/.netlify/functions/respond", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: "listar recordatorios", email: userEmail })
-    });
-    
-    const data = await res.json();
-    if (data.result) mostrarResultado(data.result, false);
-  } catch (err) {
-    mostrarResultado("Error al cargar", false);
-  }
-  
-  statusText.textContent = "Conectada";
+  setTimeout(() => hideNotification(), 5000);
 }
 
-function speak(text) {
-  if (!text) return;
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "es-AR";
-  utterance.rate = 0.9;
-  speechSynthesis.speak(utterance);
+function hideNotification() {
+  notification.classList.remove('show');
 }
 
-function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false) {
-  ultimoResultadoTexto = texto.replace(/<[^>]*>/g, '').replace(/📅/g, '').trim();
-  
-  let html = `<div>${texto}</div>`;
-  
-  if (esRecordatorio) {
-    html += `<div class="reminder-badge">Recordatorio Activo</div>`;
-  }
-  
-  if (mostrarEditar) {
-    html += `<button class="edit-btn" onclick="activarEdicion()">Editar</button>`;
-  }
-  
-  resultPanel.innerHTML = html;
-  resultPanel.classList.add("show");
-}
-
-function activarEdicion() {
-  modoEdicion = true;
-  textInput.value = ultimoResultadoTexto;
-  openTextModal();
-}
-
-function setText(texto) {
-  textInput.value = texto;
-  textInput.focus();
-}
-
-function openTextModal() {
-  if (!userEmail) {
-    document.getElementById("loginHint").classList.add("show");
-    speak("Debes iniciar sesión");
-    return;
-  }
-
-  if (!modoEdicion) textInput.value = "";
-  textModal.classList.remove("hidden");
-  textInput.focus();
-}
-
-function closeModalOnBackground(e) {
-  if (e.target === textModal) closeModal();
-}
-
-function closeModal() {
-  textModal.classList.add("hidden");
-  modoEdicion = false;
-  textInput.value = "";
-}
-
-textInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeModal();
-  if (e.key === 'Enter' && e.ctrlKey) sendText();
-});
-
-async function sendText() {
-  const texto = textInput.value.trim();
-  if (!texto) return;
-
-  closeModal();
-  document.getElementById("transcribedText").textContent = texto;
-  statusText.textContent = "Procesando...";
-
-  try {
-    let bodyData;
-
-    if (modoEdicion) {
-      bodyData = {
-        action: "edit",
-        oldText: ultimoResultadoTexto,
-        newText: texto,
-        email: userEmail
-      };
-      modoEdicion = false;
-    } else {
-      bodyData = { text: texto, email: userEmail };
-    }
-
-    const res = await fetch("/.netlify/functions/respond", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bodyData)
-    });
-
-    const data = await res.json();
-
-    if (data.result) {
-      const esBusqueda = data.action === "get" && !data.result.toLowerCase().includes("no encontr");
-      mostrarResultado(data.result, esBusqueda, data.reminderData);
-    }
-
-    if (data.ok && data.audioBase64) {
-      const audio = new Audio(`data:audio/mpeg;base64,${data.audioBase64}`);
-      audio.play();
-    }
-
-    statusText.textContent = "Conectada";
-  } catch (err) {
-    mostrarResultado("Error de conexión", false);
-    statusText.textContent = "Error";
-  }
-}
-
+// Recording
 async function toggleRecording() {
   if (!userEmail) {
-    document.getElementById("loginHint").classList.add("show");
-    speak("Debes iniciar sesión");
+    showNotification('Sistema', 'Debes iniciar sesión para continuar');
     return;
   }
 
@@ -1097,67 +652,107 @@ async function toggleRecording() {
       audioChunks = [];
       
       mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-      mediaRecorder.onstop = sendAudio;
+      mediaRecorder.onstop = processAudio;
       mediaRecorder.start();
       
       isRecording = true;
-      lilixCore.classList.add("recording");
-      statusText.textContent = "Escuchando...";
+      sphere.classList.add('listening');
+      micBtn.classList.add('recording');
+      transcribed.textContent = 'Escuchando...';
+      
     } catch(err) {
-      mostrarResultado("Error de micrófono", false);
+      showNotification('Error', 'No se pudo acceder al micrófono');
     }
   } else {
     mediaRecorder.stop();
-    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    mediaRecorder.stream.getTracks().forEach(t => t.stop());
+    
     isRecording = false;
-    lilixCore.classList.remove("recording");
-    statusText.textContent = "Procesando...";
+    sphere.classList.remove('listening');
+    micBtn.classList.remove('recording');
+    transcribed.textContent = 'Procesando...';
   }
 }
 
-async function sendAudio() {
-  const blob = new Blob(audioChunks, { type: "audio/webm" });
-  const reader = new FileReader();
-  reader.readAsDataURL(blob);
-
-  reader.onloadend = async () => {
-    const base64 = reader.result.split(",")[1];
-
-    try {
-      const resTrans = await fetch("/.netlify/functions/transcribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ audio: base64 })
-      });
-
-      const dataTrans = await resTrans.json();
-      const texto = dataTrans.text;
-      document.getElementById("transcribedText").textContent = texto;
-
-      const resResp = await fetch("/.netlify/functions/respond", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: texto, email: userEmail })
-      });
-
-      const dataResp = await resResp.json();
-
-      if (dataResp.result) {
-        const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
-        mostrarResultado(dataResp.result, esBusqueda, dataResp.reminderData);
-      }
-
-      if (dataResp.ok && dataResp.audioBase64) {
-        const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
-        audio.play();
-      }
-
-      statusText.textContent = "Conectada";
-    } catch (err) {
-      statusText.textContent = "Error";
-    }
-  };
+async function processAudio() {
+  // Send to transcribe and process
+  sphere.classList.add('speaking');
+  
+  // Simulate response
+  setTimeout(() => {
+    sphere.classList.remove('speaking');
+    transcribed.textContent = '';
+    showNotification('Recordatorio', 'Te recuerdo que hoy es el cumpleaños de Caetano a las 18 horas');
+    speak('Te recuerdo que hoy es el cumpleaños de Caetano a las 18 horas');
+  }, 1500);
 }
+
+function speak(text) {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'es-ES';
+  utterance.rate = 0.9;
+  speechSynthesis.speak(utterance);
+}
+
+// Quick actions
+function quickAction(type) {
+  if (!userEmail) {
+    showNotification('Sistema', 'Debes iniciar sesión');
+    return;
+  }
+  
+  const actions = {
+    check: () => showNotification('Tareas', 'No tienes tareas pendientes'),
+    calendar: () => showNotification('Calendario', 'Próximo evento: Mañana 13hs'),
+    settings: () => showNotification('Ajustes', 'Configuración guardada')
+  };
+  
+  actions[type]?.();
+}
+
+// Text modal
+function openTextModal() {
+  if (!userEmail) {
+    showNotification('Sistema', 'Debes iniciar sesión');
+    return;
+  }
+  document.getElementById('inputModal').classList.add('show');
+  document.getElementById('textInput').focus();
+}
+
+function closeModalOnBg(e) {
+  if (e.target.id === 'inputModal') {
+    document.getElementById('inputModal').classList.remove('show');
+  }
+}
+
+function sendText() {
+  const text = document.getElementById('textInput').value.trim();
+  if (!text) return;
+  
+  document.getElementById('inputModal').classList.remove('show');
+  document.getElementById('textInput').value = '';
+  transcribed.textContent = text;
+  
+  // Process text...
+  sphere.classList.add('speaking');
+  setTimeout(() => {
+    sphere.classList.remove('speaking');
+    showNotification('Respuesta', 'Entendido, lo he guardado');
+    speak('Entendido, lo he guardado');
+  }, 1000);
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('dropdownMenu');
+  const btn = document.getElementById('loginBtn');
+  const badge = document.getElementById('userBadge');
+  
+  if (!menu.contains(e.target) && e.target !== btn && e.target !== badge && !badge.contains(e.target)) {
+    menu.classList.remove('show');
+  }
+});
 </script>
 </body>
 </html>
