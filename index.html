@@ -907,7 +907,45 @@ document.addEventListener('DOMContentLoaded', () => {
   // Gestos táctiles para el botón GO
   setupTouchGestures();
 });
+let inactivityTimer;
+const INACTIVITY_DELAY = 30000; // 30 segundos de inactividad
+const HINT_DURATION = 10000;  // 10 segundos visible
 
+function showHint() {
+  const hint = document.getElementById('hintText');
+  if (!hint || !userEmail) return; // Solo si está logueado
+  
+  hint.classList.add('visible');
+  hint.classList.remove('fade-out');
+  
+  // Auto-ocultar después de 10 segundos
+  setTimeout(() => {
+    hint.classList.add('fade-out');
+    hint.classList.remove('visible');
+  }, HINT_DURATION);
+}
+
+function resetInactivity() {
+  clearTimeout(inactivityTimer);
+  inactivityTimer = setTimeout(showHint, INACTIVITY_DELAY);
+  
+  // Ocultar hint inmediatamente al interactuar
+  const hint = document.getElementById('hintText');
+  if (hint && hint.classList.contains('visible')) {
+    hint.classList.add('fade-out');
+    hint.classList.remove('visible');
+  }
+}
+
+// Eventos que resetean inactividad
+['click', 'touchstart', 'keydown', 'scroll'].forEach(event => {
+  document.addEventListener(event, resetInactivity, { passive: true });
+});
+
+// Iniciar timer al cargar
+resetInactivity();
+  });
+  
 function setupTouchGestures() {
   // Soporte para press largo en móvil
   aiCore.addEventListener('touchstart', handlePressStart, {passive: false});
@@ -1107,44 +1145,6 @@ function speak(text) {
 }
 
 // ==================== ANIMACIONES ====================
-let inactivityTimer;
-const INACTIVITY_DELAY = 30000; // 30 segundos de inactividad
-const HINT_DURATION = 10000;  // 10 segundos visible
-
-function showHint() {
-  const hint = document.getElementById('hintText');
-  if (!hint || !userEmail) return; // Solo si está logueado
-  
-  hint.classList.add('visible');
-  hint.classList.remove('fade-out');
-  
-  // Auto-ocultar después de 10 segundos
-  setTimeout(() => {
-    hint.classList.add('fade-out');
-    hint.classList.remove('visible');
-  }, HINT_DURATION);
-}
-
-function resetInactivity() {
-  clearTimeout(inactivityTimer);
-  inactivityTimer = setTimeout(showHint, INACTIVITY_DELAY);
-  
-  // Ocultar hint inmediatamente al interactuar
-  const hint = document.getElementById('hintText');
-  if (hint && hint.classList.contains('visible')) {
-    hint.classList.add('fade-out');
-    hint.classList.remove('visible');
-  }
-}
-
-// Eventos que resetean inactividad
-['click', 'touchstart', 'keydown', 'scroll'].forEach(event => {
-  document.addEventListener(event, resetInactivity, { passive: true });
-});
-
-// Iniciar timer al cargar
-resetInactivity();
-
 
   
 function startCoreAnimation(label) {
