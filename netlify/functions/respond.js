@@ -1,6 +1,6 @@
 import { OpenAI } from "openai";
 
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxth7Fa32vVVe7K5h_fTVa7PYfjclY6u3pi_KaJSTaYQxnB0qZk33I4jkW3CUGlvo4f/exec";
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw8utKMWHrX09tabTwWXisUAYvK_quYbfCK9GQ8TALKkFCAWChavfD04TYUcn0HxeDj/exec";
 
 export const handler = async (event) => {
   const headers = {
@@ -113,30 +113,31 @@ Analiza el texto del usuario y extrae:
 2. El contenido limpio (sin comandos como "agendame", "recordame", etc.)
 3. Si es un recordatorio, extrae: tipo (unico, diario, semanal, mensual, anual), fecha/hora, texto descriptivo
 
+IMPORTANTE: Para fechas, extrae el texto exacto como aparece (ej: "12 de diciembre", "mañana a las 9", "cada lunes")
+
 Responde SOLO con un JSON válido:
 {
   "action": "add|get|delete|edit|reminder|unknown",
-  "content": "texto limpio",
+  "content": "texto limpio sin comandos",
   "confidence": 0.0-1.0,
   "reminder": {
     "isReminder": true/false,
     "type": "unico|diario|semanal|mensual|anual",
-    "datetime": "ISO 8601 o null",
-    "timeText": "texto original de fecha/hora detectado",
-    "description": "descripción del recordatorio"
+    "dateText": "texto de fecha exacto como dijo el usuario (ej: 12 de diciembre, mañana, cada lunes)",
+    "timeText": "texto de hora si existe (ej: 14:30, 9:00)",
+    "description": "descripción limpia del recordatorio"
   }
 }
 
 Ejemplos:
-- "recordame mañana a las 9 llamar al médico" → action: "reminder", reminder.type: "unico", reminder.datetime: "2024-01-16T09:00:00"
-- "agendame comprar leche" → action: "add", content: "comprar leche"
-- "pasame lo del médico" → action: "get", content: "médico"
-- "borra lo de la leche" → action: "delete", content: "leche"`
+- "recordame cumpleaños lili 12 de diciembre" → action: "reminder", content: "cumpleaños lili", reminder: {isReminder: true, type: "anual", dateText: "12 de diciembre", timeText: "", description: "cumpleaños lili"}
+- "recordame mañana a las 9 llamar al médico" → action: "reminder", content: "llamar al médico", reminder: {isReminder: true, type: "unico", dateText: "mañana", timeText: "9:00", description: "llamar al médico"}
+- "agendame comprar leche" → action: "add", content: "comprar leche", reminder: {isReminder: false}`
           },
           { role: "user", content: text }
         ],
         response_format: { type: "json_object" },
-        temperature: 0.3
+        temperature: 0.1
       });
 
       const intent = JSON.parse(completion.choices[0].message.content);
@@ -195,13 +196,14 @@ Ejemplos:
     let esRecordatorio = false;
 
     if (action === "reminder" || (reminderData && reminderData.isReminder)) {
+      // Enviar dateText y timeText para que Apps Script parsee la fecha
       const reminderPayload = {
         action: "addReminder",
         userId,
         text: textoProcesado,
         reminderType: reminderData?.type || "unico",
-        datetime: reminderData?.datetime,
-        timeText: reminderData?.timeText,
+        dateText: reminderData?.dateText || "",
+        timeText: reminderData?.timeText || "",
         description: reminderData?.description || textoProcesado
       };
 
@@ -214,7 +216,7 @@ Ejemplos:
       const data = await res.json();
       
       if (data.ok) {
-        const fechaMostrar = data.fecha || reminderData?.timeText || 'próximamente';
+        const fechaMostrar = data.fechaFormateada || reminderData?.dateText || 'próximamente';
         respuestaFinal = `⏰ <strong>Recordatorio:</strong> ${textoProcesado}<br><small style="color:#ffc107">📅 ${fechaMostrar}</small>`;
         textoParaVoz = `Perfecto, te recordaré: ${textoProcesado} para el ${fechaMostrar}`;
         esRecordatorio = true;
