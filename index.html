@@ -1175,7 +1175,7 @@ function stopCoreAnimation() {
   coreText.textContent = "GO";
 }
 
-// ==================== UI RESULTADOS ====================
+/ ==================== UI RESULTADOS ====================
 function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, reminderData = null) {
   ultimoResultado = texto;  // HTML completo para mostrar
   
@@ -1206,11 +1206,9 @@ function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, 
 
 function activarEdicion() {
   modoEdicion = true;
-  esEdicionRecordatorio = false;  // Por defecto no es edición de recordatorio
   
   // NUEVO: Si tenemos datos de recordatorio, reconstruir el comando completo
   if (ultimoReminderData && ultimoReminderData.isReminder) {
-    esEdicionRecordatorio = true;
     const tipo = ultimoReminderData.type || 'unico';
     const fecha = ultimoReminderData.dateText || 'mañana';
     const hora = ultimoReminderData.timeText || '09:00';
@@ -1229,6 +1227,7 @@ function activarEdicion() {
   textModal.classList.remove("hidden");
   textInput.focus();
 }
+
 
 function setQuickText(texto) {
   if (!userEmail) {
@@ -1291,22 +1290,22 @@ sendTextBtn.onclick = async () => {
 
     let bodyData;
 
-    // NUEVO: Si es edición de recordatorio, primero borrar el viejo
-    if (modoEdicion && esEdicionRecordatorio && ultimoReminderData) {
-      // Borrar el recordatorio anterior
+    // NUEVO: Si es edición y tenemos recordatorio anterior, borrarlo primero
+    if (modoEdicion && ultimoReminderData && ultimoReminderData.isReminder) {
+      // Borrar el recordatorio anterior (usar el texto original para encontrarlo)
       await fetch("/.netlify/functions/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "delete",
-          text: ultimoResultadoTexto,  // Texto del recordatorio viejo
+          text: ultimoResultadoTexto,
           email: userEmail
         })
       });
       
-      // Crear como nuevo recordatorio (el backend detectará "Recordame")
+      // Crear como nuevo (el backend detectará si es recordatorio o nota)
       bodyData = {
-        text: texto,  // El texto completo con "Recordame..."
+        text: texto,
         email: userEmail
       };
     } else if (modoEdicion) {
@@ -1318,7 +1317,7 @@ sendTextBtn.onclick = async () => {
         email: userEmail
       };
     } else {
-      // Nuevo mensaje normal
+      // Nuevo mensaje
       bodyData = {
         text: texto,
         email: userEmail
@@ -1335,7 +1334,7 @@ sendTextBtn.onclick = async () => {
 
     if (dataResp.result) {
       const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
-      const esRecordatorio = dataResp.reminderData || false;
+      const esRecordatorio = dataResp.reminderData && dataResp.reminderData.isReminder;
       
       // NUEVO: Pasar reminderData a mostrarResultado
       mostrarResultado(dataResp.result, esBusqueda, esRecordatorio, dataResp.reminderData);
@@ -1358,44 +1357,6 @@ sendTextBtn.onclick = async () => {
 };
 
 // ==================== GRABACIÓN DE VOZ ====================
-async function startRecording() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ 
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        sampleRate: 44100
-      } 
-    });
-    
-    const options = { mimeType: 'audio/webm;codecs=opus' };
-    mediaRecorder = new MediaRecorder(stream, options);
-    audioChunks = [];
-    
-    mediaRecorder.ondataavailable = e => {
-      if (e.data.size > 0) audioChunks.push(e.data);
-    };
-    
-    mediaRecorder.onstop = sendAudio;
-    mediaRecorder.start(100);
-    
-    startCoreAnimation("REC");
-  } catch(err) {
-    console.error(err);
-    mostrarResultado("Error al acceder al micrófono. Verifica los permisos.", false);
-    speak("No puedo acceder al micrófono");
-    isRecording = false;
-  }
-}
-
-function stopRecording() {
-  if (mediaRecorder && mediaRecorder.state !== "inactive") {
-    mediaRecorder.stop();
-    mediaRecorder.stream.getTracks().forEach(track => track.stop());
-    stopCoreAnimation();
-  }
-}
-
 async function sendAudio() {
   if (audioChunks.length === 0) return;
   
@@ -1437,7 +1398,7 @@ async function sendAudio() {
 
       if (dataResp.result) {
         const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
-        const esRecordatorio = dataResp.reminderData || false;
+        const esRecordatorio = dataResp.reminderData && dataResp.reminderData.isReminder;
         
         // NUEVO: Pasar reminderData a mostrarResultado
         mostrarResultado(dataResp.result, esBusqueda, esRecordatorio, dataResp.reminderData);
@@ -1465,7 +1426,6 @@ async function sendAudio() {
     stopCoreAnimation();
   };
 }
-
 // Click simple en desktop (compatibilidad hacia atrás)
 aiCore.onclick = (e) => {
   if (window.innerWidth > 768) {
