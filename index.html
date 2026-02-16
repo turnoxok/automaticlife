@@ -860,9 +860,9 @@ let recordingTimer;
 let recordingSeconds = 0;
 let ultimoResultado = "";
 let ultimoResultadoTexto = "";
-let ultimoReminderData = null;  // NUEVO: Guardar datos completos del recordatorio
+let ultimoReminderData = null;
 let modoEdicion = false;
-let esEdicionRecordatorio = false;  // NUEVO: Flag para saber si es edición de recordatorio
+let esEdicionRecordatorio = false;
 let pushSubscription = null;
 let pressTimer;
 let isRecording = false;
@@ -911,17 +911,16 @@ document.addEventListener('DOMContentLoaded', () => {
   setupTouchGestures();
 
   let inactivityTimer;
-  const INACTIVITY_DELAY = 10000; // 10 segundos de inactividad
-  const HINT_DURATION = 10000;  // 10 segundos visible
+  const INACTIVITY_DELAY = 10000;
+  const HINT_DURATION = 10000;
 
   function showHint() {
     const hint = document.getElementById('hintText');
-    if (!hint || !userEmail) return; // Solo si está logueado
+    if (!hint || !userEmail) return;
     
     hint.classList.add('visible');
     hint.classList.remove('fade-out');
     
-    // Auto-ocultar después de 10 segundos
     setTimeout(() => {
       hint.classList.add('fade-out');
       hint.classList.remove('visible');
@@ -932,7 +931,6 @@ document.addEventListener('DOMContentLoaded', () => {
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(showHint, INACTIVITY_DELAY);
     
-    // Ocultar hint inmediatamente al interactuar
     const hint = document.getElementById('hintText');
     if (hint && hint.classList.contains('visible')) {
       hint.classList.add('fade-out');
@@ -940,22 +938,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Eventos que resetean inactividad
   ['click', 'touchstart', 'keydown', 'scroll'].forEach(event => {
     document.addEventListener(event, resetInactivity, { passive: true });
   });
 
-  // Iniciar timer al cargar
   resetInactivity();
 });
   
 function setupTouchGestures() {
-  // Soporte para press largo en móvil
   aiCore.addEventListener('touchstart', handlePressStart, {passive: false});
   aiCore.addEventListener('touchend', handlePressEnd);
   aiCore.addEventListener('touchcancel', handlePressEnd);
   
-  // Mouse para desktop
   aiCore.addEventListener('mousedown', handlePressStart);
   aiCore.addEventListener('mouseup', handlePressEnd);
   aiCore.addEventListener('mouseleave', handlePressEnd);
@@ -989,7 +983,6 @@ function handleCredentialResponse(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
   userEmail = payload.email;
   
-  // Actualizar UI
   userAvatar.textContent = payload.name ? payload.name.charAt(0).toUpperCase() : 'U';
   document.querySelector(".g_id_signin").classList.add("hidden");
   userPanel.classList.remove("hidden");
@@ -998,7 +991,6 @@ function handleCredentialResponse(response) {
   notifBtn.classList.remove("hidden");
   quickActions.classList.remove("hidden");
   
-  // Mover botón GO arriba cuando está logueado
   document.getElementById('centerArea').style.top = '73%';
   
   registrarPushSubscription();
@@ -1022,7 +1014,6 @@ function logout() {
   resultPanel.classList.remove("show");
   loginHint.classList.remove("hidden");
   
-  // Restaurar posición del botón GO
   document.getElementById('centerArea').style.top = '50%';
 
   stopCoreAnimation();
@@ -1030,7 +1021,6 @@ function logout() {
   
   pushSubscription = null;
   
-  // Limpiar Google session
   if (window.google && window.google.accounts) {
     window.google.accounts.id.disableAutoSelect();
   }
@@ -1175,14 +1165,10 @@ function stopCoreAnimation() {
   coreText.textContent = "GO";
 }
 
-/ ==================== UI RESULTADOS ====================
+// ==================== UI RESULTADOS ====================
 function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, reminderData = null) {
-  ultimoResultado = texto;  // HTML completo para mostrar
-  
-  // Extraer solo el texto plano (antes de cualquier tag HTML)
+  ultimoResultado = texto;
   ultimoResultadoTexto = texto.split('<')[0].trim();
-  
-  // NUEVO: Guardar datos del recordatorio si existe
   ultimoReminderData = reminderData;
   
   let html = `<div class="result-content">${texto}</div>`;
@@ -1198,7 +1184,6 @@ function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, 
   resultPanel.innerHTML = html;
   resultPanel.classList.add("show");
   
-  // Scroll al resultado en móvil
   if (window.innerWidth <= 768) {
     resultPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
@@ -1207,27 +1192,22 @@ function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, 
 function activarEdicion() {
   modoEdicion = true;
   
-  // NUEVO: Si tenemos datos de recordatorio, reconstruir el comando completo
   if (ultimoReminderData && ultimoReminderData.isReminder) {
     const tipo = ultimoReminderData.type || 'unico';
     const fecha = ultimoReminderData.dateText || 'mañana';
     const hora = ultimoReminderData.timeText || '09:00';
     const descripcion = ultimoReminderData.description || ultimoResultadoTexto;
     
-    // Formatear hora bonita (13:00 → 13hs)
     const horaBonita = hora.replace(/:00$/, 'hs').replace(/:(\d+)$/, ':$1');
     
-    // Reconstruir comando: "Recordame [fecha] a las [hora] [descripción]"
     textInput.value = `Recordame ${fecha} a las ${horaBonita} ${descripcion}`;
   } else {
-    // Si no es recordatorio, usar el texto plano normal
     textInput.value = ultimoResultadoTexto;
   }
   
   textModal.classList.remove("hidden");
   textInput.focus();
 }
-
 
 function setQuickText(texto) {
   if (!userEmail) {
@@ -1290,9 +1270,7 @@ sendTextBtn.onclick = async () => {
 
     let bodyData;
 
-    // NUEVO: Si es edición y tenemos recordatorio anterior, borrarlo primero
     if (modoEdicion && ultimoReminderData && ultimoReminderData.isReminder) {
-      // Borrar el recordatorio anterior (usar el texto original para encontrarlo)
       await fetch("/.netlify/functions/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1303,13 +1281,11 @@ sendTextBtn.onclick = async () => {
         })
       });
       
-      // Crear como nuevo (el backend detectará si es recordatorio o nota)
       bodyData = {
         text: texto,
         email: userEmail
       };
     } else if (modoEdicion) {
-      // Edición normal (no recordatorio)
       bodyData = {
         action: "edit",
         oldText: ultimoResultadoTexto,
@@ -1317,7 +1293,6 @@ sendTextBtn.onclick = async () => {
         email: userEmail
       };
     } else {
-      // Nuevo mensaje
       bodyData = {
         text: texto,
         email: userEmail
@@ -1336,7 +1311,6 @@ sendTextBtn.onclick = async () => {
       const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
       const esRecordatorio = dataResp.reminderData && dataResp.reminderData.isReminder;
       
-      // NUEVO: Pasar reminderData a mostrarResultado
       mostrarResultado(dataResp.result, esBusqueda, esRecordatorio, dataResp.reminderData);
     }
 
@@ -1357,6 +1331,44 @@ sendTextBtn.onclick = async () => {
 };
 
 // ==================== GRABACIÓN DE VOZ ====================
+async function startRecording() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ 
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        sampleRate: 44100
+      } 
+    });
+    
+    const options = { mimeType: 'audio/webm;codecs=opus' };
+    mediaRecorder = new MediaRecorder(stream, options);
+    audioChunks = [];
+    
+    mediaRecorder.ondataavailable = e => {
+      if (e.data.size > 0) audioChunks.push(e.data);
+    };
+    
+    mediaRecorder.onstop = sendAudio;
+    mediaRecorder.start(100);
+    
+    startCoreAnimation("REC");
+  } catch(err) {
+    console.error(err);
+    mostrarResultado("Error al acceder al micrófono. Verifica los permisos.", false);
+    speak("No puedo acceder al micrófono");
+    isRecording = false;
+  }
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== "inactive") {
+    mediaRecorder.stop();
+    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    stopCoreAnimation();
+  }
+}
+
 async function sendAudio() {
   if (audioChunks.length === 0) return;
   
@@ -1400,7 +1412,6 @@ async function sendAudio() {
         const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
         const esRecordatorio = dataResp.reminderData && dataResp.reminderData.isReminder;
         
-        // NUEVO: Pasar reminderData a mostrarResultado
         mostrarResultado(dataResp.result, esBusqueda, esRecordatorio, dataResp.reminderData);
       }
 
@@ -1426,10 +1437,10 @@ async function sendAudio() {
     stopCoreAnimation();
   };
 }
+
 // Click simple en desktop (compatibilidad hacia atrás)
 aiCore.onclick = (e) => {
   if (window.innerWidth > 768) {
-    // En desktop mantener comportamiento original de click
     if (!userEmail) {
       toggleMenu();
       loginHint.classList.remove("hidden");
