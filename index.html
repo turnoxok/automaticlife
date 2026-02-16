@@ -3,16 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Automatic Life</title>
-
-<!-- Google Identity -->
+<title>AURA - Asistente Virtual</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+:root {
+  --neon-cyan: #00f5ff;
+  --neon-pink: #ff00ff;
+  --neon-purple: #b300ff;
+  --dark-bg: #0a0a0f;
+  --panel-bg: rgba(10, 10, 15, 0.85);
+  --glass: rgba(255, 255, 255, 0.03);
 }
 
 body {
@@ -20,12 +28,65 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-  font-family: 'Segoe UI', Arial, sans-serif;
-  color: #00ffea;
+  background: var(--dark-bg);
+  font-family: 'Rajdhani', sans-serif;
+  color: var(--neon-cyan);
   overflow: hidden;
+  position: relative;
+}
+
+/* Background animated grid */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(0, 245, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 245, 255, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: gridMove 20s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes gridMove {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(50px, 50px); }
+}
+
+/* Floating particles */
+.particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: var(--neon-cyan);
+  border-radius: 50%;
+  opacity: 0.5;
+  animation: float 15s infinite;
+  box-shadow: 0 0 10px var(--neon-cyan);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
 }
 
 /* Top Bar */
@@ -45,421 +106,627 @@ body {
   gap: 10px;
   align-items: center;
   font-size: 0.9rem;
-  background: rgba(0,255,234,0.1);
-  padding: 8px 12px;
-  border-radius: 20px;
-  border: 1px solid rgba(0,255,234,0.3);
+  background: var(--glass);
+  padding: 10px 15px;
+  border-radius: 25px;
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  backdrop-filter: blur(10px);
   transition: all 0.3s;
+  font-family: 'Orbitron', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 #userPanel:hover {
-  background: rgba(0,255,234,0.2);
-  box-shadow: 0 0 15px rgba(0,255,234,0.3);
+  background: rgba(0, 245, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
+  border-color: var(--neon-cyan);
 }
 
 .planBadge {
-  background: rgba(0,255,234,0.2);
-  padding: 4px 8px;
-  border-radius: 8px;
-  border: 1px solid #00ffea;
+  background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
+  padding: 4px 10px;
+  border-radius: 12px;
   font-size: 0.7rem;
-  font-weight: bold;
+  font-weight: 700;
+  color: white;
 }
 
 #userMenu {
   position: absolute;
-  top: 50px;
+  top: 55px;
   right: 0;
-  background: rgba(15, 12, 41, 0.95);
-  border: 1px solid #00ffea;
+  background: var(--panel-bg);
+  border: 1px solid var(--neon-cyan);
   padding: 15px;
-  border-radius: 12px;
-  min-width: 180px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  border-radius: 15px;
+  min-width: 200px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 0 40px rgba(0, 245, 255, 0.2);
+  z-index: 101;
 }
 
 #userMenu div {
-  padding: 10px;
+  padding: 12px;
   cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.2s;
+  border-radius: 8px;
+  transition: all 0.3s;
   margin-bottom: 5px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: 1px solid transparent;
 }
 
 #userMenu div:hover {
-  background: rgba(0,255,234,0.1);
+  background: rgba(0, 245, 255, 0.1);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 245, 255, 0.2);
 }
 
 #userMenu div:last-child {
   margin-bottom: 0;
   color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.3);
+}
+
+#userMenu div:last-child:hover {
+  background: rgba(255, 107, 107, 0.1);
+  border-color: #ff6b6b;
+  box-shadow: 0 0 15px rgba(255, 107, 107, 0.2);
 }
 
 .hidden { display: none !important; }
 
+/* AURA Avatar Container */
+#auraContainer {
+  margin-top: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+  position: relative;
+}
+
+/* Holographic Avatar */
+#auraAvatar {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  position: relative;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1), transparent 50%),
+              radial-gradient(circle at 70% 70%, rgba(0, 245, 255, 0.2), transparent 50%),
+              linear-gradient(135deg, rgba(179, 0, 255, 0.3), rgba(0, 245, 255, 0.3));
+  border: 2px solid var(--neon-cyan);
+  box-shadow: 
+    0 0 30px rgba(0, 245, 255, 0.5),
+    inset 0 0 30px rgba(0, 245, 255, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  animation: auraPulse 4s ease-in-out infinite;
+}
+
+#auraAvatar::before {
+  content: '◉';
+  font-size: 80px;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 30px var(--neon-cyan);
+  animation: eyeBlink 5s ease-in-out infinite;
+}
+
+@keyframes auraPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(0, 245, 255, 0.5); }
+  50% { transform: scale(1.02); box-shadow: 0 0 50px rgba(0, 245, 255, 0.8), 0 0 80px rgba(179, 0, 255, 0.4); }
+}
+
+@keyframes eyeBlink {
+  0%, 45%, 55%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Hologram rings */
+.holoRing {
+  position: absolute;
+  border: 1px solid var(--neon-cyan);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#auraAvatar.speaking .holoRing {
+  animation: holoWave 2s ease-out infinite;
+}
+
+.holoRing:nth-child(1) { width: 200px; height: 200px; animation-delay: 0s; }
+.holoRing:nth-child(2) { width: 240px; height: 240px; animation-delay: 0.3s; }
+.holoRing:nth-child(3) { width: 280px; height: 280px; animation-delay: 0.6s; }
+
+@keyframes holoWave {
+  0% { transform: scale(0.8); opacity: 0.8; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+#auraName {
+  margin-top: 20px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(0, 245, 255, 0.5);
+}
+
+#auraStatus {
+  margin-top: 5px;
+  font-size: 0.9rem;
+  opacity: 0.7;
+  font-family: 'Orbitron', sans-serif;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
 /* Result panel */
 #resultPanel {
-  margin-bottom: 100px;
-  padding: 20px;
+  margin-top: 40px;
+  padding: 25px;
   width: 90%;
   max-width: 600px;
-  min-height: 60px;
-  border: 2px solid rgba(0,255,234,0.3);
+  min-height: 80px;
+  border: 1px solid rgba(0, 245, 255, 0.3);
   border-radius: 20px;
-  background: rgba(0,255,234,0.05);
-  backdrop-filter: blur(10px);
+  background: var(--panel-bg);
+  backdrop-filter: blur(20px);
   opacity: 0;
   transition: all 0.4s ease;
   text-align: center;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   line-height: 1.6;
-  max-height: 300px;
-  overflow-y: auto;
+  position: relative;
+  overflow: hidden;
+  z-index: 10;
+}
+
+#resultPanel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+  animation: scanline 3s linear infinite;
+}
+
+@keyframes scanline {
+  0% { left: -100%; }
+  100% { left: 100%; }
 }
 
 #resultPanel.show { 
   opacity: 1; 
   transform: translateY(0);
+  box-shadow: 0 0 40px rgba(0, 245, 255, 0.1);
 }
 
 #resultPanel::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 #resultPanel::-webkit-scrollbar-track {
-  background: rgba(0,255,234,0.1);
-  border-radius: 4px;
+  background: rgba(0, 245, 255, 0.1);
+  border-radius: 3px;
 }
 
 #resultPanel::-webkit-scrollbar-thumb {
-  background: #00ffea;
-  border-radius: 4px;
+  background: var(--neon-cyan);
+  border-radius: 3px;
 }
 
-/* GO button */
+/* AI Core Button */
 #aiCore {
-  position: relative;
-  width: 150px;
-  height: 150px;
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background: radial-gradient(circle, #00ffea 0%, #00c4b4 70%, #003a38 100%);
+  background: radial-gradient(circle, var(--neon-cyan) 0%, rgba(0, 245, 255, 0.3) 50%, transparent 70%);
+  border: 2px solid var(--neon-cyan);
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  box-shadow:
-    0 0 30px #00ffea,
-    0 0 60px rgba(0,255,234,0.5),
-    inset 0 0 20px rgba(255,255,255,0.2);
-  transition: all 0.3s ease;
-  user-select: none;
+  box-shadow: 0 0 40px rgba(0, 245, 255, 0.6);
+  transition: all 0.3s;
+  z-index: 50;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--dark-bg);
 }
 
 #aiCore:hover {
-  transform: scale(1.05);
-  box-shadow:
-    0 0 40px #00ffea,
-    0 0 80px rgba(0,255,234,0.6);
+  transform: translateX(-50%) scale(1.1);
+  box-shadow: 0 0 60px rgba(0, 245, 255, 0.8);
 }
 
-#aiCore:active {
-  transform: scale(0.95);
+#aiCore.recording {
+  background: radial-gradient(circle, #ff0040 0%, rgba(255, 0, 64, 0.3) 50%, transparent 70%);
+  border-color: #ff0040;
+  box-shadow: 0 0 40px rgba(255, 0, 64, 0.6);
+  animation: recPulse 1s ease-in-out infinite;
 }
 
-#coreText {
-  color: #001a18;
-  font-weight: bold;
-  font-size: 1.4rem;
-  letter-spacing: 3px;
-  pointer-events: none;
+@keyframes recPulse {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.05); }
 }
 
-.pulseRing {
-  position: absolute;
-  width: 150px;
-  height: 150px;
-  border: 3px solid #00ffea;
-  border-radius: 50%;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.ai-active .pulseRing {
-  animation: pulseWave 1.5s infinite;
-}
-
-.pulseRing:nth-child(1) {
-  animation-delay: 0s;
-}
-.pulseRing:nth-child(2) {
-  animation-delay: 0.5s;
-}
-.pulseRing:nth-child(3) {
-  animation-delay: 1s;
-}
-
-@keyframes pulseWave {
-  0% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(2);
-    opacity: 0;
-  }
-}
-
+/* Transcribed text */
 #transcribedText {
-  display: block;
-  margin-top: 30px;
-  font-size: 0.95rem;
-  letter-spacing: 1px;
-  opacity: 0.7;
-  color: #00ffea;
-  min-height: 20px;
-  font-style: italic;
-}
-
-#loginHint {
-  font-size: 14px;
-  opacity: 0.8;
-  margin-top: 20px;
-  padding: 10px 20px;
-  background: rgba(255,107,107,0.1);
-  border: 1px solid rgba(255,107,107,0.3);
-  border-radius: 20px;
-  color: #ff6b6b;
-}
-
-/* Notification permission button */
-#notifBtn {
   position: fixed;
-  bottom: 100px;
-  right: 30px;
-  width: 55px;
-  height: 55px;
-  border-radius: 50%;
-  background: rgba(0,255,234,0.1);
-  border: 2px solid #00ffea;
-  color: #00ffea;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 24px;
-  cursor: pointer;
-  transition: all 0.3s;
+  bottom: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1rem;
+  opacity: 0.8;
+  color: var(--neon-cyan);
+  font-style: italic;
+  text-align: center;
+  max-width: 80%;
+  font-family: 'Rajdhani', sans-serif;
+  letter-spacing: 1px;
+}
+
+/* Login hint */
+#loginHint {
+  position: fixed;
+  bottom: 180px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.9rem;
+  opacity: 0;
+  padding: 12px 25px;
+  background: rgba(255, 0, 64, 0.1);
+  border: 1px solid rgba(255, 0, 64, 0.5);
+  border-radius: 25px;
+  color: #ff6b6b;
+  font-family: 'Orbitron', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: opacity 0.3s;
   z-index: 50;
 }
 
-#notifBtn:hover {
-  background: rgba(0,255,234,0.2);
-  transform: scale(1.1);
+#loginHint.show {
+  opacity: 1;
 }
 
-#notifBtn.granted {
-  background: #00ffea;
-  color: #001a18;
+/* Quick Actions - Left side */
+#quickActions {
+  position: fixed;
+  bottom: 40px;
+  left: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 50;
 }
 
-/* Floating button */
+.quickBtn {
+  background: var(--glass);
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  color: var(--neon-cyan);
+  padding: 15px 20px;
+  border-radius: 15px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+  font-family: 'Orbitron', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.quickBtn::before {
+  content: '▹';
+  font-size: 1.2rem;
+}
+
+.quickBtn:hover {
+  background: rgba(0, 245, 255, 0.15);
+  border-color: var(--neon-cyan);
+  transform: translateX(10px);
+  box-shadow: 0 0 25px rgba(0, 245, 255, 0.3);
+}
+
+/* Text FAB - Right side */
 #textFAB {
   position: fixed;
-  bottom: 30px;
+  bottom: 40px;
   right: 30px;
-  width: 55px;
-  height: 55px;
-  border-radius: 50%;
-  background: #00ffea;
-  color: #001a18;
+  width: 60px;
+  height: 60px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
+  color: white;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 28px;
+  font-size: 1.5rem;
   cursor: pointer;
-  box-shadow: 0 0 20px #00ffea;
+  box-shadow: 0 0 30px rgba(179, 0, 255, 0.5);
   transition: all 0.3s;
   z-index: 50;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 #textFAB:hover {
-  transform: scale(1.1) rotate(90deg);
-  box-shadow: 0 0 30px #00ffea;
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 0 40px rgba(255, 0, 255, 0.7);
 }
 
 /* Modal */
 #textModal {
   position: fixed;
   inset: 0;
-  background: rgba(5, 10, 25, 0.85);
-  backdrop-filter: blur(15px);
+  background: rgba(10, 10, 15, 0.95);
+  backdrop-filter: blur(20px);
   justify-content: center;
   align-items: center;
   z-index: 1000;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s;
+  display: flex;
 }
 
 #textModal:not(.hidden) {
-  display: flex;
   opacity: 1;
   pointer-events: all;
 }
 
 #textBox {
-  background: rgba(0,255,234,0.05);
-  border: 1px solid rgba(0,255,234,0.4);
-  box-shadow:
-    0 0 30px rgba(0,255,234,0.3),
-    0 0 60px rgba(0,255,234,0.1);
-  border-radius: 20px;
-  padding: 30px;
+  background: var(--panel-bg);
+  border: 1px solid var(--neon-cyan);
+  box-shadow: 0 0 50px rgba(0, 245, 255, 0.2);
+  border-radius: 25px;
+  padding: 35px;
   width: 90%;
-  max-width: 400px;
+  max-width: 450px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(30px);
   transform: scale(0.9);
   transition: transform 0.3s;
+  position: relative;
+  overflow: hidden;
 }
 
 #textModal:not(.hidden) #textBox {
   transform: scale(1);
 }
 
+#textBox::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--neon-cyan), var(--neon-pink), transparent);
+}
+
 #textInput {
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(0,255,234,0.5);
-  border-radius: 12px;
-  padding: 15px;
-  color: #00ffea;
-  font-size: 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  border-radius: 15px;
+  padding: 20px;
+  color: var(--neon-cyan);
+  font-size: 1.1rem;
   resize: none;
   outline: none;
   height: 120px;
-  font-family: inherit;
+  font-family: 'Rajdhani', sans-serif;
   transition: all 0.3s;
+  line-height: 1.5;
 }
 
 #textInput::placeholder {
-  color: rgba(0,255,234,0.4);
+  color: rgba(0, 245, 255, 0.4);
+  font-style: italic;
 }
 
 #textInput:focus {
-  border-color: #00ffea;
-  box-shadow: 0 0 20px rgba(0,255,234,0.3);
-  background: rgba(0,0,0,0.5);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 30px rgba(0, 245, 255, 0.2);
+  background: rgba(0, 0, 0, 0.6);
 }
 
 #sendTextBtn {
-  background: radial-gradient(circle, #00ffea 0%, #00c4b4 100%);
+  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
   border: none;
-  border-radius: 30px;
-  padding: 15px;
-  font-weight: bold;
-  letter-spacing: 2px;
-  color: #001a18;
+  border-radius: 12px;
+  padding: 18px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--dark-bg);
   cursor: pointer;
-  box-shadow: 0 0 20px rgba(0,255,234,0.5);
+  box-shadow: 0 0 30px rgba(0, 245, 255, 0.4);
   transition: all 0.3s;
-  font-size: 1rem;
+  font-family: 'Orbitron', sans-serif;
   text-transform: uppercase;
+  font-size: 0.9rem;
+  position: relative;
+  overflow: hidden;
+}
+
+#sendTextBtn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.5s;
+}
+
+#sendTextBtn:hover::before {
+  left: 100%;
 }
 
 #sendTextBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 25px rgba(0,255,234,0.7);
+  box-shadow: 0 5px 40px rgba(0, 245, 255, 0.6);
 }
 
-#sendTextBtn:active {
-  transform: translateY(0);
-}
-
-/* Quick actions */
-#quickActions {
-  position: fixed;
-  bottom: 30px;
-  left: 30px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 50;
-}
-
-.quickBtn {
-  background: rgba(0,255,234,0.1);
-  border: 1px solid rgba(0,255,234,0.3);
-  color: #00ffea;
-  padding: 10px 15px;
-  border-radius: 20px;
+/* Edit button */
+.edit-btn {
+  margin-top: 20px;
+  padding: 12px 30px;
+  border-radius: 25px;
+  border: 1px solid var(--neon-cyan);
+  background: transparent;
+  color: var(--neon-cyan);
   cursor: pointer;
-  font-size: 0.85rem;
+  font-family: 'Orbitron', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 0.8rem;
   transition: all 0.3s;
-  backdrop-filter: blur(5px);
+  position: relative;
+  overflow: hidden;
 }
 
-.quickBtn:hover {
-  background: rgba(0,255,234,0.2);
-  transform: translateX(5px);
+.edit-btn::before {
+  content: '✎';
+  margin-right: 8px;
 }
 
-/* Loading dots */
+.edit-btn:hover {
+  background: rgba(0, 245, 255, 0.15);
+  box-shadow: 0 0 25px rgba(0, 245, 255, 0.4);
+  transform: scale(1.05);
+}
+
+/* Reminder badge */
+.reminder-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(255, 0, 255, 0.2), rgba(179, 0, 255, 0.2));
+  border: 1px solid var(--neon-pink);
+  color: var(--neon-pink);
+  padding: 8px 15px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  margin-top: 15px;
+  font-family: 'Orbitron', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.reminder-badge::before {
+  content: '◉';
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* Loading animation */
 .loading-dots {
   display: inline-flex;
-  gap: 4px;
+  gap: 8px;
 }
 
 .loading-dots span {
   animation: bounce 1.4s infinite ease-in-out both;
-  background: #00ffea;
+  background: var(--neon-cyan);
   border-radius: 50%;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 10px var(--neon-cyan);
 }
 
 .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
 .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
 
 @keyframes bounce {
-  0%, 80%, 100% { transform: scale(0); }
-  40% { transform: scale(1); }
+  0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
 }
 
-/* Reminder badge */
-.reminder-badge {
-  display: inline-block;
-  background: rgba(255,193,7,0.2);
-  border: 1px solid #ffc107;
-  color: #ffc107;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  margin-top: 10px;
-}
-
-/* Edit button */
-.edit-btn {
-  margin-top: 15px;
-  padding: 8px 20px;
-  border-radius: 20px;
-  border: none;
-  background: #00ffea;
+/* Notification button */
+#notifBtn {
+  position: fixed;
+  bottom: 120px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--glass);
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  color: var(--neon-cyan);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
   cursor: pointer;
-  font-weight: bold;
-  color: #001a18;
   transition: all 0.3s;
+  z-index: 50;
+  backdrop-filter: blur(10px);
 }
 
-.edit-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(0,255,234,0.5);
+#notifBtn:hover {
+  background: rgba(0, 245, 255, 0.2);
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+}
+
+#notifBtn.granted {
+  background: var(--neon-cyan);
+  color: var(--dark-bg);
+  box-shadow: 0 0 30px rgba(0, 245, 255, 0.6);
+}
+
+/* Glitch effect for text */
+.glitch {
+  position: relative;
+  animation: glitch 3s infinite;
+}
+
+@keyframes glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
 }
 </style>
 </head>
 
 <body>
+
+<!-- Particles -->
+<div class="particles" id="particles"></div>
 
 <!-- Google auto loader -->
 <div id="g_id_onload"
@@ -470,57 +737,62 @@ body {
 
 <!-- TOP BAR -->
 <div id="topBar">
-  <!-- User Panel -->
   <div id="userPanel" class="hidden" onclick="toggleMenu()">
     <span id="userEmail"></span>
-    <span class="planBadge">Free</span>
+    <span class="planBadge">FREE</span>
   </div>
 
-  <!-- User Menu -->
   <div id="userMenu" class="hidden">
-    <div class="g_id_signin"
-         data-type="standard"
-         data-theme="outline"
-         data-size="medium">
-    </div>
-    <div onclick="mejorarPlan()">⭐ Mejorar Plan</div>
-    <div onclick="verRecordatorios()">📅 Mis Recordatorios</div>
-    <div onclick="logout()">🚪 Cerrar sesión</div>
+    <div class="g_id_signin" data-type="standard" data-theme="outline" data-size="medium"></div>
+    <div onclick="mejorarPlan()">⚡ Mejorar Plan</div>
+    <div onclick="verRecordatorios()">◉ Recordatorios</div>
+    <div onclick="logout()">✕ Cerrar sesión</div>
   </div>
 </div>
 
+<!-- AURA AVATAR -->
+<div id="auraContainer">
+  <div id="auraAvatar">
+    <div class="holoRing"></div>
+    <div class="holoRing"></div>
+    <div class="holoRing"></div>
+  </div>
+  <div id="auraName">AURA</div>
+  <div id="auraStatus">Sistema Listo</div>
+</div>
+
 <!-- NOTIFICATION BUTTON -->
-<button id="notifBtn" class="hidden" onclick="solicitarNotificaciones()" title="Activar notificaciones">🔔</button>
+<button id="notifBtn" class="hidden" onclick="solicitarNotificaciones()" title="Activar notificaciones">◉</button>
 
 <!-- RESULT PANEL -->
 <div id="resultPanel"></div>
 
-<!-- AI CORE -->
-<div id="aiCore">
-  <div class="pulseRing"></div>
-  <div class="pulseRing"></div>
-  <div class="pulseRing"></div>
-  <div id="coreText">GO</div>
-</div>
+<!-- LOGIN HINT -->
+<p id="loginHint" class="hidden">◉ INICIA SESIÓN PARA CONTINUAR</p>
 
-<p><span id="transcribedText"></span></p>
-<p id="loginHint" class="hidden">🔐 Inicia sesión con Google para usar Automatic Life</p>
+<!-- TRANSCRIBED TEXT -->
+<p id="transcribedText"></p>
 
 <!-- QUICK ACTIONS -->
 <div id="quickActions" class="hidden">
-  <button class="quickBtn" onclick="setQuickText('Recordame mañana a las ')">⏰ Mañana</button>
-  <button class="quickBtn" onclick="setQuickText('Agendame ')">📝 Agendar</button>
-  <button class="quickBtn" onclick="setQuickText('Pasame ')">🔍 Buscar</button>
+  <button class="quickBtn" onclick="setQuickText('Recordame mañana a las ')">⏱ Mañana</button>
+  <button class="quickBtn" onclick="setQuickText('Agendame ')">✚ Agendar</button>
+  <button class="quickBtn" onclick="setQuickText('Pasame ')">⌕ Buscar</button>
+</div>
+
+<!-- AI CORE -->
+<div id="aiCore" onclick="toggleRecording()">
+  <span id="coreText">◉</span>
 </div>
 
 <!-- TEXT FAB -->
-<div id="textFAB">✏️</div>
+<div id="textFAB" onclick="openTextModal()">✎</div>
 
 <!-- TEXT MODAL -->
-<div id="textModal" class="hidden">
+<div id="textModal" class="hidden" onclick="closeModalOnBackground(event)">
   <div id="textBox">
-    <textarea id="textInput" placeholder="Escribe tu solicitud... Ej: Recordame mañana a las 9:00 llamar al médico"></textarea>
-    <button id="sendTextBtn">Enviar</button>
+    <textarea id="textInput" placeholder="¿Qué necesitas, humano?"></textarea>
+    <button id="sendTextBtn" onclick="sendText()">◉ ENVIAR</button>
   </div>
 </div>
 
@@ -531,9 +803,10 @@ let mediaRecorder;
 let audioChunks = [];
 let recordingTimer;
 let recordingSeconds = 0;
-let ultimoResultado = "";
+let ultimoResultadoTexto = ""; // Solo el texto limpio, sin HTML
+let ultimoResultadoHTML = ""; // El HTML completo para mostrar
 let modoEdicion = false;
-let pushSubscription = null;
+let isRecording = false;
 
 // ==================== ELEMENTOS DOM ====================
 const aiCore = document.getElementById("aiCore");
@@ -544,27 +817,31 @@ const userEmailSpan = document.getElementById("userEmail");
 const textFAB = document.getElementById("textFAB");
 const textModal = document.getElementById("textModal");
 const textInput = document.getElementById("textInput");
-const sendTextBtn = document.getElementById("sendTextBtn");
-const notifBtn = document.getElementById("notifBtn");
-const quickActions = document.getElementById("quickActions");
+const auraAvatar = document.getElementById("auraAvatar");
+const auraStatus = document.getElementById("auraStatus");
 
 // ==================== INICIALIZACIÓN ====================
 document.addEventListener('DOMContentLoaded', () => {
-  // Registrar Service Worker
+  createParticles();
+  
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('SW registrado:', reg))
+      .then(reg => console.log('SW registrado'))
       .catch(err => console.log('SW error:', err));
   }
-  
-  // Escuchar mensajes del SW
-  navigator.serviceWorker?.addEventListener('message', event => {
-    if (event.data.type === 'REMINDER_TRIGGERED') {
-      mostrarResultado(`🔔 Recordatorio: ${event.data.message}`, false);
-      speak(`Recordatorio: ${event.data.message}`);
-    }
-  });
 });
+
+function createParticles() {
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDelay = Math.random() * 15 + 's';
+    p.style.animationDuration = (10 + Math.random() * 10) + 's';
+    container.appendChild(p);
+  }
+}
 
 // ==================== AUTENTICACIÓN ====================
 function handleCredentialResponse(response) {
@@ -575,12 +852,11 @@ function handleCredentialResponse(response) {
   document.querySelector(".g_id_signin").classList.add("hidden");
   document.getElementById("userPanel").classList.remove("hidden");
   document.getElementById("userMenu").classList.add("hidden");
-  document.getElementById("loginHint").classList.add("hidden");
-  notifBtn.classList.remove("hidden");
-  quickActions.classList.remove("hidden");
+  document.getElementById("loginHint").classList.remove("show");
+  document.getElementById("notifBtn").classList.remove("hidden");
+  document.getElementById("quickActions").classList.remove("hidden");
   
-  // Registrar suscripción push si ya existe
-  registrarPushSubscription();
+  auraStatus.textContent = "Conectada • " + userEmail.split('@')[0];
 }
 
 function toggleMenu() {
@@ -593,38 +869,32 @@ function logout() {
   document.getElementById("userPanel").classList.add("hidden");
   document.querySelector(".g_id_signin").classList.remove("hidden");
   document.getElementById("userMenu").classList.add("hidden");
-  notifBtn.classList.add("hidden");
-  quickActions.classList.add("hidden");
+  document.getElementById("notifBtn").classList.add("hidden");
+  document.getElementById("quickActions").classList.add("hidden");
 
   transcribedText.textContent = "";
   resultPanel.innerHTML = "";
   resultPanel.classList.remove("show");
-  document.getElementById("loginHint").classList.remove("hidden");
+  document.getElementById("loginHint").classList.add("show");
 
-  stopCoreAnimation();
-  coreText.textContent = "GO";
-  
-  // Limpiar suscripción push
-  pushSubscription = null;
+  auraAvatar.classList.remove("speaking");
+  auraStatus.textContent = "Sistema Listo";
+  coreText.textContent = "◉";
 }
 
 function mejorarPlan() {
-  mostrarResultado("⭐ Función disponible próximamente. ¡Gracias por tu interés!", false);
+  mostrarResultado("⚡ Función disponible próximamente. Gracias por tu interés.", false);
 }
 
 async function verRecordatorios() {
   if (!userEmail) return;
-  
-  startCoreAnimation("...");
+  auraStatus.textContent = "Procesando...";
   
   try {
     const res = await fetch("/.netlify/functions/respond", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: "listar recordatorios",
-        email: userEmail
-      })
+      body: JSON.stringify({ text: "listar recordatorios", email: userEmail })
     });
     
     const data = await res.json();
@@ -635,10 +905,10 @@ async function verRecordatorios() {
     mostrarResultado("Error al cargar recordatorios", false);
   }
   
-  stopCoreAnimation();
+  auraStatus.textContent = "Conectada";
 }
 
-// ==================== NOTIFICACIONES PUSH ====================
+// ==================== NOTIFICACIONES ====================
 async function solicitarNotificaciones() {
   if (!userEmail) {
     speak("Debes iniciar sesión primero");
@@ -653,57 +923,9 @@ async function solicitarNotificaciones() {
   const permission = await Notification.requestPermission();
   
   if (permission === 'granted') {
-    notifBtn.classList.add('granted');
-    notifBtn.innerHTML = '✓';
-    await subscribeToPush();
-  } else {
-    mostrarResultado("Necesitas permitir notificaciones para los recordatorios", false);
+    document.getElementById('notifBtn').classList.add('granted');
+    mostrarResultado("◉ Notificaciones activadas", false);
   }
-}
-
-async function subscribeToPush() {
-  try {
-    const registration = await navigator.serviceWorker.ready;
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array('BK3d7LKjB2vKLxJ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ=') // Reemplaza con tu clave VAPID pública
-    });
-    
-    pushSubscription = subscription;
-    
-    // Enviar al servidor
-    await fetch("/.netlify/functions/respond", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "registerPush",
-        email: userEmail,
-        subscription: subscription
-      })
-    });
-    
-    mostrarResultado("✅ Notificaciones activadas correctamente", false);
-  } catch (err) {
-    console.error('Error suscripción push:', err);
-  }
-}
-
-async function registrarPushSubscription() {
-  if (!userEmail) return;
-  const registration = await navigator.serviceWorker.ready;
-  const subscription = await registration.pushManager.getSubscription();
-  if (subscription) {
-    pushSubscription = subscription;
-    notifBtn.classList.add('granted');
-    notifBtn.innerHTML = '✓';
-  }
-}
-
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
 }
 
 // ==================== VOZ ====================
@@ -711,54 +933,35 @@ function speak(text) {
   if (!text) return;
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "es-AR";
-  utterance.rate = 1;
-  utterance.pitch = 1;
-  startCoreAnimation("AI");
-  utterance.onend = () => stopCoreAnimation();
-  speechSynthesis.speak(utterance);
-}
-
-// ==================== ANIMACIONES ====================
-function startCoreAnimation(label) {
-  aiCore.classList.add("ai-active");
+  utterance.rate = 0.9;
+  utterance.pitch = 1.1;
   
-  if (label === "REC") {
-    recordingSeconds = 0;
-    coreText.innerHTML = `REC <span style="font-size:0.8rem">0s</span>`;
-    recordingTimer = setInterval(() => {
-      recordingSeconds++;
-      coreText.innerHTML = `REC <span style="font-size:0.8rem">${recordingSeconds}s</span>`;
-      
-      // Auto-stop después de 30 segundos
-      if (recordingSeconds >= 30) {
-        aiCore.click();
-      }
-    }, 1000);
-  } else if (label === "...") {
-    coreText.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
-  } else {
-    coreText.textContent = label;
-  }
-}
-
-function stopCoreAnimation() {
-  aiCore.classList.remove("ai-active");
-  clearInterval(recordingTimer);
-  coreText.textContent = "GO";
+  auraAvatar.classList.add("speaking");
+  auraStatus.textContent = "Hablando...";
+  
+  utterance.onend = () => {
+    auraAvatar.classList.remove("speaking");
+    auraStatus.textContent = "Conectada • " + (userEmail ? userEmail.split('@')[0] : '');
+  };
+  
+  speechSynthesis.speak(utterance);
 }
 
 // ==================== UI RESULTADOS ====================
 function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false) {
-  ultimoResultado = texto;
+  // Guardar solo el texto limpio (sin HTML) para edición
+  ultimoResultadoTexto = texto.replace(/<[^>]*>/g, '').replace(/📅/g, '').trim();
+  // Guardar el HTML completo para mostrar
+  ultimoResultadoHTML = texto;
   
   let html = `<div>${texto}</div>`;
   
   if (esRecordatorio) {
-    html += `<div class="reminder-badge">⏰ Recordatorio programado</div>`;
+    html += `<div class="reminder-badge">◉ RECORDATORIO ACTIVO</div>`;
   }
   
   if (mostrarEditar) {
-    html += `<button class="edit-btn" onclick="activarEdicion()">✏️ Editar</button>`;
+    html += `<button class="edit-btn" onclick="activarEdicion()">✎ Editar</button>`;
   }
   
   resultPanel.innerHTML = html;
@@ -767,9 +970,9 @@ function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false) 
 
 function activarEdicion() {
   modoEdicion = true;
-  textInput.value = ultimoResultado;
-  textModal.classList.remove("hidden");
-  textInput.focus();
+  // Usar solo el texto limpio, no el HTML
+  textInput.value = ultimoResultadoTexto;
+  openTextModal();
 }
 
 function setQuickText(texto) {
@@ -778,66 +981,63 @@ function setQuickText(texto) {
     return;
   }
   textInput.value = texto;
+  openTextModal();
+}
+
+// ==================== MODAL ====================
+function openTextModal() {
+  if (!userEmail) {
+    document.getElementById("userMenu").classList.remove("hidden");
+    document.getElementById("loginHint").classList.add("show");
+    speak("Debes iniciar sesión para continuar");
+    return;
+  }
+
+  if (!modoEdicion) {
+    textInput.value = "";
+  }
+  
   textModal.classList.remove("hidden");
   textInput.focus();
 }
 
-// ==================== MODAL TEXTO ====================
-textFAB.onclick = () => {
-  if (!userEmail) {
-    document.getElementById("userMenu").classList.remove("hidden");
-    document.getElementById("loginHint").classList.remove("hidden");
-    speak("Debes iniciar sesión con Google para continuar.");
-    return;
-  }
-
-  modoEdicion = false;
-  textInput.value = "";
-  textModal.classList.remove("hidden");
-  textInput.focus();
-};
-
-textModal.onclick = (e) => {
+function closeModalOnBackground(e) {
   if (e.target === textModal) {
-    cerrarModal();
+    closeModal();
   }
-};
+}
 
-textInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    cerrarModal();
-  }
-  if (e.key === 'Enter' && e.ctrlKey) {
-    sendTextBtn.click();
-  }
-});
-
-function cerrarModal() {
+function closeModal() {
   textModal.classList.add("hidden");
   modoEdicion = false;
   textInput.value = "";
 }
 
+textInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'Enter' && e.ctrlKey) sendText();
+});
+
 // ==================== ENVIAR TEXTO ====================
-sendTextBtn.onclick = async () => {
+async function sendText() {
   const texto = textInput.value.trim();
   if (!texto) return;
 
-  cerrarModal();
-  transcribedText.textContent = texto;
+  closeModal();
+  transcribedText.textContent = "◉ " + texto;
+  auraStatus.textContent = "Procesando...";
 
   try {
-    startCoreAnimation("...");
-
     let bodyData;
 
     if (modoEdicion) {
       bodyData = {
         action: "edit",
-        oldText: ultimoResultado,
+        oldText: ultimoResultadoTexto, // Usar el texto limpio
         newText: texto,
         email: userEmail
       };
+      modoEdicion = false;
     } else {
       bodyData = {
         text: texto,
@@ -862,30 +1062,34 @@ sendTextBtn.onclick = async () => {
 
     if (dataResp.ok && dataResp.audioBase64) {
       const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
-      startCoreAnimation("AI");
+      auraAvatar.classList.add("speaking");
+      auraStatus.textContent = "Respondiendo...";
       audio.play();
-      audio.onended = () => stopCoreAnimation();
+      audio.onended = () => {
+        auraAvatar.classList.remove("speaking");
+        auraStatus.textContent = "Conectada";
+      };
     } else {
-      stopCoreAnimation();
+      auraStatus.textContent = "Conectada";
     }
 
   } catch (err) {
     console.error(err);
-    mostrarResultado("Error de conexión. Intenta de nuevo.", false);
-    stopCoreAnimation();
+    mostrarResultado("◉ Error de conexión", false);
+    auraStatus.textContent = "Error";
   }
-};
+}
 
-// ==================== GRABACIÓN DE VOZ ====================
-aiCore.onclick = async () => {
+// ==================== GRABACIÓN ====================
+async function toggleRecording() {
   if (!userEmail) {
     document.getElementById("userMenu").classList.remove("hidden");
-    document.getElementById("loginHint").classList.remove("hidden");
-    speak("Debes iniciar sesión con Google para continuar.");
+    document.getElementById("loginHint").classList.add("show");
+    speak("Debes iniciar sesión para continuar");
     return;
   }
 
-  if (!mediaRecorder || mediaRecorder.state === "inactive") {
+  if (!isRecording) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
@@ -904,20 +1108,33 @@ aiCore.onclick = async () => {
       };
       
       mediaRecorder.onstop = sendAudio;
-      mediaRecorder.start(100); // Collect data every 100ms
+      mediaRecorder.start(100);
       
-      startCoreAnimation("REC");
+      isRecording = true;
+      aiCore.classList.add("recording");
+      coreText.textContent = "◉ REC";
+      auraStatus.textContent = "Escuchando...";
+      recordingSeconds = 0;
+      
+      recordingTimer = setInterval(() => {
+        recordingSeconds++;
+        if (recordingSeconds >= 30) toggleRecording();
+      }, 1000);
+      
     } catch(err) {
-      console.error(err);
-      mostrarResultado("Error al acceder al micrófono. Verifica los permisos.", false);
-      speak("No puedo acceder al micrófono");
+      mostrarResultado("◉ Error de micrófono", false);
     }
   } else {
     mediaRecorder.stop();
     mediaRecorder.stream.getTracks().forEach(track => track.stop());
-    stopCoreAnimation();
+    clearInterval(recordingTimer);
+    
+    isRecording = false;
+    aiCore.classList.remove("recording");
+    coreText.textContent = "◉";
+    auraStatus.textContent = "Procesando...";
   }
-};
+}
 
 async function sendAudio() {
   if (audioChunks.length === 0) return;
@@ -930,9 +1147,6 @@ async function sendAudio() {
     const base64 = reader.result.split(",")[1];
 
     try {
-      startCoreAnimation("...");
-
-      // Transcribir
       const resTrans = await fetch("/.netlify/functions/transcribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -941,21 +1155,15 @@ async function sendAudio() {
 
       const dataTrans = await resTrans.json();
       
-      if (!dataTrans.text) {
-        throw new Error("No se pudo transcribir el audio");
-      }
+      if (!dataTrans.text) throw new Error("No se pudo transcribir");
       
       const texto = dataTrans.text;
-      transcribedText.textContent = texto;
+      transcribedText.textContent = "◉ " + texto;
 
-      // Procesar
       const resResp = await fetch("/.netlify/functions/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: texto,
-          email: userEmail
-        })
+        body: JSON.stringify({ text: texto, email: userEmail })
       });
 
       const dataResp = await resResp.json();
@@ -969,24 +1177,22 @@ async function sendAudio() {
 
       if (dataResp.ok && dataResp.audioBase64) {
         const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
-        startCoreAnimation("AI");
+        auraAvatar.classList.add("speaking");
+        auraStatus.textContent = "Respondiendo...";
         audio.play();
-        audio.onended = () => stopCoreAnimation();
+        audio.onended = () => {
+          auraAvatar.classList.remove("speaking");
+          auraStatus.textContent = "Conectada";
+        };
       } else {
-        stopCoreAnimation();
+        auraStatus.textContent = "Conectada";
       }
 
     } catch (err) {
-      console.error(err);
-      transcribedText.textContent = "[Error de procesamiento]";
-      mostrarResultado("No pude procesar tu solicitud. Intenta de nuevo.", false);
-      stopCoreAnimation();
+      transcribedText.textContent = "◉ Error";
+      mostrarResultado("No pude procesar tu solicitud", false);
+      auraStatus.textContent = "Error";
     }
-  };
-  
-  reader.onerror = () => {
-    transcribedText.textContent = "[Error de lectura]";
-    stopCoreAnimation();
   };
 }
 </script>
