@@ -3,11 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AURA - Asistente Virtual</title>
+<title>LILIX - Asistente Personal</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<link href="https://fonts.googleapis.com/css2?family=Georama:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
-
 * {
   margin: 0;
   padding: 0;
@@ -15,12 +14,13 @@
 }
 
 :root {
-  --neon-cyan: #00f5ff;
-  --neon-pink: #ff00ff;
-  --neon-purple: #b300ff;
-  --dark-bg: #0a0a0f;
-  --panel-bg: rgba(10, 10, 15, 0.85);
-  --glass: rgba(255, 255, 255, 0.03);
+  --lilix-magenta: #ff006e;
+  --lilix-pink: #fb5607;
+  --lilix-cyan: #00f5d4;
+  --lilix-dark: #0d1b2a;
+  --lilix-mid: #1b263b;
+  --lilix-light: #415a77;
+  --text-primary: #e0e1dd;
 }
 
 body {
@@ -30,14 +30,14 @@ body {
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  background: var(--dark-bg);
-  font-family: 'Rajdhani', sans-serif;
-  color: var(--neon-cyan);
+  background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #0d1b2a 100%);
+  font-family: 'Georama', sans-serif;
+  color: var(--text-primary);
   overflow: hidden;
   position: relative;
 }
 
-/* Background animated grid */
+/* Subtle grid background - retro computer style */
 body::before {
   content: '';
   position: fixed;
@@ -46,363 +46,394 @@ body::before {
   width: 100%;
   height: 100%;
   background-image: 
-    linear-gradient(rgba(0, 245, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 245, 255, 0.03) 1px, transparent 1px);
-  background-size: 50px 50px;
-  animation: gridMove 20s linear infinite;
+    linear-gradient(rgba(65, 90, 119, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(65, 90, 119, 0.15) 1px, transparent 1px);
+  background-size: 60px 60px;
   pointer-events: none;
   z-index: 0;
 }
 
-@keyframes gridMove {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(50px, 50px); }
-}
-
-/* Floating particles */
-.particles {
+/* Floating geometric shapes - retro modern */
+.geo-shape {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  border: 1px solid rgba(255, 0, 110, 0.2);
   pointer-events: none;
   z-index: 1;
-  overflow: hidden;
 }
 
-.particle {
-  position: absolute;
-  width: 2px;
-  height: 2px;
-  background: var(--neon-cyan);
+.geo-shape:nth-child(1) {
+  width: 200px;
+  height: 200px;
+  top: 10%;
+  left: 5%;
+  transform: rotate(45deg);
+  animation: float1 20s infinite ease-in-out;
+}
+
+.geo-shape:nth-child(2) {
+  width: 150px;
+  height: 150px;
+  bottom: 20%;
+  right: 10%;
   border-radius: 50%;
-  opacity: 0.5;
-  animation: float 15s infinite;
-  box-shadow: 0 0 10px var(--neon-cyan);
+  animation: float2 25s infinite ease-in-out;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+.geo-shape:nth-child(3) {
+  width: 100px;
+  height: 100px;
+  top: 60%;
+  left: 15%;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  animation: float3 18s infinite ease-in-out;
+}
+
+@keyframes float1 {
+  0%, 100% { transform: rotate(45deg) translate(0, 0); }
+  50% { transform: rotate(50deg) translate(20px, -20px); }
+}
+
+@keyframes float2 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-30px, 20px); }
+}
+
+@keyframes float3 {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(15px, -30px) rotate(180deg); }
 }
 
 /* Top Bar */
 #topBar {
   position: absolute;
   top: 20px;
-  right: 30px;
+  right: 20px;
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
   z-index: 100;
 }
 
 #userPanel {
   cursor: pointer;
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
-  font-size: 0.9rem;
-  background: var(--glass);
-  padding: 10px 15px;
-  border-radius: 25px;
-  border: 1px solid rgba(0, 245, 255, 0.3);
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   transition: all 0.3s;
-  font-family: 'Orbitron', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  max-width: 200px;
+}
+
+#userEmail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
 }
 
 #userPanel:hover {
-  background: rgba(0, 245, 255, 0.1);
-  box-shadow: 0 0 20px rgba(0, 245, 255, 0.3);
-  border-color: var(--neon-cyan);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--lilix-magenta);
 }
 
 .planBadge {
-  background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.7rem;
+  background: linear-gradient(135deg, var(--lilix-magenta), var(--lilix-pink));
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 0.65rem;
   font-weight: 700;
   color: white;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 #userMenu {
   position: absolute;
-  top: 55px;
+  top: 50px;
   right: 0;
-  background: var(--panel-bg);
-  border: 1px solid var(--neon-cyan);
-  padding: 15px;
-  border-radius: 15px;
-  min-width: 200px;
+  background: rgba(13, 27, 42, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px;
+  border-radius: 12px;
+  min-width: 180px;
   backdrop-filter: blur(20px);
-  box-shadow: 0 0 40px rgba(0, 245, 255, 0.2);
   z-index: 101;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
 #userMenu div {
-  padding: 12px;
+  padding: 10px 12px;
   cursor: pointer;
   border-radius: 8px;
-  transition: all 0.3s;
-  margin-bottom: 5px;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border: 1px solid transparent;
+  transition: all 0.2s;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  color: var(--text-primary);
 }
 
 #userMenu div:hover {
-  background: rgba(0, 245, 255, 0.1);
-  border-color: var(--neon-cyan);
-  box-shadow: 0 0 15px rgba(0, 245, 255, 0.2);
+  background: rgba(255, 0, 110, 0.15);
+  color: var(--lilix-magenta);
 }
 
 #userMenu div:last-child {
   margin-bottom: 0;
-  color: #ff6b6b;
-  border-color: rgba(255, 107, 107, 0.3);
+  color: var(--lilix-magenta);
 }
 
 #userMenu div:last-child:hover {
-  background: rgba(255, 107, 107, 0.1);
-  border-color: #ff6b6b;
-  box-shadow: 0 0 15px rgba(255, 107, 107, 0.2);
+  background: rgba(255, 0, 110, 0.2);
 }
 
 .hidden { display: none !important; }
 
-/* AURA Avatar Container */
-#auraContainer {
-  margin-top: 80px;
+/* LILIX Branding */
+#brandContainer {
+  margin-top: 60px;
   display: flex;
   flex-direction: column;
   align-items: center;
   z-index: 10;
   position: relative;
+  text-align: center;
 }
 
-/* Holographic Avatar */
-#auraAvatar {
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  position: relative;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1), transparent 50%),
-              radial-gradient(circle at 70% 70%, rgba(0, 245, 255, 0.2), transparent 50%),
-              linear-gradient(135deg, rgba(179, 0, 255, 0.3), rgba(0, 245, 255, 0.3));
-  border: 2px solid var(--neon-cyan);
-  box-shadow: 
-    0 0 30px rgba(0, 245, 255, 0.5),
-    inset 0 0 30px rgba(0, 245, 255, 0.1);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  animation: auraPulse 4s ease-in-out infinite;
-}
-
-#auraAvatar::before {
-  content: '◉';
-  font-size: 80px;
-  color: var(--neon-cyan);
-  text-shadow: 0 0 30px var(--neon-cyan);
-  animation: eyeBlink 5s ease-in-out infinite;
-}
-
-@keyframes auraPulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(0, 245, 255, 0.5); }
-  50% { transform: scale(1.02); box-shadow: 0 0 50px rgba(0, 245, 255, 0.8), 0 0 80px rgba(179, 0, 255, 0.4); }
-}
-
-@keyframes eyeBlink {
-  0%, 45%, 55%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
-/* Hologram rings */
-.holoRing {
-  position: absolute;
-  border: 1px solid var(--neon-cyan);
-  border-radius: 50%;
-  opacity: 0;
-  pointer-events: none;
-}
-
-#auraAvatar.speaking .holoRing {
-  animation: holoWave 2s ease-out infinite;
-}
-
-.holoRing:nth-child(1) { width: 200px; height: 200px; animation-delay: 0s; }
-.holoRing:nth-child(2) { width: 240px; height: 240px; animation-delay: 0.3s; }
-.holoRing:nth-child(3) { width: 280px; height: 280px; animation-delay: 0.6s; }
-
-@keyframes holoWave {
-  0% { transform: scale(0.8); opacity: 0.8; }
-  100% { transform: scale(1.5); opacity: 0; }
-}
-
-#auraName {
-  margin-top: 20px;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 700;
+#brandName {
+  font-family: 'Georama', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 800;
+  font-stretch: expanded;
   text-transform: uppercase;
-  letter-spacing: 4px;
-  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+  letter-spacing: 8px;
+  background: linear-gradient(90deg, var(--text-primary), var(--lilix-magenta));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 30px rgba(0, 245, 255, 0.5);
+  margin-bottom: 8px;
 }
 
-#auraStatus {
-  margin-top: 5px;
+#brandSubtitle {
+  font-family: 'Georama', sans-serif;
   font-size: 0.9rem;
-  opacity: 0.7;
-  font-family: 'Orbitron', sans-serif;
-  letter-spacing: 2px;
+  font-weight: 300;
+  letter-spacing: 6px;
   text-transform: uppercase;
+  color: rgba(224, 225, 221, 0.6);
+}
+
+/* Dodecahedron Wireframe Avatar */
+#avatarContainer {
+  margin-top: 40px;
+  width: 150px;
+  height: 150px;
+  position: relative;
+  z-index: 10;
+}
+
+.dodecahedron {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: rotate3d 15s infinite linear;
+}
+
+.dodecahedron svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 20px rgba(255, 0, 110, 0.3));
+}
+
+.dodecahedron path {
+  fill: none;
+  stroke: var(--lilix-magenta);
+  stroke-width: 1;
+  opacity: 0.8;
+  animation: pulseStroke 3s infinite ease-in-out;
+}
+
+@keyframes rotate3d {
+  0% { transform: rotateX(0deg) rotateY(0deg); }
+  100% { transform: rotateX(360deg) rotateY(360deg); }
+}
+
+@keyframes pulseStroke {
+  0%, 100% { stroke-opacity: 0.4; stroke-width: 1; }
+  50% { stroke-opacity: 1; stroke-width: 1.5; }
+}
+
+/* Status */
+#statusText {
+  margin-top: 30px;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(224, 225, 221, 0.5);
+  z-index: 10;
+}
+
+#statusText.active {
+  color: var(--lilix-cyan);
 }
 
 /* Result panel */
 #resultPanel {
-  margin-top: 40px;
+  margin-top: 30px;
   padding: 25px;
   width: 90%;
-  max-width: 600px;
+  max-width: 500px;
   min-height: 80px;
-  border: 1px solid rgba(0, 245, 255, 0.3);
-  border-radius: 20px;
-  background: var(--panel-bg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(20px);
   opacity: 0;
   transition: all 0.4s ease;
   text-align: center;
-  font-size: 1.2rem;
+  font-size: 1rem;
   line-height: 1.6;
   position: relative;
-  overflow: hidden;
   z-index: 10;
-}
-
-#resultPanel::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
-  animation: scanline 3s linear infinite;
-}
-
-@keyframes scanline {
-  0% { left: -100%; }
-  100% { left: 100%; }
+  font-weight: 300;
 }
 
 #resultPanel.show { 
   opacity: 1; 
-  transform: translateY(0);
-  box-shadow: 0 0 40px rgba(0, 245, 255, 0.1);
+  border-color: rgba(255, 0, 110, 0.3);
 }
 
-#resultPanel::-webkit-scrollbar {
-  width: 6px;
-}
-
-#resultPanel::-webkit-scrollbar-track {
-  background: rgba(0, 245, 255, 0.1);
-  border-radius: 3px;
-}
-
-#resultPanel::-webkit-scrollbar-thumb {
-  background: var(--neon-cyan);
-  border-radius: 3px;
-}
-
-/* AI Core Button */
-#aiCore {
+/* Main Action Button */
+#mainAction {
   position: fixed;
   bottom: 40px;
   left: 50%;
   transform: translateX(-50%);
-  width: 80px;
-  height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  z-index: 50;
+}
+
+#lilixCore {
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--neon-cyan) 0%, rgba(0, 245, 255, 0.3) 50%, transparent 70%);
-  border: 2px solid var(--neon-cyan);
+  background: linear-gradient(135deg, var(--lilix-magenta), var(--lilix-pink));
+  border: none;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  box-shadow: 0 0 40px rgba(0, 245, 255, 0.6);
+  box-shadow: 0 0 40px rgba(255, 0, 110, 0.4);
   transition: all 0.3s;
-  z-index: 50;
-  font-family: 'Orbitron', sans-serif;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--dark-bg);
+  position: relative;
 }
 
-#aiCore:hover {
-  transform: translateX(-50%) scale(1.1);
-  box-shadow: 0 0 60px rgba(0, 245, 255, 0.8);
+#lilixCore::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1px solid var(--lilix-magenta);
+  opacity: 0;
+  transition: all 0.3s;
 }
 
-#aiCore.recording {
-  background: radial-gradient(circle, #ff0040 0%, rgba(255, 0, 64, 0.3) 50%, transparent 70%);
-  border-color: #ff0040;
-  box-shadow: 0 0 40px rgba(255, 0, 64, 0.6);
-  animation: recPulse 1s ease-in-out infinite;
+#lilixCore:hover::before {
+  inset: -10px;
+  opacity: 0.5;
+}
+
+#lilixCore:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 60px rgba(255, 0, 110, 0.6);
+}
+
+#lilixCore.recording {
+  background: linear-gradient(135deg, #ff0040, #ff4080);
+  animation: recPulse 1s infinite;
 }
 
 @keyframes recPulse {
-  0%, 100% { transform: translateX(-50%) scale(1); }
-  50% { transform: translateX(-50%) scale(1.05); }
+  0%, 100% { box-shadow: 0 0 40px rgba(255, 0, 64, 0.4); }
+  50% { box-shadow: 0 0 60px rgba(255, 0, 64, 0.8); }
+}
+
+.coreIcon {
+  width: 24px;
+  height: 24px;
+  fill: white;
+}
+
+/* Text button */
+#textBtn {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+#textBtn:hover {
+  background: rgba(255, 0, 110, 0.1);
+  border-color: var(--lilix-magenta);
+  transform: translateY(-3px);
+}
+
+#textBtn svg {
+  width: 20px;
+  height: 20px;
+  fill: var(--text-primary);
 }
 
 /* Transcribed text */
 #transcribedText {
   position: fixed;
-  bottom: 140px;
+  bottom: 180px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 1rem;
-  opacity: 0.8;
-  color: var(--neon-cyan);
+  font-size: 0.9rem;
+  opacity: 0.7;
+  color: var(--text-primary);
   font-style: italic;
   text-align: center;
   max-width: 80%;
-  font-family: 'Rajdhani', sans-serif;
+  font-weight: 300;
   letter-spacing: 1px;
 }
 
 /* Login hint */
 #loginHint {
   position: fixed;
-  bottom: 180px;
+  bottom: 220px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   opacity: 0;
-  padding: 12px 25px;
-  background: rgba(255, 0, 64, 0.1);
-  border: 1px solid rgba(255, 0, 64, 0.5);
-  border-radius: 25px;
-  color: #ff6b6b;
-  font-family: 'Orbitron', sans-serif;
+  padding: 10px 20px;
+  background: rgba(255, 0, 110, 0.1);
+  border: 1px solid rgba(255, 0, 110, 0.3);
+  border-radius: 20px;
+  color: var(--lilix-magenta);
+  font-weight: 500;
+  letter-spacing: 2px;
   text-transform: uppercase;
-  letter-spacing: 1px;
   transition: opacity 0.3s;
   z-index: 50;
 }
@@ -411,80 +442,12 @@ body::before {
   opacity: 1;
 }
 
-/* Quick Actions - Left side */
-#quickActions {
-  position: fixed;
-  bottom: 40px;
-  left: 30px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  z-index: 50;
-}
-
-.quickBtn {
-  background: var(--glass);
-  border: 1px solid rgba(0, 245, 255, 0.3);
-  color: var(--neon-cyan);
-  padding: 15px 20px;
-  border-radius: 15px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: all 0.3s;
-  backdrop-filter: blur(10px);
-  font-family: 'Orbitron', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-}
-
-.quickBtn::before {
-  content: '▹';
-  font-size: 1.2rem;
-}
-
-.quickBtn:hover {
-  background: rgba(0, 245, 255, 0.15);
-  border-color: var(--neon-cyan);
-  transform: translateX(10px);
-  box-shadow: 0 0 25px rgba(0, 245, 255, 0.3);
-}
-
-/* Text FAB - Right side */
-#textFAB {
-  position: fixed;
-  bottom: 40px;
-  right: 30px;
-  width: 60px;
-  height: 60px;
-  border-radius: 15px;
-  background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.5rem;
-  cursor: pointer;
-  box-shadow: 0 0 30px rgba(179, 0, 255, 0.5);
-  transition: all 0.3s;
-  z-index: 50;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-#textFAB:hover {
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 0 40px rgba(255, 0, 255, 0.7);
-}
-
 /* Modal */
 #textModal {
   position: fixed;
   inset: 0;
-  background: rgba(10, 10, 15, 0.95);
-  backdrop-filter: blur(20px);
+  background: rgba(13, 27, 42, 0.95);
+  backdrop-filter: blur(30px);
   justify-content: center;
   align-items: center;
   z-index: 1000;
@@ -499,129 +462,127 @@ body::before {
   pointer-events: all;
 }
 
-#textBox {
-  background: var(--panel-bg);
-  border: 1px solid var(--neon-cyan);
-  box-shadow: 0 0 50px rgba(0, 245, 255, 0.2);
-  border-radius: 25px;
-  padding: 35px;
+#modalContent {
+  background: rgba(27, 38, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 30px;
   width: 90%;
   max-width: 450px;
   display: flex;
   flex-direction: column;
   gap: 20px;
   backdrop-filter: blur(30px);
-  transform: scale(0.9);
+  transform: scale(0.95);
   transition: transform 0.3s;
-  position: relative;
-  overflow: hidden;
 }
 
-#textModal:not(.hidden) #textBox {
+#textModal:not(.hidden) #modalContent {
   transform: scale(1);
 }
 
-#textBox::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--neon-cyan), var(--neon-pink), transparent);
+/* Suggestions */
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.suggestion-chip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  color: rgba(224, 225, 221, 0.8);
+}
+
+.suggestion-chip:hover {
+  background: rgba(255, 0, 110, 0.15);
+  border-color: var(--lilix-magenta);
+  color: var(--lilix-magenta);
+}
+
+.suggestion-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: rgba(224, 225, 221, 0.4);
+  margin-bottom: 8px;
+  font-weight: 500;
 }
 
 #textInput {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(0, 245, 255, 0.3);
-  border-radius: 15px;
-  padding: 20px;
-  color: var(--neon-cyan);
-  font-size: 1.1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 18px;
+  color: var(--text-primary);
+  font-size: 1rem;
   resize: none;
   outline: none;
-  height: 120px;
-  font-family: 'Rajdhani', sans-serif;
+  height: 100px;
+  font-family: 'Georama', sans-serif;
+  font-weight: 300;
   transition: all 0.3s;
   line-height: 1.5;
 }
 
 #textInput::placeholder {
-  color: rgba(0, 245, 255, 0.4);
-  font-style: italic;
+  color: rgba(224, 225, 221, 0.3);
 }
 
 #textInput:focus {
-  border-color: var(--neon-cyan);
-  box-shadow: 0 0 30px rgba(0, 245, 255, 0.2);
-  background: rgba(0, 0, 0, 0.6);
+  border-color: var(--lilix-magenta);
+  background: rgba(0, 0, 0, 0.3);
 }
 
-#sendTextBtn {
-  background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+#sendBtn {
+  background: linear-gradient(135deg, var(--lilix-magenta), var(--lilix-pink));
   border: none;
-  border-radius: 12px;
-  padding: 18px;
-  font-weight: 700;
+  border-radius: 10px;
+  padding: 16px;
+  font-weight: 600;
   letter-spacing: 3px;
-  color: var(--dark-bg);
+  color: white;
   cursor: pointer;
-  box-shadow: 0 0 30px rgba(0, 245, 255, 0.4);
   transition: all 0.3s;
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Georama', sans-serif;
   text-transform: uppercase;
-  font-size: 0.9rem;
-  position: relative;
-  overflow: hidden;
+  font-size: 0.8rem;
 }
 
-#sendTextBtn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  transition: left 0.5s;
-}
-
-#sendTextBtn:hover::before {
-  left: 100%;
-}
-
-#sendTextBtn:hover {
+#sendBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 40px rgba(0, 245, 255, 0.6);
+  box-shadow: 0 10px 30px rgba(255, 0, 110, 0.4);
 }
 
 /* Edit button */
 .edit-btn {
   margin-top: 20px;
-  padding: 12px 30px;
-  border-radius: 25px;
-  border: 1px solid var(--neon-cyan);
+  padding: 10px 25px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   background: transparent;
-  color: var(--neon-cyan);
+  color: var(--text-primary);
   cursor: pointer;
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Georama', sans-serif;
   text-transform: uppercase;
   letter-spacing: 2px;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
+  font-weight: 500;
   transition: all 0.3s;
-  position: relative;
-  overflow: hidden;
-}
-
-.edit-btn::before {
-  content: '✎';
-  margin-right: 8px;
 }
 
 .edit-btn:hover {
-  background: rgba(0, 245, 255, 0.15);
-  box-shadow: 0 0 25px rgba(0, 245, 255, 0.4);
-  transform: scale(1.05);
+  background: rgba(255, 0, 110, 0.1);
+  border-color: var(--lilix-magenta);
+  color: var(--lilix-magenta);
 }
 
 /* Reminder badge */
@@ -629,104 +590,57 @@ body::before {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, rgba(255, 0, 255, 0.2), rgba(179, 0, 255, 0.2));
-  border: 1px solid var(--neon-pink);
-  color: var(--neon-pink);
-  padding: 8px 15px;
+  background: rgba(0, 245, 212, 0.1);
+  border: 1px solid var(--lilix-cyan);
+  color: var(--lilix-cyan);
+  padding: 8px 16px;
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   margin-top: 15px;
-  font-family: 'Orbitron', sans-serif;
+  font-weight: 500;
+  letter-spacing: 2px;
   text-transform: uppercase;
-  letter-spacing: 1px;
 }
 
-.reminder-badge::before {
-  content: '◉';
-  animation: blink 2s infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
-/* Loading animation */
-.loading-dots {
-  display: inline-flex;
-  gap: 8px;
-}
-
-.loading-dots span {
-  animation: bounce 1.4s infinite ease-in-out both;
-  background: var(--neon-cyan);
-  border-radius: 50%;
-  width: 10px;
-  height: 10px;
-  box-shadow: 0 0 10px var(--neon-cyan);
-}
-
-.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
-.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
-
-@keyframes bounce {
-  0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
-  40% { transform: scale(1); opacity: 1; }
-}
-
-/* Notification button */
-#notifBtn {
-  position: fixed;
-  bottom: 120px;
-  right: 30px;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: var(--glass);
-  border: 1px solid rgba(0, 245, 255, 0.3);
-  color: var(--neon-cyan);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: all 0.3s;
-  z-index: 50;
-  backdrop-filter: blur(10px);
-}
-
-#notifBtn:hover {
-  background: rgba(0, 245, 255, 0.2);
-  transform: scale(1.1);
-  box-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
-}
-
-#notifBtn.granted {
-  background: var(--neon-cyan);
-  color: var(--dark-bg);
-  box-shadow: 0 0 30px rgba(0, 245, 255, 0.6);
-}
-
-/* Glitch effect for text */
-.glitch {
-  position: relative;
-  animation: glitch 3s infinite;
-}
-
-@keyframes glitch {
-  0%, 100% { transform: translate(0); }
-  20% { transform: translate(-2px, 2px); }
-  40% { transform: translate(-2px, -2px); }
-  60% { transform: translate(2px, 2px); }
-  80% { transform: translate(2px, -2px); }
+/* Mobile optimizations */
+@media (max-width: 600px) {
+  #brandName {
+    font-size: 1.8rem;
+    letter-spacing: 5px;
+  }
+  
+  #brandSubtitle {
+    font-size: 0.7rem;
+    letter-spacing: 4px;
+  }
+  
+  #userEmail {
+    max-width: 80px;
+  }
+  
+  #resultPanel {
+    width: 95%;
+    padding: 20px;
+  }
+  
+  .suggestions {
+    justify-content: center;
+  }
+  
+  .suggestion-chip {
+    font-size: 0.7rem;
+    padding: 6px 10px;
+  }
 }
 </style>
 </head>
 
 <body>
 
-<!-- Particles -->
-<div class="particles" id="particles"></div>
+<!-- Geometric shapes -->
+<div class="geo-shape"></div>
+<div class="geo-shape"></div>
+<div class="geo-shape"></div>
 
 <!-- Google auto loader -->
 <div id="g_id_onload"
@@ -737,158 +651,154 @@ body::before {
 
 <!-- TOP BAR -->
 <div id="topBar">
-  <div id="userPanel" class="hidden" onclick="toggleMenu()">
+  <div id="userPanel" class="hidden" onclick="toggleMenu(event)">
     <span id="userEmail"></span>
-    <span class="planBadge">FREE</span>
+    <span class="planBadge">Plan</span>
   </div>
 
   <div id="userMenu" class="hidden">
     <div class="g_id_signin" data-type="standard" data-theme="outline" data-size="medium"></div>
-    <div onclick="mejorarPlan()">⚡ Mejorar Plan</div>
-    <div onclick="verRecordatorios()">◉ Recordatorios</div>
-    <div onclick="logout()">✕ Cerrar sesión</div>
+    <div onclick="mejorarPlan()">Mejorar Plan</div>
+    <div onclick="verRecordatorios()">Ver Recordatorios</div>
+    <div onclick="logout()">Cerrar Sesión</div>
   </div>
 </div>
 
-<!-- AURA AVATAR -->
-<div id="auraContainer">
-  <div id="auraAvatar">
-    <div class="holoRing"></div>
-    <div class="holoRing"></div>
-    <div class="holoRing"></div>
-  </div>
-  <div id="auraName">AURA</div>
-  <div id="auraStatus">Sistema Listo</div>
+<!-- BRAND -->
+<div id="brandContainer">
+  <div id="brandName">LILIX</div>
+  <div id="brandSubtitle">Asistente Personal</div>
 </div>
 
-<!-- NOTIFICATION BUTTON -->
-<button id="notifBtn" class="hidden" onclick="solicitarNotificaciones()" title="Activar notificaciones">◉</button>
+<!-- AVATAR: Dodecahedron Wireframe -->
+<div id="avatarContainer">
+  <div class="dodecahedron">
+    <svg viewBox="0 0 100 100">
+      <!-- Simplified dodecahedron wireframe -->
+      <path d="M50 10 L80 25 L80 60 L50 75 L20 60 L20 25 Z" />
+      <path d="M50 10 L50 25 M80 25 L65 35 M80 60 L65 50 M50 75 L50 60 M20 60 L35 50 M20 25 L35 35" />
+      <path d="M50 25 L65 35 L65 50 L50 60 L35 50 L35 35 Z" opacity="0.5" />
+      <circle cx="50" cy="42" r="3" fill="var(--lilix-magenta)" opacity="0.8">
+        <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite" />
+      </circle>
+    </svg>
+  </div>
+</div>
+
+<!-- STATUS -->
+<div id="statusText">Sistema Listo</div>
 
 <!-- RESULT PANEL -->
 <div id="resultPanel"></div>
 
 <!-- LOGIN HINT -->
-<p id="loginHint" class="hidden">◉ INICIA SESIÓN PARA CONTINUAR</p>
+<div id="loginHint" class="hidden">Iniciá Sesión para Continuar</div>
 
 <!-- TRANSCRIBED TEXT -->
-<p id="transcribedText"></p>
+<div id="transcribedText"></div>
 
-<!-- QUICK ACTIONS -->
-<div id="quickActions" class="hidden">
-  <button class="quickBtn" onclick="setQuickText('Recordame mañana a las ')">⏱ Mañana</button>
-  <button class="quickBtn" onclick="setQuickText('Agendame ')">✚ Agendar</button>
-  <button class="quickBtn" onclick="setQuickText('Pasame ')">⌕ Buscar</button>
+<!-- MAIN ACTION -->
+<div id="mainAction">
+  <button id="textBtn" onclick="openTextModal()">
+    <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+  </button>
+  
+  <button id="lilixCore" onclick="toggleRecording()">
+    <svg class="coreIcon" viewBox="0 0 24 24">
+      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+      <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+    </svg>
+  </button>
 </div>
-
-<!-- AI CORE -->
-<div id="aiCore" onclick="toggleRecording()">
-  <span id="coreText">◉</span>
-</div>
-
-<!-- TEXT FAB -->
-<div id="textFAB" onclick="openTextModal()">✎</div>
 
 <!-- TEXT MODAL -->
 <div id="textModal" class="hidden" onclick="closeModalOnBackground(event)">
-  <div id="textBox">
-    <textarea id="textInput" placeholder="¿Qué necesitas, humano?"></textarea>
-    <button id="sendTextBtn" onclick="sendText()">◉ ENVIAR</button>
+  <div id="modalContent">
+    <div class="suggestion-label">Probá decir:</div>
+    <div class="suggestions">
+      <span class="suggestion-chip" onclick="setText('Recordame mañana a las 13hs ')">Mañana 13hs</span>
+      <span class="suggestion-chip" onclick="setText('Agendame ')">Agendar</span>
+      <span class="suggestion-chip" onclick="setText('Pasame ')">Buscar</span>
+      <span class="suggestion-chip" onclick="setText('Borra ')">Borrar</span>
+    </div>
+    
+    <textarea id="textInput" placeholder="¿Qué necesitás?"></textarea>
+    
+    <button id="sendBtn" onclick="sendText()">Enviar</button>
   </div>
 </div>
 
 <script>
-// ==================== VARIABLES GLOBALES ====================
 let userEmail = null;
 let mediaRecorder;
 let audioChunks = [];
-let recordingTimer;
-let recordingSeconds = 0;
-let ultimoResultadoTexto = ""; // Solo el texto limpio, sin HTML
-let ultimoResultadoHTML = ""; // El HTML completo para mostrar
-let modoEdicion = false;
 let isRecording = false;
+let ultimoResultadoTexto = "";
+let modoEdicion = false;
 
-// ==================== ELEMENTOS DOM ====================
-const aiCore = document.getElementById("aiCore");
-const coreText = document.getElementById("coreText");
-const transcribedText = document.getElementById("transcribedText");
+const statusText = document.getElementById("statusText");
 const resultPanel = document.getElementById("resultPanel");
-const userEmailSpan = document.getElementById("userEmail");
-const textFAB = document.getElementById("textFAB");
 const textModal = document.getElementById("textModal");
 const textInput = document.getElementById("textInput");
-const auraAvatar = document.getElementById("auraAvatar");
-const auraStatus = document.getElementById("auraStatus");
+const lilixCore = document.getElementById("lilixCore");
 
-// ==================== INICIALIZACIÓN ====================
-document.addEventListener('DOMContentLoaded', () => {
-  createParticles();
-  
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('SW registrado'))
-      .catch(err => console.log('SW error:', err));
+// Close menu when clicking outside
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById("userMenu");
+  const panel = document.getElementById("userPanel");
+  if (!menu.contains(e.target) && !panel.contains(e.target)) {
+    menu.classList.add("hidden");
   }
 });
 
-function createParticles() {
-  const container = document.getElementById('particles');
-  for (let i = 0; i < 20; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.left = Math.random() * 100 + '%';
-    p.style.animationDelay = Math.random() * 15 + 's';
-    p.style.animationDuration = (10 + Math.random() * 10) + 's';
-    container.appendChild(p);
-  }
-}
-
-// ==================== AUTENTICACIÓN ====================
 function handleCredentialResponse(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
   userEmail = payload.email;
-  userEmailSpan.textContent = userEmail;
+  
+  const emailSpan = document.getElementById("userEmail");
+  // Show abbreviated email on mobile
+  if (window.innerWidth < 600) {
+    const parts = userEmail.split('@');
+    emailSpan.textContent = parts[0].substring(0, 8) + (parts[0].length > 8 ? '...' : '');
+  } else {
+    emailSpan.textContent = userEmail;
+  }
 
   document.querySelector(".g_id_signin").classList.add("hidden");
   document.getElementById("userPanel").classList.remove("hidden");
   document.getElementById("userMenu").classList.add("hidden");
   document.getElementById("loginHint").classList.remove("show");
-  document.getElementById("notifBtn").classList.remove("hidden");
-  document.getElementById("quickActions").classList.remove("hidden");
   
-  auraStatus.textContent = "Conectada • " + userEmail.split('@')[0];
+  statusText.textContent = "Conectada";
+  statusText.classList.add("active");
 }
 
-function toggleMenu() {
+function toggleMenu(e) {
+  e.stopPropagation();
   document.getElementById("userMenu").classList.toggle("hidden");
 }
 
 function logout() {
   userEmail = null;
-  userEmailSpan.textContent = "";
   document.getElementById("userPanel").classList.add("hidden");
   document.querySelector(".g_id_signin").classList.remove("hidden");
   document.getElementById("userMenu").classList.add("hidden");
-  document.getElementById("notifBtn").classList.add("hidden");
-  document.getElementById("quickActions").classList.add("hidden");
-
-  transcribedText.textContent = "";
+  
   resultPanel.innerHTML = "";
   resultPanel.classList.remove("show");
   document.getElementById("loginHint").classList.add("show");
-
-  auraAvatar.classList.remove("speaking");
-  auraStatus.textContent = "Sistema Listo";
-  coreText.textContent = "◉";
+  
+  statusText.textContent = "Sistema Listo";
+  statusText.classList.remove("active");
 }
 
 function mejorarPlan() {
-  mostrarResultado("⚡ Función disponible próximamente. Gracias por tu interés.", false);
+  mostrarResultado("Función disponible próximamente", false);
 }
 
 async function verRecordatorios() {
   if (!userEmail) return;
-  auraStatus.textContent = "Procesando...";
+  statusText.textContent = "Procesando...";
   
   try {
     const res = await fetch("/.netlify/functions/respond", {
@@ -898,70 +808,33 @@ async function verRecordatorios() {
     });
     
     const data = await res.json();
-    if (data.result) {
-      mostrarResultado(data.result, false);
-    }
+    if (data.result) mostrarResultado(data.result, false);
   } catch (err) {
-    mostrarResultado("Error al cargar recordatorios", false);
+    mostrarResultado("Error al cargar", false);
   }
   
-  auraStatus.textContent = "Conectada";
+  statusText.textContent = "Conectada";
 }
 
-// ==================== NOTIFICACIONES ====================
-async function solicitarNotificaciones() {
-  if (!userEmail) {
-    speak("Debes iniciar sesión primero");
-    return;
-  }
-  
-  if (!('Notification' in window)) {
-    mostrarResultado("Tu navegador no soporta notificaciones", false);
-    return;
-  }
-  
-  const permission = await Notification.requestPermission();
-  
-  if (permission === 'granted') {
-    document.getElementById('notifBtn').classList.add('granted');
-    mostrarResultado("◉ Notificaciones activadas", false);
-  }
-}
-
-// ==================== VOZ ====================
 function speak(text) {
   if (!text) return;
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "es-AR";
   utterance.rate = 0.9;
-  utterance.pitch = 1.1;
-  
-  auraAvatar.classList.add("speaking");
-  auraStatus.textContent = "Hablando...";
-  
-  utterance.onend = () => {
-    auraAvatar.classList.remove("speaking");
-    auraStatus.textContent = "Conectada • " + (userEmail ? userEmail.split('@')[0] : '');
-  };
-  
   speechSynthesis.speak(utterance);
 }
 
-// ==================== UI RESULTADOS ====================
 function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false) {
-  // Guardar solo el texto limpio (sin HTML) para edición
   ultimoResultadoTexto = texto.replace(/<[^>]*>/g, '').replace(/📅/g, '').trim();
-  // Guardar el HTML completo para mostrar
-  ultimoResultadoHTML = texto;
   
   let html = `<div>${texto}</div>`;
   
   if (esRecordatorio) {
-    html += `<div class="reminder-badge">◉ RECORDATORIO ACTIVO</div>`;
+    html += `<div class="reminder-badge">Recordatorio Activo</div>`;
   }
   
   if (mostrarEditar) {
-    html += `<button class="edit-btn" onclick="activarEdicion()">✎ Editar</button>`;
+    html += `<button class="edit-btn" onclick="activarEdicion()">Editar</button>`;
   }
   
   resultPanel.innerHTML = html;
@@ -970,41 +843,29 @@ function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false) 
 
 function activarEdicion() {
   modoEdicion = true;
-  // Usar solo el texto limpio, no el HTML
   textInput.value = ultimoResultadoTexto;
   openTextModal();
 }
 
-function setQuickText(texto) {
-  if (!userEmail) {
-    document.getElementById("userMenu").classList.remove("hidden");
-    return;
-  }
+function setText(texto) {
   textInput.value = texto;
-  openTextModal();
+  textInput.focus();
 }
 
-// ==================== MODAL ====================
 function openTextModal() {
   if (!userEmail) {
-    document.getElementById("userMenu").classList.remove("hidden");
     document.getElementById("loginHint").classList.add("show");
-    speak("Debes iniciar sesión para continuar");
+    speak("Debes iniciar sesión");
     return;
   }
 
-  if (!modoEdicion) {
-    textInput.value = "";
-  }
-  
+  if (!modoEdicion) textInput.value = "";
   textModal.classList.remove("hidden");
   textInput.focus();
 }
 
 function closeModalOnBackground(e) {
-  if (e.target === textModal) {
-    closeModal();
-  }
+  if (e.target === textModal) closeModal();
 }
 
 function closeModal() {
@@ -1018,14 +879,13 @@ textInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.ctrlKey) sendText();
 });
 
-// ==================== ENVIAR TEXTO ====================
 async function sendText() {
   const texto = textInput.value.trim();
   if (!texto) return;
 
   closeModal();
-  transcribedText.textContent = "◉ " + texto;
-  auraStatus.textContent = "Procesando...";
+  document.getElementById("transcribedText").textContent = texto;
+  statusText.textContent = "Procesando...";
 
   try {
     let bodyData;
@@ -1033,112 +893,73 @@ async function sendText() {
     if (modoEdicion) {
       bodyData = {
         action: "edit",
-        oldText: ultimoResultadoTexto, // Usar el texto limpio
+        oldText: ultimoResultadoTexto,
         newText: texto,
         email: userEmail
       };
       modoEdicion = false;
     } else {
-      bodyData = {
-        text: texto,
-        email: userEmail
-      };
+      bodyData = { text: texto, email: userEmail };
     }
 
-    const resResp = await fetch("/.netlify/functions/respond", {
+    const res = await fetch("/.netlify/functions/respond", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(bodyData)
     });
 
-    const dataResp = await resResp.json();
+    const data = await res.json();
 
-    if (dataResp.result) {
-      const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
-      const esRecordatorio = dataResp.reminderData || false;
-      
-      mostrarResultado(dataResp.result, esBusqueda, esRecordatorio);
+    if (data.result) {
+      const esBusqueda = data.action === "get" && !data.result.toLowerCase().includes("no encontr");
+      mostrarResultado(data.result, esBusqueda, data.reminderData);
     }
 
-    if (dataResp.ok && dataResp.audioBase64) {
-      const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
-      auraAvatar.classList.add("speaking");
-      auraStatus.textContent = "Respondiendo...";
+    if (data.ok && data.audioBase64) {
+      const audio = new Audio(`data:audio/mpeg;base64,${data.audioBase64}`);
       audio.play();
-      audio.onended = () => {
-        auraAvatar.classList.remove("speaking");
-        auraStatus.textContent = "Conectada";
-      };
-    } else {
-      auraStatus.textContent = "Conectada";
     }
 
+    statusText.textContent = "Conectada";
   } catch (err) {
-    console.error(err);
-    mostrarResultado("◉ Error de conexión", false);
-    auraStatus.textContent = "Error";
+    mostrarResultado("Error de conexión", false);
+    statusText.textContent = "Error";
   }
 }
 
-// ==================== GRABACIÓN ====================
 async function toggleRecording() {
   if (!userEmail) {
-    document.getElementById("userMenu").classList.remove("hidden");
     document.getElementById("loginHint").classList.add("show");
-    speak("Debes iniciar sesión para continuar");
+    speak("Debes iniciar sesión");
     return;
   }
 
   if (!isRecording) {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          sampleRate: 44100
-        } 
-      });
-      
-      const options = { mimeType: 'audio/webm;codecs=opus' };
-      mediaRecorder = new MediaRecorder(stream, options);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
       audioChunks = [];
       
-      mediaRecorder.ondataavailable = e => {
-        if (e.data.size > 0) audioChunks.push(e.data);
-      };
-      
+      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
       mediaRecorder.onstop = sendAudio;
-      mediaRecorder.start(100);
+      mediaRecorder.start();
       
       isRecording = true;
-      aiCore.classList.add("recording");
-      coreText.textContent = "◉ REC";
-      auraStatus.textContent = "Escuchando...";
-      recordingSeconds = 0;
-      
-      recordingTimer = setInterval(() => {
-        recordingSeconds++;
-        if (recordingSeconds >= 30) toggleRecording();
-      }, 1000);
-      
+      lilixCore.classList.add("recording");
+      statusText.textContent = "Escuchando...";
     } catch(err) {
-      mostrarResultado("◉ Error de micrófono", false);
+      mostrarResultado("Error de micrófono", false);
     }
   } else {
     mediaRecorder.stop();
     mediaRecorder.stream.getTracks().forEach(track => track.stop());
-    clearInterval(recordingTimer);
-    
     isRecording = false;
-    aiCore.classList.remove("recording");
-    coreText.textContent = "◉";
-    auraStatus.textContent = "Procesando...";
+    lilixCore.classList.remove("recording");
+    statusText.textContent = "Procesando...";
   }
 }
 
 async function sendAudio() {
-  if (audioChunks.length === 0) return;
-  
   const blob = new Blob(audioChunks, { type: "audio/webm" });
   const reader = new FileReader();
   reader.readAsDataURL(blob);
@@ -1154,11 +975,8 @@ async function sendAudio() {
       });
 
       const dataTrans = await resTrans.json();
-      
-      if (!dataTrans.text) throw new Error("No se pudo transcribir");
-      
       const texto = dataTrans.text;
-      transcribedText.textContent = "◉ " + texto;
+      document.getElementById("transcribedText").textContent = texto;
 
       const resResp = await fetch("/.netlify/functions/respond", {
         method: "POST",
@@ -1170,28 +988,17 @@ async function sendAudio() {
 
       if (dataResp.result) {
         const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
-        const esRecordatorio = dataResp.reminderData || false;
-        
-        mostrarResultado(dataResp.result, esBusqueda, esRecordatorio);
+        mostrarResultado(dataResp.result, esBusqueda, dataResp.reminderData);
       }
 
       if (dataResp.ok && dataResp.audioBase64) {
         const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
-        auraAvatar.classList.add("speaking");
-        auraStatus.textContent = "Respondiendo...";
         audio.play();
-        audio.onended = () => {
-          auraAvatar.classList.remove("speaking");
-          auraStatus.textContent = "Conectada";
-        };
-      } else {
-        auraStatus.textContent = "Conectada";
       }
 
+      statusText.textContent = "Conectada";
     } catch (err) {
-      transcribedText.textContent = "◉ Error";
-      mostrarResultado("No pude procesar tu solicitud", false);
-      auraStatus.textContent = "Error";
+      statusText.textContent = "Error";
     }
   };
 }
