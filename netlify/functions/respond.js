@@ -1,6 +1,6 @@
 import { OpenAI } from "openai";
 
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxH-sMPHcuCKAiEerrrGNPv75xzBzaIFSjMZqKPqWamWo2Ibp_5W0OVk11QAP_dtvzU/exec";
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw6tSaae4s3gJYWtqKb3UWHgEOsSZHcd-ZPI6GgzCTHwqkaYe-0NPpDFS3qMQ5o-kOb/exec";
 
 export const handler = async (event) => {
   const headers = {
@@ -115,6 +115,11 @@ REGLAS IMPORTANTES:
 - "borra", "elimina", "saca", "quita" → action: "delete"
 - "cambia", "modifica", "actualiza", "edita" → action: "edit"
 
+Para recordatorios, extrae la hora exacta que menciona el usuario:
+- "8hs", "8:00", "8" → timeText: "08:00"
+- "16hs", "16:00", "16" → timeText: "16:00"
+- "13hs", "13:00", "13" → timeText: "13:00"
+
 Analiza el texto y responde SOLO con este JSON:
 {
   "action": "add|get|delete|edit|reminder|unknown",
@@ -123,15 +128,17 @@ Analiza el texto y responde SOLO con este JSON:
   "reminder": {
     "isReminder": true/false,
     "type": "unico|diario|semanal|mensual|anual",
-    "dateText": "texto de fecha exacto (ej: 12 de diciembre, mañana)",
-    "timeText": "texto de hora (ej: 14:30)",
+    "dateText": "texto de fecha exacto (ej: 12 de diciembre, mañana, lunes a viernes)",
+    "timeText": "hora exacta en formato HH:MM (ej: 08:00, 16:00, 13:00)",
     "description": "descripción del recordatorio"
   }
 }
 
 Ejemplos:
 - "agendame comprar leche" → {"action":"add","content":"comprar leche","reminder":{"isReminder":false}}
-- "recordame cumpleaños lili 12 de diciembre" → {"action":"reminder","content":"cumpleaños lili","reminder":{"isReminder":true,"type":"anual","dateText":"12 de diciembre","timeText":"","description":"cumpleaños lili"}}
+- "recordame cumpleaños lili 12 de diciembre" → {"action":"reminder","content":"cumpleaños lili","reminder":{"isReminder":true,"type":"anual","dateText":"12 de diciembre","timeText":"09:00","description":"cumpleaños lili"}}
+- "mañana almuerzo con Pepe 13hs" → {"action":"reminder","content":"almuerzo con Pepe","reminder":{"isReminder":true,"type":"unico","dateText":"mañana","timeText":"13:00","description":"almuerzo con Pepe"}}
+- "de lunes a viernes 8hs" → {"action":"reminder","content":"trabajo","reminder":{"isReminder":true,"type":"semanal","dateText":"lunes a viernes","timeText":"08:00","description":"trabajo"}}
 - "Pasame cumpleaños lili" → {"action":"get","content":"cumpleaños lili","reminder":{"isReminder":false}}
 - "borra lo de la leche" → {"action":"delete","content":"leche","reminder":{"isReminder":false}}`
           },
@@ -146,7 +153,7 @@ Ejemplos:
       textoProcesado = intent.content || text;
       reminderData = intent.reminder;
       
-      console.log("Intent detectado:", action, "Contenido:", textoProcesado);
+      console.log("Intent detectado:", action, "Contenido:", textoProcesado, "Reminder:", JSON.stringify(reminderData));
     }
 
     // ========== MODO EDICIÓN ==========
@@ -219,8 +226,13 @@ Ejemplos:
       
       if (data.ok) {
         const fechaMostrar = data.fechaFormateada || reminderData?.dateText || 'próximamente';
-        respuestaFinal = `⏰ <strong>Recordatorio:</strong> ${textoProcesado}<br><small style="color:#ffc107">📅 ${fechaMostrar}</small>`;
-        textoParaVoz = `Perfecto, te recordaré: ${textoProcesado} para el ${fechaMostrar}`;
+        const horaMostrar = data.hora || reminderData?.timeText || '09:00';
+        
+        // Formatear hora bonita (13:00 → 13hs)
+        const horaBonita = horaMostrar.replace(/:00$/, 'hs').replace(/:(\d+)$/, ':$1');
+        
+        respuestaFinal = `⏰ <strong>Recordatorio:</strong> ${textoProcesado}<br><small style="color:#ffc107">📅 ${fechaMostrar} a las ${horaBonita}</small>`;
+        textoParaVoz = `Perfecto, te recordaré: ${textoProcesado} para el ${fechaMostrar} a las ${horaBonita}`;
         esRecordatorio = true;
       } else {
         respuestaFinal = "No pude programar el recordatorio.";
