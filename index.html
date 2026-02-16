@@ -1166,15 +1166,27 @@ function stopCoreAnimation() {
   coreText.textContent = "GO";
 }
 
-// ==================== UI RESULTADOS ====================
-function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, reminderData = null) {
+// ==================== UI RESULTADOS - CORREGIDO ====================
+function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, reminderData = null, datosExtra = null) {
   ultimoResultado = texto;
   ultimoResultadoTexto = texto.replace(/<[^>]*>/g, '').trim();
   
-  // Guardar datos del recordatorio si viene
+  // >>> CORRECCIÓN CLAVE: También guardar datos de la búsqueda (get) <<<
+  // Si es recordatorio O si es búsqueda que encontró un recordatorio (tiene reminderId)
   if (reminderData && reminderData.isReminder) {
     ultimoReminderData = reminderData;
-    console.log("✓ Guardado reminderData en mostrarResultado:", ultimoReminderData);
+    console.log("✓ Guardado reminderData (desde creación):", ultimoReminderData);
+  } else if (datosExtra && datosExtra.reminderId) {
+    // Viene de una búsqueda (get) que encontró recordatorio
+    ultimoReminderData = {
+      isReminder: true,
+      id: datosExtra.reminderId,
+      type: datosExtra.tipo || 'unico',
+      dateText: datosExtra.dateText || '',
+      timeText: datosExtra.timeText || '09:00',
+      description: datosExtra.description || ultimoResultadoTexto
+    };
+    console.log("✓ Guardado reminderData (desde búsqueda):", ultimoReminderData);
   } else if (!modoEdicion) {
     // Solo limpiar si no estamos en medio de una edición
     ultimoReminderData = null;
@@ -1182,11 +1194,11 @@ function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, 
   
   let html = `<div class="result-content">${texto}</div>`;
   
-  if (esRecordatorio) {
+  if (esRecordatorio || (datosExtra && datosExtra.reminderId)) {
     html += `<div class="reminder-badge"><svg class="icon icon-small" style="stroke: currentColor;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>Recordatorio programado</div>`;
   }
   
-  if (mostrarEditar) {
+  if (mostrarEditar || (datosExtra && datosExtra.reminderId)) {
     html += `<button class="edit-btn" onclick="activarEdicion()"><svg class="icon icon-small" style="stroke: currentColor;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>Editar</button>`;
   }
   
@@ -1223,12 +1235,13 @@ function activarEdicion() {
     modalTitle.textContent = "Editar recordatorio";
     sendBtnText.textContent = "Guardar cambios";
     
-    console.log("Texto reconstruido:", textInput.value);
+    console.log("Texto reconstruido para edición:", textInput.value);
+    console.log("ID del recordatorio a editar:", ultimoReminderData.id);
   } else {
     textInput.value = ultimoResultadoTexto;
     modalTitle.textContent = "Editar nota";
     sendBtnText.textContent = "Guardar cambios";
-    console.log("Edición normal:", textInput.value);
+    console.log("Edición normal (sin ID de recordatorio):", textInput.value);
   }
   
   textModal.classList.remove("hidden");
@@ -1290,7 +1303,7 @@ function cerrarModal() {
   sendBtnText.textContent = "Enviar";
 }
 
-// ==================== ENVIAR TEXTO - VERSIÓN CORREGIDA ====================
+// ==================== ENVIAR TEXTO - CORREGIDO ====================
 sendTextBtn.onclick = async () => {
   const texto = textInput.value.trim();
   if (!texto) return;
@@ -1316,13 +1329,13 @@ sendTextBtn.onclick = async () => {
       const oldTextLimpio = ultimoResultadoTexto;
       const newTextLimpio = texto;
       
-      // Preparar datos específicos para edición
+      // >>> CORRECCIÓN: Siempre enviar reminderId si existe <<<
       bodyData = {
         action: "edit",
         oldText: oldTextLimpio,
         newText: newTextLimpio,
         email: userEmail,
-        userId: userEmail, // Por compatibilidad
+        userId: userEmail,
         isReminder: !!(ultimoReminderData && ultimoReminderData.isReminder),
         reminderId: ultimoReminderData ? ultimoReminderData.id : null,
         description: ultimoReminderData ? ultimoReminderData.description : null
@@ -1356,11 +1369,21 @@ sendTextBtn.onclick = async () => {
       const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
       const esRecordatorio = dataResp.reminderData && dataResp.reminderData.isReminder;
       
+      // >>> CORRECCIÓN: Pasar datos extra para búsquedas <<<
+      const datosExtra = dataResp.reminderId ? {
+        reminderId: dataResp.reminderId,
+        tipo: dataResp.tipo,
+        dateText: dataResp.dateText,
+        timeText: dataResp.timeText,
+        description: dataResp.description
+      } : null;
+      
       mostrarResultado(
         dataResp.result || dataResp.message, 
         esBusqueda, 
         esRecordatorio, 
-        dataResp.reminderData
+        dataResp.reminderData,
+        datosExtra
       );
       
       // Si era edición exitosa, limpiar datos viejos
@@ -1472,7 +1495,16 @@ async function sendAudio() {
         const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
         const esRecordatorio = dataResp.reminderData && dataResp.reminderData.isReminder;
         
-        mostrarResultado(dataResp.result, esBusqueda, esRecordatorio, dataResp.reminderData);
+        // Pasar datos extra para búsquedas
+        const datosExtra = dataResp.reminderId ? {
+          reminderId: dataResp.reminderId,
+          tipo: dataResp.tipo,
+          dateText: dataResp.dateText,
+          timeText: dataResp.timeText,
+          description: dataResp.description
+        } : null;
+        
+        mostrarResultado(dataResp.result, esBusqueda, esRecordatorio, dataResp.reminderData, datosExtra);
       }
 
       if (dataResp.ok && dataResp.audioBase64) {
