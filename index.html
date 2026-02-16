@@ -838,7 +838,7 @@ body {
 <div id="textModal" class="hidden">
   <div id="textBox">
     <div class="modalHeader">
-      <span class="modalTitle">Escribe tu solicitud</span>
+      <span class="modalTitle" id="modalTitle">Escribe tu solicitud</span>
       <button id="closeModal" onclick="cerrarModal()">
         <svg class="icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
@@ -846,7 +846,7 @@ body {
     <textarea id="textInput" placeholder="Ej: Recordame mañana a las 9:00 llamar al médico"></textarea>
     <button id="sendTextBtn">
       <svg class="icon icon-small"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-      Enviar
+      <span id="sendBtnText">Enviar</span>
     </button>
   </div>
 </div>
@@ -862,7 +862,6 @@ let ultimoResultado = "";
 let ultimoResultadoTexto = "";
 let ultimoReminderData = null;
 let modoEdicion = false;
-let esEdicionRecordatorio = false;
 let pushSubscription = null;
 let pressTimer;
 let isRecording = false;
@@ -878,6 +877,8 @@ const textFAB = document.getElementById("textFAB");
 const textModal = document.getElementById("textModal");
 const textInput = document.getElementById("textInput");
 const sendTextBtn = document.getElementById("sendTextBtn");
+const sendBtnText = document.getElementById("sendBtnText");
+const modalTitle = document.getElementById("modalTitle");
 const notifBtn = document.getElementById("notifBtn");
 const quickActions = document.getElementById("quickActions");
 const loginHint = document.getElementById("loginHint");
@@ -895,7 +896,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Escuchar mensajes del SW
   navigator.serviceWorker?.addEventListener('message', event => {
     if (event.data.type === 'REMINDER_TRIGGERED') {
-      mostrarResultado(`Recordatorio: ${event.data.message}`, false);
+      mostrarResultado(`⏰ Recordatorio: ${event.data.message}`, false);
       speak(`Recordatorio: ${event.data.message}`);
     }
   });
@@ -1168,15 +1169,15 @@ function stopCoreAnimation() {
 // ==================== UI RESULTADOS ====================
 function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, reminderData = null) {
   ultimoResultado = texto;
-  ultimoResultadoTexto = texto.split('<')[0].trim();
+  ultimoResultadoTexto = texto.replace(/<[^>]*>/g, '').trim(); // Limpiar HTML para edición
   
-  // CORREGIDO: Solo actualizar ultimoReminderData si viene nuevo dato
+  // Guardar datos del recordatorio si viene
   if (reminderData && reminderData.isReminder) {
     ultimoReminderData = reminderData;
     console.log("Guardado reminderData:", ultimoReminderData);
-  } else if (!reminderData) {
-    // Si viene null, NO pisar el anterior (podría ser un get después de crear)
-    console.log("reminderData es null, mantengo anterior:", ultimoReminderData);
+  } else if (!modoEdicion) {
+    // Solo limpiar si no estamos en medio de una edición
+    ultimoReminderData = null;
   }
   
   let html = `<div class="result-content">${texto}</div>`;
@@ -1196,28 +1197,43 @@ function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, 
     resultPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 }
+
 function activarEdicion() {
+  if (!ultimoResultadoTexto) {
+    console.error("No hay texto para editar");
+    return;
+  }
+  
   modoEdicion = true;
   
   console.log("Activando edición. ultimoReminderData:", ultimoReminderData);
   
   if (ultimoReminderData && ultimoReminderData.isReminder) {
+    // Reconstruir texto del recordatorio para edición
     const tipo = ultimoReminderData.type || 'unico';
     const fecha = ultimoReminderData.dateText || 'mañana';
     const hora = ultimoReminderData.timeText || '09:00';
     const descripcion = ultimoReminderData.description || ultimoResultadoTexto;
     
+    // Formatear hora bonita
     const horaBonita = hora.replace(/:00$/, 'hs').replace(/:(\d+)$/, ':$1');
     
     textInput.value = `Recordame ${fecha} a las ${horaBonita} ${descripcion}`;
-    console.log("Texto reconstruido:", textInput.value);
+    modalTitle.textContent = "Editar recordatorio";
+    sendBtnText.textContent = "Guardar cambios";
+    
+    console.log("Texto reconstruido para edición:", textInput.value);
   } else {
+    // Edición normal de nota
     textInput.value = ultimoResultadoTexto;
-    console.log("Edición normal (no recordatorio):", textInput.value);
+    modalTitle.textContent = "Editar nota";
+    sendBtnText.textContent = "Guardar cambios";
+    console.log("Edición normal:", textInput.value);
   }
   
   textModal.classList.remove("hidden");
   textInput.focus();
+  textInput.select(); // Seleccionar todo para fácil edición
 }
 
 function setQuickText(texto) {
@@ -1225,7 +1241,10 @@ function setQuickText(texto) {
     toggleMenu();
     return;
   }
+  modoEdicion = false;
   textInput.value = texto;
+  modalTitle.textContent = "Escribe tu solicitud";
+  sendBtnText.textContent = "Enviar";
   textModal.classList.remove("hidden");
   textInput.focus();
 }
@@ -1240,8 +1259,10 @@ textFAB.onclick = () => {
   }
 
   modoEdicion = false;
-  esEdicionRecordatorio = false;
+  ultimoReminderData = null;
   textInput.value = "";
+  modalTitle.textContent = "Escribe tu solicitud";
+  sendBtnText.textContent = "Enviar";
   textModal.classList.remove("hidden");
   textInput.focus();
 };
@@ -1264,131 +1285,71 @@ textInput.addEventListener('keydown', (e) => {
 function cerrarModal() {
   textModal.classList.add("hidden");
   modoEdicion = false;
-  esEdicionRecordatorio = false;
   textInput.value = "";
+  modalTitle.textContent = "Escribe tu solicitud";
+  sendBtnText.textContent = "Enviar";
 }
 
-// ==================== ENVIAR TEXTO ====================
+// ==================== ENVIAR TEXTO (SIMPLIFICADO) ====================
 sendTextBtn.onclick = async () => {
   const texto = textInput.value.trim();
   if (!texto) return;
 
   cerrarModal();
-  transcribedText.textContent = texto;
+  transcribedText.textContent = modoEdicion ? `Editando: ${texto}` : texto;
 
   try {
     startCoreAnimation("...");
 
-    let dataResp;
+    let bodyData;
     
     if (modoEdicion) {
-      // === MODO EDICIÓN ===
-      
-      // PASO 1: Intentar usar endpoint edit (si existe)
-      const resEdit = await fetch("/.netlify/functions/respond", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "edit",
-          oldText: ultimoResultadoTexto,
-          newText: texto,
-          email: userEmail,
-          isReminder: ultimoReminderData && ultimoReminderData.isReminder,
-          reminderId: ultimoReminderData ? ultimoReminderData.id : null
-        })
-      });
-      
-      dataResp = await resEdit.json();
-      
-      // Si el backend no soporta edit (error o no existe), hacer fallback manual
-      if (!dataResp.ok && (dataResp.error && dataResp.error.includes("no válida"))) {
-        console.log("Backend no soporta edit, usando fallback delete+add");
-        
-        // Fallback: Borrar primero, luego crear
-        if (ultimoReminderData && ultimoReminderData.isReminder) {
-          // Es recordatorio: borrar el viejo
-          await fetch("/.netlify/functions/respond", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action: "delete",
-              text: ultimoReminderData.description || ultimoResultadoTexto,
-              email: userEmail
-            })
-          });
-          
-          // Crear nuevo como recordatorio (detectará "Recordame" en el texto)
-          const resNuevo = await fetch("/.netlify/functions/respond", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              text: texto, // Debe contener "Recordame..." para que se detecte como recordatorio
-              email: userEmail
-            })
-          });
-          
-          dataResp = await resNuevo.json();
-          
-        } else {
-          // Es nota simple: borrar y agregar
-          await fetch("/.netlify/functions/respond", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action: "delete",
-              text: ultimoResultadoTexto,
-              email: userEmail
-            })
-          });
-          
-          const resNuevo = await fetch("/.netlify/functions/respond", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              text: texto,
-              email: userEmail
-            })
-          });
-          
-          dataResp = await resNuevo.json();
-        }
-      }
-      
-      // Limpiar estado de edición
-      modoEdicion = false;
-      ultimoReminderData = null;
-      
+      // === MODO EDICIÓN: Usar endpoint edit de Apps Script ===
+      bodyData = {
+        action: "edit",
+        oldText: ultimoResultadoTexto,
+        newText: texto,
+        email: userEmail,
+        isReminder: ultimoReminderData && ultimoReminderData.isReminder,
+        reminderId: ultimoReminderData ? ultimoReminderData.id : null
+      };
+      console.log("Enviando edición:", bodyData);
     } else {
       // === MODO NUEVO ===
-      const res = await fetch("/.netlify/functions/respond", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: texto,
-          email: userEmail
-        })
-      });
-      
-      dataResp = await res.json();
+      bodyData = {
+        text: texto,
+        email: userEmail
+      };
     }
 
+    const resResp = await fetch("/.netlify/functions/respond", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bodyData)
+    });
+
+    const dataResp = await resResp.json();
     console.log("Respuesta:", dataResp);
 
-    if (dataResp.result || dataResp.message) {
+    // Limpiar modo edición después de procesar
+    const eraEdicion = modoEdicion;
+    modoEdicion = false;
+
+    if (dataResp.result) {
       const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
       const esRecordatorio = dataResp.reminderData && dataResp.reminderData.isReminder;
       
-      mostrarResultado(
-        dataResp.result || dataResp.message, 
-        esBusqueda, 
-        esRecordatorio, 
-        dataResp.reminderData
-      );
+      mostrarResultado(dataResp.result, esBusqueda, esRecordatorio, dataResp.reminderData);
+      
+      // Si era edición exitosa, limpiar datos viejos
+      if (eraEdicion && dataResp.ok) {
+        ultimoReminderData = null;
+      }
     } else {
       mostrarResultado("No se pudo completar la operación", false);
     }
 
-    // Audio
+    // Reproducir audio si viene
     if (dataResp.ok && dataResp.audioBase64) {
       const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
       startCoreAnimation("AI");
@@ -1402,9 +1363,10 @@ sendTextBtn.onclick = async () => {
     console.error("Error:", err);
     mostrarResultado("Error de conexión. Intenta de nuevo.", false);
     stopCoreAnimation();
+    modoEdicion = false;
   }
 };
-  
+
 // ==================== GRABACIÓN DE VOZ ====================
 async function startRecording() {
   try {
@@ -1485,10 +1447,8 @@ async function sendAudio() {
 
       if (dataResp.result) {
         const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
-        // CORREGIDO: Verificar que reminderData existe y tiene isReminder
         const esRecordatorio = dataResp.reminderData && dataResp.reminderData.isReminder;
         
-        // CORREGIDO: Pasar reminderData a mostrarResultado
         mostrarResultado(dataResp.result, esBusqueda, esRecordatorio, dataResp.reminderData);
       }
 
@@ -1535,3 +1495,4 @@ aiCore.onclick = (e) => {
 </script>
 </body>
 </html>
+
