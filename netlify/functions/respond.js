@@ -1,6 +1,6 @@
 import { OpenAI } from "openai";
 
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzDt3DH6AtKGEsu2Bge5I2SjuWheILb8Z6w6DF40WuErV0IXER1JznuMSDpFlaoML0z/exec";
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzaip2WuavMQ9mR2xmHUgn0X6HNtjSlXTpLtQOc4u6CEeWrmuMkGwBdjB0BkBxNAZNA/exec";
 
 export const handler = async (event) => {
   const headers = {
@@ -23,7 +23,7 @@ export const handler = async (event) => {
 
   try {
     const body = JSON.parse(event.body || "{}");
-    const { text = "", email, oldText, newText, action: forcedAction, subscription } = body;
+    const { text = "", email, oldText, newText, action: forcedAction, subscription, isReminder, reminderId } = body;
 
     if (!email && !forcedAction) {
       return {
@@ -95,12 +95,98 @@ export const handler = async (event) => {
       };
     }
 
+    // ========== MODO EDICIÓN DIRECTA (NUEVO - APPS SCRIPT SOPORTA EDIT) ==========
+    if (forcedAction === "edit" || (oldText && newText && !text)) {
+      console.log("Modo edición detectado:", { oldText, newText, isReminder, reminderId });
+      
+      if (!oldText || !newText) {
+        const errorMsg = "Faltan datos para editar.";
+        const audioBase64 = await generarAudio(openai, errorMsg);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            ok: false,
+            action: "edit",
+            result: errorMsg,
+            audioBase64
+          })
+        };
+      }
+
+      try {
+        const res = await fetch(SHEETS_WEBAPP_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "edit",
+            userId,
+            oldText,
+            newText,
+            isReminder: isReminder || false,
+            reminderId: reminderId || null
+          })
+        });
+
+        const data = await res.json();
+        console.log("Respuesta de edit en Sheets:", data);
+
+        if (!data.ok) {
+          throw new Error(data.error || "Error al editar en Sheets");
+        }
+
+        // Generar mensaje de voz según el tipo
+        let textoVoz = "";
+        let resultadoHTML = "";
+        
+        if (data.reminderData && data.reminderData.isReminder) {
+          const horaBonita = data.reminderData.timeText.replace(/:00$/, 'hs').replace(/:(\d+)$/, ':$1');
+          resultadoHTML = `✏️ <strong>Editado:</strong> ${data.reminderData.description}<br><small style="color:#ffc107">📅 ${data.reminderData.fechaFormateada} a las ${horaBonita}</small>`;
+          textoVoz = `Listo, actualicé el recordatorio: ${data.reminderData.description} para el ${data.reminderData.fechaFormateada} a las ${horaBonita}`;
+        } else {
+          resultadoHTML = `✏️ <strong>Editado:</strong> ${newText}`;
+          textoVoz = "Listo, actualicé el registro.";
+        }
+
+        const audioBase64 = await generarAudio(openai, textoVoz);
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            ok: true,
+            action: "edit",
+            result: resultadoHTML,
+            audioBase64,
+            reminderData: data.reminderData || null
+          })
+        };
+        
+      } catch (err) {
+        console.error("Error en edición:", err);
+        const errorMsg = "No pude editar el registro. Intenta de nuevo.";
+        const audioBase64 = await generarAudio(openai, errorMsg);
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            ok: false,
+            action: "edit",
+            result: errorMsg,
+            audioBase64,
+            error: err.message
+          })
+        };
+      }
+    }
+
     // ========== DETECTAR INTENCIÓN CON OPENAI ==========
     let action = forcedAction;
     let textoProcesado = text;
     let reminderData = null;
 
-    if (!action) {
+    if (!action && text) {
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
@@ -161,50 +247,6 @@ Ejemplos:
       }
       
       console.log("Intent:", action, "Content:", textoProcesado, "Reminder:", JSON.stringify(reminderData));
-    }
-
-    // ========== MODO EDICIÓN ==========
-    if (action === "edit" || forcedAction === "edit") {
-      if (!oldText || !newText) {
-        const errorMsg = "Faltan datos para editar.";
-        const audioBase64 = await generarAudio(openai, errorMsg);
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify({
-            ok: false,
-            action: "edit",
-            result: errorMsg,
-            audioBase64
-          })
-        };
-      }
-
-      await fetch(SHEETS_WEBAPP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete", text: oldText, userId })
-      });
-
-      const res = await fetch(SHEETS_WEBAPP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "add", text: newText, userId })
-      });
-
-      const successMsg = "Listo, actualicé el registro.";
-      const audioBase64 = await generarAudio(openai, successMsg);
-      
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({
-          ok: true,
-          action: "edit",
-          result: newText,
-          audioBase64
-        })
-      };
     }
 
     // ========== ACCIONES CON SHEETS ==========
@@ -294,6 +336,11 @@ Ejemplos:
         respuestaFinal = "No encontré información sobre eso.";
         textoParaVoz = respuestaFinal;
       }
+
+    } else if (action === "edit") {
+      // Este caso se maneja arriba con forcedAction, pero por si OpenAI detecta "edita" en el texto
+      respuestaFinal = "Para editar, usa el botón de editar en el resultado.";
+      textoParaVoz = respuestaFinal;
 
     } else {
       respuestaFinal = "No entendí la acción. Prueba con: agendame, recordame, pasame, o borra.";
