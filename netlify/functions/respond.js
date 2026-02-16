@@ -1,6 +1,6 @@
 import { OpenAI } from "openai";
 
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbySXKl82jHVCDPDNq2YXcj7u3PjiQRK2Q_lOBd-FoAw_H1QrdFvjwbk0V_ffb2_CrsW/exec";
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycby20e_vTjhgu79LCZGC0Ht7jP37TfaOeAqLetTvnUOrauba6EQziF3OML7rrGqLwBX2/exec";
 
 // Claves VAPID para notificaciones push (genera las tuyas en https://web-push-codelab.glitch.me/)
 const VAPID_PUBLIC_KEY = "BK3d7LKjB2vKLxJ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ=";
@@ -251,22 +251,35 @@ Ejemplos:
       respuestaFinal = "";
       textoParaVoz = data.ok ? "Eliminado correctamente." : "No encontré ese dato para borrar.";
 
-    } else if (action === "get") {
-      const res = await fetch(SHEETS_WEBAPP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "get", text: textoProcesado, userId })
-      });
+    
 
-      const data = await res.json();
+else if (action === "get") {
+  const res = await fetch(SHEETS_WEBAPP_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "get", text: textoProcesado, userId })
+  });
 
-      if (data.ok && data.result) {
-        respuestaFinal = data.result;
-        textoParaVoz = `Encontré: ${data.result}`;
-      } else {
-        respuestaFinal = "No encontré información sobre eso.";
-        textoParaVoz = respuestaFinal;
-      }
+  const data = await res.json();
+
+  if (data.ok && data.result) {
+    // Si es recordatorio, incluir la fecha en el resultado
+    if (data.esRecordatorio && data.fecha) {
+      respuestaFinal = `${data.result}<br><small style="color:#ffc107">${data.fecha}</small>`;
+      textoParaVoz = `Encontré: ${data.result} para el ${data.fecha.replace(/📅|🕐/g, '')}`;
+    } else if (data.fecha) {
+      respuestaFinal = `${data.result}<br><small style="opacity:0.7">Guardado el: ${data.fecha}</small>`;
+      textoParaVoz = `Encontré: ${data.result}`;
+    } else {
+      respuestaFinal = data.result;
+      textoParaVoz = `Encontré: ${data.result}`;
+    }
+  } else {
+    respuestaFinal = "No encontré información sobre eso.";
+    textoParaVoz = respuestaFinal;
+  }
+}
+
 
     } else {
       respuestaFinal = "No entendí la acción. Prueba con: agendame, recordame, pasame, o borra.";
