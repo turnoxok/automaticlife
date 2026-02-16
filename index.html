@@ -3,23 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Asistente</title>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+<title>Automatic Life</title>
 
+<!-- Google Identity -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<style>
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
-
-:root {
-  --cyan: #00d9ff;
-  --magenta: #ff00a0;
-  --purple: #b829dd;
-  --dark: #050510;
-  --glass: rgba(255, 255, 255, 0.05);
 }
 
 body {
@@ -27,732 +20,975 @@ body {
   height: 100vh;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
-  background: var(--dark);
-  font-family: 'Inter', sans-serif;
-  color: white;
+  background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: #00ffea;
   overflow: hidden;
-  position: relative;
 }
 
-/* Animated starfield */
-#starfield {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-}
-
-.star {
-  position: absolute;
-  background: white;
-  border-radius: 50%;
-  animation: twinkle 3s infinite;
-}
-
-@keyframes twinkle {
-  0%, 100% { opacity: 0.2; }
-  50% { opacity: 1; }
-}
-
-/* Top right menu */
-#topMenu {
+/* Top Bar */
+#topBar {
   position: absolute;
   top: 20px;
-  right: 20px;
+  right: 30px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
   z-index: 100;
 }
 
-#loginBtn {
-  background: linear-gradient(135deg, rgba(0, 217, 255, 0.15), rgba(255, 0, 160, 0.15));
-  border: 1px solid rgba(0, 217, 255, 0.4);
-  padding: 10px 20px;
-  border-radius: 25px;
-  color: var(--cyan);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+#userPanel {
   cursor: pointer;
-  backdrop-filter: blur(10px);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 0.9rem;
+  background: rgba(0,255,234,0.1);
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(0,255,234,0.3);
   transition: all 0.3s;
 }
 
-#loginBtn:hover {
-  background: linear-gradient(135deg, var(--cyan), var(--magenta));
-  color: white;
-  box-shadow: 0 0 30px rgba(0, 217, 255, 0.5);
+#userPanel:hover {
+  background: rgba(0,255,234,0.2);
+  box-shadow: 0 0 15px rgba(0,255,234,0.3);
 }
 
-#userBadge {
-  display: none;
-  align-items: center;
-  gap: 10px;
-  background: var(--glass);
-  padding: 8px 16px;
-  border-radius: 25px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  cursor: pointer;
+.planBadge {
+  background: rgba(0,255,234,0.2);
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #00ffea;
+  font-size: 0.7rem;
+  font-weight: bold;
 }
 
-#userEmail {
-  font-size: 0.8rem;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-#planTag {
-  background: linear-gradient(135deg, var(--cyan), var(--purple));
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.6rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-#dropdownMenu {
+#userMenu {
   position: absolute;
   top: 50px;
   right: 0;
-  background: rgba(5, 5, 16, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 16px;
-  min-width: 200px;
-  backdrop-filter: blur(20px);
-  display: none;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  background: rgba(15, 12, 41, 0.95);
+  border: 1px solid #00ffea;
+  padding: 15px;
+  border-radius: 12px;
+  min-width: 180px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
 }
 
-#dropdownMenu.show {
-  display: block;
-}
-
-.menuItem {
-  padding: 12px 16px;
-  border-radius: 10px;
+#userMenu div {
+  padding: 10px;
   cursor: pointer;
-  font-size: 0.85rem;
+  border-radius: 6px;
   transition: all 0.2s;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
-.menuItem:hover {
-  background: rgba(0, 217, 255, 0.1);
-  color: var(--cyan);
+#userMenu div:hover {
+  background: rgba(0,255,234,0.1);
 }
 
-.menuItem:last-child {
-  color: var(--magenta);
+#userMenu div:last-child {
+  margin-bottom: 0;
+  color: #ff6b6b;
 }
 
-.menuItem:last-child:hover {
-  background: rgba(255, 0, 160, 0.1);
-}
+.hidden { display: none !important; }
 
-/* Notification card */
-#notification {
-  position: absolute;
-  top: 80px;
-  width: 90%;
-  max-width: 420px;
-  background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(184, 41, 221, 0.1));
-  border: 1px solid rgba(0, 217, 255, 0.3);
-  border-radius: 20px;
+/* Result panel */
+#resultPanel {
+  margin-bottom: 100px;
   padding: 20px;
-  backdrop-filter: blur(20px);
-  z-index: 50;
-  transform: translateY(-200px);
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 10px 40px rgba(0, 217, 255, 0.2);
+  width: 90%;
+  max-width: 600px;
+  min-height: 60px;
+  border: 2px solid rgba(0,255,234,0.3);
+  border-radius: 20px;
+  background: rgba(0,255,234,0.05);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  transition: all 0.4s ease;
+  text-align: center;
+  font-size: 1.1rem;
+  line-height: 1.6;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
-#notification.show {
+#resultPanel.show { 
+  opacity: 1; 
   transform: translateY(0);
 }
 
-.notifHeader {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-  font-size: 0.85rem;
-  color: var(--cyan);
+#resultPanel::-webkit-scrollbar {
+  width: 8px;
 }
 
-.notifIcon {
-  width: 20px;
-  height: 20px;
-  background: var(--cyan);
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
+#resultPanel::-webkit-scrollbar-track {
+  background: rgba(0,255,234,0.1);
+  border-radius: 4px;
 }
 
-.notifText {
-  font-size: 0.95rem;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.9);
+#resultPanel::-webkit-scrollbar-thumb {
+  background: #00ffea;
+  border-radius: 4px;
 }
 
-.notifFooter {
-  margin-top: 15px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-/* Central sphere */
-#sphereContainer {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 200px;
-  height: 200px;
-  z-index: 10;
-}
-
-#sphere {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, var(--cyan), var(--purple) 50%, var(--magenta) 100%);
-  box-shadow: 
-    0 0 60px rgba(0, 217, 255, 0.5),
-    0 0 100px rgba(184, 41, 221, 0.3),
-    inset 0 0 40px rgba(255, 255, 255, 0.2);
+/* GO button */
+#aiCore {
   position: relative;
-  animation: spherePulse 3s ease-in-out infinite;
-}
-
-#sphere.listening {
-  animation: sphereListen 1s ease-in-out infinite;
-  background: radial-gradient(circle at 30% 30%, #ff0040, #ff4080 50%, #ff0066 100%);
-  box-shadow: 
-    0 0 60px rgba(255, 0, 64, 0.6),
-    0 0 100px rgba(255, 0, 100, 0.4);
-}
-
-#sphere.speaking {
-  animation: sphereSpeak 0.5s ease-in-out infinite;
-}
-
-@keyframes spherePulse {
-  0%, 100% { transform: scale(1); opacity: 0.9; }
-  50% { transform: scale(1.05); opacity: 1; }
-}
-
-@keyframes sphereListen {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-
-@keyframes sphereSpeak {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.03); }
-}
-
-/* Orbital rings */
-.orbit {
-  position: absolute;
-  border: 1px solid rgba(0, 217, 255, 0.2);
+  width: 150px;
+  height: 150px;
   border-radius: 50%;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, #00ffea 0%, #00c4b4 70%, #003a38 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow:
+    0 0 30px #00ffea,
+    0 0 60px rgba(0,255,234,0.5),
+    inset 0 0 20px rgba(255,255,255,0.2);
+  transition: all 0.3s ease;
+  user-select: none;
 }
 
-.orbit1 { width: 280px; height: 280px; animation: orbit1 10s linear infinite; }
-.orbit2 { width: 340px; height: 340px; animation: orbit2 15s linear infinite; border-color: rgba(255, 0, 160, 0.15); }
-
-@keyframes orbit1 {
-  0% { transform: translate(-50%, -50%) rotateX(60deg) rotateZ(0deg); }
-  100% { transform: translate(-50%, -50%) rotateX(60deg) rotateZ(360deg); }
+#aiCore:hover {
+  transform: scale(1.05);
+  box-shadow:
+    0 0 40px #00ffea,
+    0 0 80px rgba(0,255,234,0.6);
 }
 
-@keyframes orbit2 {
-  0% { transform: translate(-50%, -50%) rotateX(70deg) rotateY(10deg) rotateZ(0deg); }
-  100% { transform: translate(-50%, -50%) rotateX(70deg) rotateY(10deg) rotateZ(-360deg); }
+#aiCore:active {
+  transform: scale(0.95);
 }
 
-/* Mic button */
-#micBtn {
+#coreText {
+  color: #001a18;
+  font-weight: bold;
+  font-size: 1.4rem;
+  letter-spacing: 3px;
+  pointer-events: none;
+}
+
+.pulseRing {
   position: absolute;
-  bottom: 140px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 70px;
-  height: 70px;
+  width: 150px;
+  height: 150px;
+  border: 3px solid #00ffea;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--cyan), var(--purple));
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 10px 40px rgba(0, 217, 255, 0.4);
-  z-index: 20;
-  transition: all 0.3s;
-}
-
-#micBtn:hover {
-  transform: translateX(-50%) scale(1.1);
-  box-shadow: 0 15px 50px rgba(0, 217, 255, 0.6);
-}
-
-#micBtn.recording {
-  background: linear-gradient(135deg, #ff0040, #ff6b9d);
-  box-shadow: 0 10px 40px rgba(255, 0, 64, 0.5);
-  animation: micPulse 1s infinite;
-}
-
-@keyframes micPulse {
-  0%, 100% { box-shadow: 0 10px 40px rgba(255, 0, 64, 0.5); }
-  50% { box-shadow: 0 15px 60px rgba(255, 0, 64, 0.8); }
-}
-
-.micIcon {
-  width: 28px;
-  height: 28px;
-  fill: white;
-}
-
-/* Context buttons */
-#contextButtons {
-  position: absolute;
-  bottom: 50px;
-  display: flex;
-  gap: 20px;
-  z-index: 20;
-}
-
-.ctxBtn {
-  width: 60px;
-  height: 60px;
-  border-radius: 18px;
-  background: var(--glass);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
-  position: relative;
-  overflow: hidden;
-}
-
-.ctxBtn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, var(--cyan), var(--purple));
   opacity: 0;
+  pointer-events: none;
+}
+
+.ai-active .pulseRing {
+  animation: pulseWave 1.5s infinite;
+}
+
+.pulseRing:nth-child(1) {
+  animation-delay: 0s;
+}
+.pulseRing:nth-child(2) {
+  animation-delay: 0.5s;
+}
+.pulseRing:nth-child(3) {
+  animation-delay: 1s;
+}
+
+@keyframes pulseWave {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+#transcribedText {
+  display: block;
+  margin-top: 30px;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  opacity: 0.7;
+  color: #00ffea;
+  min-height: 20px;
+  font-style: italic;
+}
+
+#loginHint {
+  font-size: 14px;
+  opacity: 0.8;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: rgba(255,107,107,0.1);
+  border: 1px solid rgba(255,107,107,0.3);
+  border-radius: 20px;
+  color: #ff6b6b;
+}
+
+/* Notification permission button */
+#notifBtn {
+  position: fixed;
+  bottom: 100px;
+  right: 30px;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: rgba(0,255,234,0.1);
+  border: 2px solid #00ffea;
+  color: #00ffea;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.3s;
+  z-index: 50;
+}
+
+#notifBtn:hover {
+  background: rgba(0,255,234,0.2);
+  transform: scale(1.1);
+}
+
+#notifBtn.granted {
+  background: #00ffea;
+  color: #001a18;
+}
+
+/* Floating button */
+#textFAB {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: #00ffea;
+  color: #001a18;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 28px;
+  cursor: pointer;
+  box-shadow: 0 0 20px #00ffea;
+  transition: all 0.3s;
+  z-index: 50;
+}
+
+#textFAB:hover {
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 0 30px #00ffea;
+}
+
+/* Modal */
+#textModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 10, 25, 0.85);
+  backdrop-filter: blur(15px);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
   transition: opacity 0.3s;
 }
 
-.ctxBtn:hover::before {
-  opacity: 0.2;
-}
-
-.ctxBtn:hover {
-  transform: translateY(-5px) scale(1.05);
-  border-color: var(--cyan);
-  box-shadow: 0 10px 30px rgba(0, 217, 255, 0.3);
-}
-
-.ctxBtn:active {
-  transform: translateY(-2px) scale(0.98);
-}
-
-.ctxBtn svg {
-  width: 26px;
-  height: 26px;
-  fill: rgba(255, 255, 255, 0.7);
-  position: relative;
-  z-index: 1;
-  transition: all 0.3s;
-}
-
-.ctxBtn:hover svg {
-  fill: var(--cyan);
-}
-
-/* Transcribed text */
-#transcribed {
-  position: absolute;
-  bottom: 230px;
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.6);
-  font-style: italic;
-  z-index: 10;
-}
-
-/* Text input modal */
-#inputModal {
-  position: fixed;
-  inset: 0;
-  background: rgba(5, 5, 16, 0.98);
-  backdrop-filter: blur(30px);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-#inputModal.show {
+#textModal:not(.hidden) {
   display: flex;
+  opacity: 1;
+  pointer-events: all;
 }
 
-#inputBox {
+#textBox {
+  background: rgba(0,255,234,0.05);
+  border: 1px solid rgba(0,255,234,0.4);
+  box-shadow:
+    0 0 30px rgba(0,255,234,0.3),
+    0 0 60px rgba(0,255,234,0.1);
+  border-radius: 20px;
+  padding: 30px;
   width: 90%;
   max-width: 400px;
-  background: var(--glass);
-  border: 1px solid rgba(0, 217, 255, 0.2);
-  border-radius: 24px;
-  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   backdrop-filter: blur(20px);
+  transform: scale(0.9);
+  transition: transform 0.3s;
+}
+
+#textModal:not(.hidden) #textBox {
+  transform: scale(1);
 }
 
 #textInput {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 18px;
-  color: white;
-  font-size: 1rem;
-  font-family: inherit;
-  resize: none;
-  height: 100px;
-  margin-bottom: 15px;
-  outline: none;
-}
-
-#textInput:focus {
-  border-color: var(--cyan);
-}
-
-#sendBtn {
-  width: 100%;
-  padding: 16px;
-  background: linear-gradient(135deg, var(--cyan), var(--purple));
-  border: none;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(0,255,234,0.5);
   border-radius: 12px;
-  color: white;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
+  padding: 15px;
+  color: #00ffea;
+  font-size: 16px;
+  resize: none;
+  outline: none;
+  height: 120px;
+  font-family: inherit;
   transition: all 0.3s;
 }
 
-#sendBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(0, 217, 255, 0.4);
+#textInput::placeholder {
+  color: rgba(0,255,234,0.4);
 }
 
-/* Mobile */
-@media (max-width: 600px) {
-  #sphereContainer {
-    width: 160px;
-    height: 160px;
-  }
-  
-  .orbit1 { width: 220px; height: 220px; }
-  .orbit2 { width: 280px; height: 280px; }
-  
-  #contextButtons {
-    gap: 15px;
-  }
-  
-  .ctxBtn {
-    width: 55px;
-    height: 55px;
-  }
+#textInput:focus {
+  border-color: #00ffea;
+  box-shadow: 0 0 20px rgba(0,255,234,0.3);
+  background: rgba(0,0,0,0.5);
+}
+
+#sendTextBtn {
+  background: radial-gradient(circle, #00ffea 0%, #00c4b4 100%);
+  border: none;
+  border-radius: 30px;
+  padding: 15px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #001a18;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(0,255,234,0.5);
+  transition: all 0.3s;
+  font-size: 1rem;
+  text-transform: uppercase;
+}
+
+#sendTextBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 25px rgba(0,255,234,0.7);
+}
+
+#sendTextBtn:active {
+  transform: translateY(0);
+}
+
+/* Quick actions */
+#quickActions {
+  position: fixed;
+  bottom: 30px;
+  left: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 50;
+}
+
+.quickBtn {
+  background: rgba(0,255,234,0.1);
+  border: 1px solid rgba(0,255,234,0.3);
+  color: #00ffea;
+  padding: 10px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.3s;
+  backdrop-filter: blur(5px);
+}
+
+.quickBtn:hover {
+  background: rgba(0,255,234,0.2);
+  transform: translateX(5px);
+}
+
+/* Loading dots */
+.loading-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.loading-dots span {
+  animation: bounce 1.4s infinite ease-in-out both;
+  background: #00ffea;
+  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+/* Reminder badge */
+.reminder-badge {
+  display: inline-block;
+  background: rgba(255,193,7,0.2);
+  border: 1px solid #ffc107;
+  color: #ffc107;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  margin-top: 10px;
+}
+
+/* Edit button */
+.edit-btn {
+  margin-top: 15px;
+  padding: 8px 20px;
+  border-radius: 20px;
+  border: none;
+  background: #00ffea;
+  cursor: pointer;
+  font-weight: bold;
+  color: #001a18;
+  transition: all 0.3s;
+}
+
+.edit-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0,255,234,0.5);
 }
 </style>
 </head>
+
 <body>
 
-<!-- Starfield -->
-<div id="starfield"></div>
+<!-- Google auto loader -->
+<div id="g_id_onload"
+     data-client_id="687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com"
+     data-callback="handleCredentialResponse"
+     data-auto_prompt="false">
+</div>
 
-<!-- Top Menu -->
-<div id="topMenu">
-  <button id="loginBtn" onclick="toggleDropdown()">Iniciar Sesión</button>
-  
-  <div id="userBadge" onclick="toggleDropdown()">
+<!-- TOP BAR -->
+<div id="topBar">
+  <!-- User Panel -->
+  <div id="userPanel" class="hidden" onclick="toggleMenu()">
     <span id="userEmail"></span>
-    <span id="planTag">Plan</span>
+    <span class="planBadge">Free</span>
   </div>
-  
-  <div id="dropdownMenu">
-    <div class="g_id_signin" data-type="standard" data-theme="outline" data-size="medium"></div>
-    <div class="menuItem" onclick="upgradePlan()">Mejorar Plan</div>
-    <div class="menuItem" onclick="showReminders()">Ver Recordatorios</div>
-    <div class="menuItem" onclick="logout()">Cerrar Sesión</div>
-  </div>
-</div>
 
-<!-- Notification -->
-<div id="notification">
-  <div class="notifHeader">
-    <div class="notifIcon">📅</div>
-    <span id="notifTime">24 abr 18:00</span>
-  </div>
-  <div class="notifText" id="notifText">Te recuerdo que hoy es el cumpleaños de Caetano a las 18 horas en la escondida calle Devenson al final.</div>
-  <div class="notifFooter">
-    <span>🔔</span>
-    <span>Evento programado</span>
+  <!-- User Menu -->
+  <div id="userMenu" class="hidden">
+    <div class="g_id_signin"
+         data-type="standard"
+         data-theme="outline"
+         data-size="medium">
+    </div>
+    <div onclick="mejorarPlan()">⭐ Mejorar Plan</div>
+    <div onclick="verRecordatorios()">📅 Mis Recordatorios</div>
+    <div onclick="logout()">🚪 Cerrar sesión</div>
   </div>
 </div>
 
-<!-- Central Sphere -->
-<div id="sphereContainer">
-  <div class="orbit orbit1"></div>
-  <div class="orbit orbit2"></div>
-  <div id="sphere"></div>
+<!-- NOTIFICATION BUTTON -->
+<button id="notifBtn" class="hidden" onclick="solicitarNotificaciones()" title="Activar notificaciones">🔔</button>
+
+<!-- RESULT PANEL -->
+<div id="resultPanel"></div>
+
+<!-- AI CORE -->
+<div id="aiCore">
+  <div class="pulseRing"></div>
+  <div class="pulseRing"></div>
+  <div class="pulseRing"></div>
+  <div id="coreText">GO</div>
 </div>
 
-<!-- Transcribed text -->
-<div id="transcribed"></div>
+<p><span id="transcribedText"></span></p>
+<p id="loginHint" class="hidden">🔐 Inicia sesión con Google para usar Automatic Life</p>
 
-<!-- Mic Button -->
-<button id="micBtn" onclick="toggleRecording()">
-  <svg class="micIcon" viewBox="0 0 24 24">
-    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-    <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-  </svg>
-</button>
-
-<!-- Context Buttons -->
-<div id="contextButtons">
-  <button class="ctxBtn" onclick="quickAction('check')" title="Tareas">
-    <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-  </button>
-  <button class="ctxBtn" onclick="quickAction('calendar')" title="Calendario">
-    <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
-  </button>
-  <button class="ctxBtn" onclick="openTextModal()" title="Escribir">
-    <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/></svg>
-  </button>
-  <button class="ctxBtn" onclick="quickAction('settings')" title="Ajustes">
-    <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L5.09 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-  </button>
+<!-- QUICK ACTIONS -->
+<div id="quickActions" class="hidden">
+  <button class="quickBtn" onclick="setQuickText('Recordame mañana a las ')">⏰ Mañana</button>
+  <button class="quickBtn" onclick="setQuickText('Agendame ')">📝 Agendar</button>
+  <button class="quickBtn" onclick="setQuickText('Pasame ')">🔍 Buscar</button>
 </div>
 
-<!-- Text Input Modal -->
-<div id="inputModal" onclick="closeModalOnBg(event)">
-  <div id="inputBox">
-    <textarea id="textInput" placeholder="¿Qué necesitás?"></textarea>
-    <button id="sendBtn" onclick="sendText()">Enviar</button>
+<!-- TEXT FAB -->
+<div id="textFAB">✏️</div>
+
+<!-- TEXT MODAL -->
+<div id="textModal" class="hidden">
+  <div id="textBox">
+    <textarea id="textInput" placeholder="Escribe tu solicitud... Ej: Recordame mañana a las 9:00 llamar al médico"></textarea>
+    <button id="sendTextBtn">Enviar</button>
   </div>
 </div>
 
 <script>
+// ==================== VARIABLES GLOBALES ====================
 let userEmail = null;
 let mediaRecorder;
 let audioChunks = [];
-let isRecording = false;
+let recordingTimer;
+let recordingSeconds = 0;
+let ultimoResultado = "";
+let modoEdicion = false;
+let pushSubscription = null;
 
-const sphere = document.getElementById('sphere');
-const micBtn = document.getElementById('micBtn');
-const transcribed = document.getElementById('transcribed');
-const notification = document.getElementById('notification');
+// ==================== ELEMENTOS DOM ====================
+const aiCore = document.getElementById("aiCore");
+const coreText = document.getElementById("coreText");
+const transcribedText = document.getElementById("transcribedText");
+const resultPanel = document.getElementById("resultPanel");
+const userEmailSpan = document.getElementById("userEmail");
+const textFAB = document.getElementById("textFAB");
+const textModal = document.getElementById("textModal");
+const textInput = document.getElementById("textInput");
+const sendTextBtn = document.getElementById("sendTextBtn");
+const notifBtn = document.getElementById("notifBtn");
+const quickActions = document.getElementById("quickActions");
 
-// Create starfield
-function createStars() {
-  const container = document.getElementById('starfield');
-  for (let i = 0; i < 150; i++) {
-    const star = document.createElement('div');
-    star.className = 'star';
-    star.style.left = Math.random() * 100 + '%';
-    star.style.top = Math.random() * 100 + '%';
-    star.style.width = Math.random() * 2 + 1 + 'px';
-    star.style.height = star.style.width;
-    star.style.animationDelay = Math.random() * 3 + 's';
-    container.appendChild(star);
+// ==================== INICIALIZACIÓN ====================
+document.addEventListener('DOMContentLoaded', () => {
+  // Registrar Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registrado:', reg))
+      .catch(err => console.log('SW error:', err));
   }
-}
-createStars();
+  
+  // Escuchar mensajes del SW
+  navigator.serviceWorker?.addEventListener('message', event => {
+    if (event.data.type === 'REMINDER_TRIGGERED') {
+      mostrarResultado(`🔔 Recordatorio: ${event.data.message}`, false);
+      speak(`Recordatorio: ${event.data.message}`);
+    }
+  });
+});
 
-// Google Sign In
+// ==================== AUTENTICACIÓN ====================
 function handleCredentialResponse(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
   userEmail = payload.email;
+  userEmailSpan.textContent = userEmail;
+
+  document.querySelector(".g_id_signin").classList.add("hidden");
+  document.getElementById("userPanel").classList.remove("hidden");
+  document.getElementById("userMenu").classList.add("hidden");
+  document.getElementById("loginHint").classList.add("hidden");
+  notifBtn.classList.remove("hidden");
+  quickActions.classList.remove("hidden");
   
-  document.getElementById('loginBtn').style.display = 'none';
-  document.getElementById('userBadge').style.display = 'flex';
-  
-  const emailSpan = document.getElementById('userEmail');
-  emailSpan.textContent = window.innerWidth < 600 
-    ? userEmail.split('@')[0].substring(0, 6) + '..' 
-    : userEmail;
-  
-  document.getElementById('dropdownMenu').classList.remove('show');
+  // Registrar suscripción push si ya existe
+  registrarPushSubscription();
 }
 
-function toggleDropdown() {
-  document.getElementById('dropdownMenu').classList.toggle('show');
+function toggleMenu() {
+  document.getElementById("userMenu").classList.toggle("hidden");
 }
 
 function logout() {
   userEmail = null;
-  document.getElementById('loginBtn').style.display = 'block';
-  document.getElementById('userBadge').style.display = 'none';
-  document.getElementById('dropdownMenu').classList.remove('show');
-  hideNotification();
-}
+  userEmailSpan.textContent = "";
+  document.getElementById("userPanel").classList.add("hidden");
+  document.querySelector(".g_id_signin").classList.remove("hidden");
+  document.getElementById("userMenu").classList.add("hidden");
+  notifBtn.classList.add("hidden");
+  quickActions.classList.add("hidden");
 
-function upgradePlan() {
-  showNotification('Sistema', 'Función disponible próximamente');
-}
+  transcribedText.textContent = "";
+  resultPanel.innerHTML = "";
+  resultPanel.classList.remove("show");
+  document.getElementById("loginHint").classList.remove("hidden");
 
-function showReminders() {
-  if (!userEmail) return;
-  // Fetch reminders
-}
-
-// Notification system
-function showNotification(title, text) {
-  document.getElementById('notifTime').textContent = new Date().toLocaleString('es-ES', { 
-    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
-  });
-  document.getElementById('notifText').textContent = text;
-  notification.classList.add('show');
+  stopCoreAnimation();
+  coreText.textContent = "GO";
   
-  setTimeout(() => hideNotification(), 5000);
+  // Limpiar suscripción push
+  pushSubscription = null;
 }
 
-function hideNotification() {
-  notification.classList.remove('show');
+function mejorarPlan() {
+  mostrarResultado("⭐ Función disponible próximamente. ¡Gracias por tu interés!", false);
 }
 
-// Recording
-async function toggleRecording() {
+async function verRecordatorios() {
+  if (!userEmail) return;
+  
+  startCoreAnimation("...");
+  
+  try {
+    const res = await fetch("/.netlify/functions/respond", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: "listar recordatorios",
+        email: userEmail
+      })
+    });
+    
+    const data = await res.json();
+    if (data.result) {
+      mostrarResultado(data.result, false);
+    }
+  } catch (err) {
+    mostrarResultado("Error al cargar recordatorios", false);
+  }
+  
+  stopCoreAnimation();
+}
+
+// ==================== NOTIFICACIONES PUSH ====================
+async function solicitarNotificaciones() {
   if (!userEmail) {
-    showNotification('Sistema', 'Debes iniciar sesión para continuar');
+    speak("Debes iniciar sesión primero");
     return;
   }
-
-  if (!isRecording) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream);
-      audioChunks = [];
-      
-      mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-      mediaRecorder.onstop = processAudio;
-      mediaRecorder.start();
-      
-      isRecording = true;
-      sphere.classList.add('listening');
-      micBtn.classList.add('recording');
-      transcribed.textContent = 'Escuchando...';
-      
-    } catch(err) {
-      showNotification('Error', 'No se pudo acceder al micrófono');
-    }
+  
+  if (!('Notification' in window)) {
+    mostrarResultado("Tu navegador no soporta notificaciones", false);
+    return;
+  }
+  
+  const permission = await Notification.requestPermission();
+  
+  if (permission === 'granted') {
+    notifBtn.classList.add('granted');
+    notifBtn.innerHTML = '✓';
+    await subscribeToPush();
   } else {
-    mediaRecorder.stop();
-    mediaRecorder.stream.getTracks().forEach(t => t.stop());
-    
-    isRecording = false;
-    sphere.classList.remove('listening');
-    micBtn.classList.remove('recording');
-    transcribed.textContent = 'Procesando...';
+    mostrarResultado("Necesitas permitir notificaciones para los recordatorios", false);
   }
 }
 
-async function processAudio() {
-  // Send to transcribe and process
-  sphere.classList.add('speaking');
-  
-  // Simulate response
-  setTimeout(() => {
-    sphere.classList.remove('speaking');
-    transcribed.textContent = '';
-    showNotification('Recordatorio', 'Te recuerdo que hoy es el cumpleaños de Caetano a las 18 horas');
-    speak('Te recuerdo que hoy es el cumpleaños de Caetano a las 18 horas');
-  }, 1500);
+async function subscribeToPush() {
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array('BK3d7LKjB2vKLxJ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ=') // Reemplaza con tu clave VAPID pública
+    });
+    
+    pushSubscription = subscription;
+    
+    // Enviar al servidor
+    await fetch("/.netlify/functions/respond", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "registerPush",
+        email: userEmail,
+        subscription: subscription
+      })
+    });
+    
+    mostrarResultado("✅ Notificaciones activadas correctamente", false);
+  } catch (err) {
+    console.error('Error suscripción push:', err);
+  }
 }
 
+async function registrarPushSubscription() {
+  if (!userEmail) return;
+  const registration = await navigator.serviceWorker.ready;
+  const subscription = await registration.pushManager.getSubscription();
+  if (subscription) {
+    pushSubscription = subscription;
+    notifBtn.classList.add('granted');
+    notifBtn.innerHTML = '✓';
+  }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+}
+
+// ==================== VOZ ====================
 function speak(text) {
+  if (!text) return;
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'es-ES';
-  utterance.rate = 0.9;
+  utterance.lang = "es-AR";
+  utterance.rate = 1;
+  utterance.pitch = 1;
+  startCoreAnimation("AI");
+  utterance.onend = () => stopCoreAnimation();
   speechSynthesis.speak(utterance);
 }
 
-// Quick actions
-function quickAction(type) {
+// ==================== ANIMACIONES ====================
+function startCoreAnimation(label) {
+  aiCore.classList.add("ai-active");
+  
+  if (label === "REC") {
+    recordingSeconds = 0;
+    coreText.innerHTML = `REC <span style="font-size:0.8rem">0s</span>`;
+    recordingTimer = setInterval(() => {
+      recordingSeconds++;
+      coreText.innerHTML = `REC <span style="font-size:0.8rem">${recordingSeconds}s</span>`;
+      
+      // Auto-stop después de 30 segundos
+      if (recordingSeconds >= 30) {
+        aiCore.click();
+      }
+    }, 1000);
+  } else if (label === "...") {
+    coreText.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+  } else {
+    coreText.textContent = label;
+  }
+}
+
+function stopCoreAnimation() {
+  aiCore.classList.remove("ai-active");
+  clearInterval(recordingTimer);
+  coreText.textContent = "GO";
+}
+
+// ==================== UI RESULTADOS ====================
+function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false) {
+  ultimoResultado = texto;
+  
+  let html = `<div>${texto}</div>`;
+  
+  if (esRecordatorio) {
+    html += `<div class="reminder-badge">⏰ Recordatorio programado</div>`;
+  }
+  
+  if (mostrarEditar) {
+    html += `<button class="edit-btn" onclick="activarEdicion()">✏️ Editar</button>`;
+  }
+  
+  resultPanel.innerHTML = html;
+  resultPanel.classList.add("show");
+}
+
+function activarEdicion() {
+  modoEdicion = true;
+  textInput.value = ultimoResultado;
+  textModal.classList.remove("hidden");
+  textInput.focus();
+}
+
+function setQuickText(texto) {
   if (!userEmail) {
-    showNotification('Sistema', 'Debes iniciar sesión');
+    document.getElementById("userMenu").classList.remove("hidden");
     return;
   }
-  
-  const actions = {
-    check: () => showNotification('Tareas', 'No tienes tareas pendientes'),
-    calendar: () => showNotification('Calendario', 'Próximo evento: Mañana 13hs'),
-    settings: () => showNotification('Ajustes', 'Configuración guardada')
-  };
-  
-  actions[type]?.();
+  textInput.value = texto;
+  textModal.classList.remove("hidden");
+  textInput.focus();
 }
 
-// Text modal
-function openTextModal() {
+// ==================== MODAL TEXTO ====================
+textFAB.onclick = () => {
   if (!userEmail) {
-    showNotification('Sistema', 'Debes iniciar sesión');
+    document.getElementById("userMenu").classList.remove("hidden");
+    document.getElementById("loginHint").classList.remove("hidden");
+    speak("Debes iniciar sesión con Google para continuar.");
     return;
   }
-  document.getElementById('inputModal').classList.add('show');
-  document.getElementById('textInput').focus();
-}
 
-function closeModalOnBg(e) {
-  if (e.target.id === 'inputModal') {
-    document.getElementById('inputModal').classList.remove('show');
+  modoEdicion = false;
+  textInput.value = "";
+  textModal.classList.remove("hidden");
+  textInput.focus();
+};
+
+textModal.onclick = (e) => {
+  if (e.target === textModal) {
+    cerrarModal();
   }
-}
+};
 
-function sendText() {
-  const text = document.getElementById('textInput').value.trim();
-  if (!text) return;
-  
-  document.getElementById('inputModal').classList.remove('show');
-  document.getElementById('textInput').value = '';
-  transcribed.textContent = text;
-  
-  // Process text...
-  sphere.classList.add('speaking');
-  setTimeout(() => {
-    sphere.classList.remove('speaking');
-    showNotification('Respuesta', 'Entendido, lo he guardado');
-    speak('Entendido, lo he guardado');
-  }, 1000);
-}
-
-// Close dropdown when clicking outside
-document.addEventListener('click', (e) => {
-  const menu = document.getElementById('dropdownMenu');
-  const btn = document.getElementById('loginBtn');
-  const badge = document.getElementById('userBadge');
-  
-  if (!menu.contains(e.target) && e.target !== btn && e.target !== badge && !badge.contains(e.target)) {
-    menu.classList.remove('show');
+textInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    cerrarModal();
+  }
+  if (e.key === 'Enter' && e.ctrlKey) {
+    sendTextBtn.click();
   }
 });
+
+function cerrarModal() {
+  textModal.classList.add("hidden");
+  modoEdicion = false;
+  textInput.value = "";
+}
+
+// ==================== ENVIAR TEXTO ====================
+sendTextBtn.onclick = async () => {
+  const texto = textInput.value.trim();
+  if (!texto) return;
+
+  cerrarModal();
+  transcribedText.textContent = texto;
+
+  try {
+    startCoreAnimation("...");
+
+    let bodyData;
+
+    if (modoEdicion) {
+      bodyData = {
+        action: "edit",
+        oldText: ultimoResultado,
+        newText: texto,
+        email: userEmail
+      };
+    } else {
+      bodyData = {
+        text: texto,
+        email: userEmail
+      };
+    }
+
+    const resResp = await fetch("/.netlify/functions/respond", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bodyData)
+    });
+
+    const dataResp = await resResp.json();
+
+    if (dataResp.result) {
+      const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
+      const esRecordatorio = dataResp.reminderData || false;
+      
+      mostrarResultado(dataResp.result, esBusqueda, esRecordatorio);
+    }
+
+    if (dataResp.ok && dataResp.audioBase64) {
+      const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
+      startCoreAnimation("AI");
+      audio.play();
+      audio.onended = () => stopCoreAnimation();
+    } else {
+      stopCoreAnimation();
+    }
+
+  } catch (err) {
+    console.error(err);
+    mostrarResultado("Error de conexión. Intenta de nuevo.", false);
+    stopCoreAnimation();
+  }
+};
+
+// ==================== GRABACIÓN DE VOZ ====================
+aiCore.onclick = async () => {
+  if (!userEmail) {
+    document.getElementById("userMenu").classList.remove("hidden");
+    document.getElementById("loginHint").classList.remove("hidden");
+    speak("Debes iniciar sesión con Google para continuar.");
+    return;
+  }
+
+  if (!mediaRecorder || mediaRecorder.state === "inactive") {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
+        } 
+      });
+      
+      const options = { mimeType: 'audio/webm;codecs=opus' };
+      mediaRecorder = new MediaRecorder(stream, options);
+      audioChunks = [];
+      
+      mediaRecorder.ondataavailable = e => {
+        if (e.data.size > 0) audioChunks.push(e.data);
+      };
+      
+      mediaRecorder.onstop = sendAudio;
+      mediaRecorder.start(100); // Collect data every 100ms
+      
+      startCoreAnimation("REC");
+    } catch(err) {
+      console.error(err);
+      mostrarResultado("Error al acceder al micrófono. Verifica los permisos.", false);
+      speak("No puedo acceder al micrófono");
+    }
+  } else {
+    mediaRecorder.stop();
+    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    stopCoreAnimation();
+  }
+};
+
+async function sendAudio() {
+  if (audioChunks.length === 0) return;
+  
+  const blob = new Blob(audioChunks, { type: "audio/webm" });
+  const reader = new FileReader();
+  reader.readAsDataURL(blob);
+
+  reader.onloadend = async () => {
+    const base64 = reader.result.split(",")[1];
+
+    try {
+      startCoreAnimation("...");
+
+      // Transcribir
+      const resTrans = await fetch("/.netlify/functions/transcribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ audio: base64 })
+      });
+
+      const dataTrans = await resTrans.json();
+      
+      if (!dataTrans.text) {
+        throw new Error("No se pudo transcribir el audio");
+      }
+      
+      const texto = dataTrans.text;
+      transcribedText.textContent = texto;
+
+      // Procesar
+      const resResp = await fetch("/.netlify/functions/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: texto,
+          email: userEmail
+        })
+      });
+
+      const dataResp = await resResp.json();
+
+      if (dataResp.result) {
+        const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
+        const esRecordatorio = dataResp.reminderData || false;
+        
+        mostrarResultado(dataResp.result, esBusqueda, esRecordatorio);
+      }
+
+      if (dataResp.ok && dataResp.audioBase64) {
+        const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
+        startCoreAnimation("AI");
+        audio.play();
+        audio.onended = () => stopCoreAnimation();
+      } else {
+        stopCoreAnimation();
+      }
+
+    } catch (err) {
+      console.error(err);
+      transcribedText.textContent = "[Error de procesamiento]";
+      mostrarResultado("No pude procesar tu solicitud. Intenta de nuevo.", false);
+      stopCoreAnimation();
+    }
+  };
+  
+  reader.onerror = () => {
+    transcribedText.textContent = "[Error de lectura]";
+    stopCoreAnimation();
+  };
+}
 </script>
 </body>
 </html>
