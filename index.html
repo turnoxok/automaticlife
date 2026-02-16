@@ -631,6 +631,29 @@ body::before {
     font-size: 0.7rem;
     padding: 6px 10px;
   }
+  #loginTrigger {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  background: linear-gradient(135deg, rgba(255, 0, 110, 0.2), rgba(251, 86, 7, 0.2));
+  padding: 10px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--lilix-magenta);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--lilix-magenta);
+}
+
+#loginTrigger:hover {
+  background: linear-gradient(135deg, var(--lilix-magenta), var(--lilix-pink));
+  color: white;
+  box-shadow: 0 0 20px rgba(255, 0, 110, 0.4);
+}
 }
 </style>
 </head>
@@ -650,12 +673,22 @@ body::before {
 </div>
 
 <!-- TOP BAR -->
+<!-- Reemplazar el topBar completo por esto: -->
+
+<!-- TOP BAR -->
 <div id="topBar">
+  <!-- Estado sin login -->
+  <div id="loginTrigger" onclick="showLoginMenu()">
+    <span>Iniciar Sesión</span>
+  </div>
+
+  <!-- Estado con login -->
   <div id="userPanel" class="hidden" onclick="toggleMenu(event)">
     <span id="userEmail"></span>
     <span class="planBadge">Plan</span>
   </div>
 
+  <!-- Menú desplegable (funciona para ambos estados) -->
   <div id="userMenu" class="hidden">
     <div class="g_id_signin" data-type="standard" data-theme="outline" data-size="medium"></div>
     <div onclick="mejorarPlan()">Mejorar Plan</div>
@@ -750,7 +783,10 @@ document.addEventListener('click', (e) => {
     menu.classList.add("hidden");
   }
 });
-
+function showLoginMenu() {
+  const menu = document.getElementById("userMenu");
+  menu.classList.remove("hidden");
+}
 function handleCredentialResponse(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
   userEmail = payload.email;
