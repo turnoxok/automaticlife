@@ -1,8 +1,9 @@
-import { OpenAI } from "openai";
+// Netlify Function - CommonJS format
+const { OpenAI } = require("openai");
 
 const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwsNHHZ_ZyTRFsfeeEvkvl2kfOzWoNnNoQBowsxPbXDIBsjGSOl1iq917UvzzulnK75/exec";
 
-export const handler = async (event) => {
+exports.handler = async (event, context) => {
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
@@ -24,7 +25,6 @@ export const handler = async (event) => {
   try {
     const body = JSON.parse(event.body || "{}");
     
-    // Log para debug
     console.log("=== RESPOND.JS RECIBIDO ===");
     console.log("Body completo:", JSON.stringify(body, null, 2));
     
@@ -109,7 +109,6 @@ export const handler = async (event) => {
     }
 
     // ========== MODO EDICIÓN - PRIORIDAD MÁXIMA ==========
-    // Si viene forcedAction === "edit" O viene oldText + newText, es edición
     if (forcedAction === "edit" || (oldText && newText)) {
       console.log("=== MODO EDICIÓN DETECTADO ===");
       console.log("forcedAction:", forcedAction);
@@ -134,9 +133,8 @@ export const handler = async (event) => {
       }
 
       try {
-        // Enviar DIRECTAMENTE a Apps Script con action: "edit"
         const editPayload = {
-          action: "edit",  // FORZAR action edit
+          action: "edit",
           userId,
           oldText: oldText,
           newText: newText,
@@ -159,7 +157,6 @@ export const handler = async (event) => {
           throw new Error(data.error || "Error al editar");
         }
 
-        // Generar mensaje de éxito
         let textoVoz = "";
         let resultadoHTML = "";
         
@@ -184,7 +181,7 @@ export const handler = async (event) => {
             audioBase64,
             reminderData: data.reminderData || null
           })
-        });
+        };
         
       } catch (err) {
         console.error("Error en edición:", err);
@@ -205,7 +202,7 @@ export const handler = async (event) => {
       }
     }
 
-    // ========== DETECTAR INTENCIÓN CON OPENAI (solo si NO es edición) ==========
+    // ========== DETECTAR INTENCIÓN CON OPENAI ==========
     let action = forcedAction;
     let textoProcesado = text;
     let reminderData = null;
@@ -261,7 +258,6 @@ Ejemplos:
       textoProcesado = intent.content || text;
       reminderData = intent.reminder;
       
-      // RESPALDO: Si OpenAI no detectó la hora, extraerla manualmente
       if (reminderData && reminderData.isReminder) {
         const horaDetectada = extraerHoraManual(text);
         if (horaDetectada && (!reminderData.timeText || reminderData.timeText === "09:00")) {
