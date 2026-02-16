@@ -1279,31 +1279,15 @@ sendTextBtn.onclick = async () => {
   try {
     startCoreAnimation("...");
 
+    // PASO 1: Crear el nuevo (siempre funciona)
     let bodyData;
-
-    // Si es edición de recordatorio, primero intentar borrar el anterior (sin bloquear)
+    
     if (modoEdicion && ultimoReminderData && ultimoReminderData.isReminder) {
-      console.log("Editando recordatorio. Borrando:", ultimoReminderData.description);
-      
-      // Borrar en segundo plano (no esperar respuesta)
-      fetch("/.netlify/functions/respond", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "delete",
-          text: ultimoReminderData.description,
-          email: userEmail
-        })
-      }).then(res => res.json())
-        .then(data => console.log("Delete completado:", data))
-        .catch(err => console.log("Error en delete:", err));
-      
-      // Crear el nuevo inmediatamente (no esperar al delete)
+      // Es edición de recordatorio - crear como nuevo recordatorio
       bodyData = {
-        text: texto,
+        text: texto,  // El backend detectará "Recordame" y creará recordatorio
         email: userEmail
       };
-      
     } else if (modoEdicion) {
       // Edición normal (no recordatorio)
       bodyData = {
@@ -1327,7 +1311,25 @@ sendTextBtn.onclick = async () => {
     });
 
     const dataResp = await resResp.json();
-    console.log("Respuesta crear/editar:", dataResp);
+    console.log("Respuesta crear:", dataResp);
+
+    // PASO 2: Si se creó correctamente y es edición, borrar el viejo (sin esperar)
+    if (dataResp.ok && modoEdicion && ultimoReminderData && ultimoReminderData.isReminder) {
+      console.log("Nuevo creado. Borrando viejo:", ultimoReminderData.description);
+      
+      // Llamada rápida de delete (sin await, no bloquea)
+      setTimeout(() => {
+        fetch("/.netlify/functions/respond", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "delete",
+            text: ultimoReminderData.description,
+            email: userEmail
+          })
+        }).catch(err => console.log("Delete falló (no crítico):", err));
+      }, 100); // Pequeño delay para no saturar
+    }
 
     if (dataResp.result) {
       const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
@@ -1346,11 +1348,13 @@ sendTextBtn.onclick = async () => {
     }
 
   } catch (err) {
-    console.error("Error completo:", err);
+    console.error("Error:", err);
     mostrarResultado("Error de conexión. Intenta de nuevo.", false);
     stopCoreAnimation();
   }
 };
+
+  
 // ==================== GRABACIÓN DE VOZ ====================
 async function startRecording() {
   try {
