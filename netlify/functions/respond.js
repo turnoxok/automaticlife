@@ -1,6 +1,6 @@
 import { OpenAI } from "openai";
 
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw8utKMWHrX09tabTwWXisUAYvK_quYbfCK9GQ8TALKkFCAWChavfD04TYUcn0HxeDj/exec";
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxH-sMPHcuCKAiEerrrGNPv75xzBzaIFSjMZqKPqWamWo2Ibp_5W0OVk11QAP_dtvzU/exec";
 
 export const handler = async (event) => {
   const headers = {
@@ -106,33 +106,34 @@ export const handler = async (event) => {
         messages: [
           {
             role: "system",
-            content: `Eres un asistente de procesamiento de lenguaje natural para un sistema de notas y recordatorios.
-            
-Analiza el texto del usuario y extrae:
-1. La acción principal (add, get, delete, edit, reminder, unknown)
-2. El contenido limpio (sin comandos como "agendame", "recordame", etc.)
-3. Si es un recordatorio, extrae: tipo (unico, diario, semanal, mensual, anual), fecha/hora, texto descriptivo
+            content: `Eres un clasificador de intenciones para un asistente de notas y recordatorios.
 
-IMPORTANTE: Para fechas, extrae el texto exacto como aparece (ej: "12 de diciembre", "mañana a las 9", "cada lunes")
+REGLAS IMPORTANTES:
+- "agendame", "agenda", "guarda", "guardame", "anota" → action: "add"
+- "recordame", "recordatorio", "acordate", "avisame" → action: "reminder"
+- "pasame", "pasa", "dame", "busca", "buscame", "mostrame", "decime" → action: "get"
+- "borra", "elimina", "saca", "quita" → action: "delete"
+- "cambia", "modifica", "actualiza", "edita" → action: "edit"
 
-Responde SOLO con un JSON válido:
+Analiza el texto y responde SOLO con este JSON:
 {
   "action": "add|get|delete|edit|reminder|unknown",
-  "content": "texto limpio sin comandos",
+  "content": "texto limpio SIN el comando inicial",
   "confidence": 0.0-1.0,
   "reminder": {
     "isReminder": true/false,
     "type": "unico|diario|semanal|mensual|anual",
-    "dateText": "texto de fecha exacto como dijo el usuario (ej: 12 de diciembre, mañana, cada lunes)",
-    "timeText": "texto de hora si existe (ej: 14:30, 9:00)",
-    "description": "descripción limpia del recordatorio"
+    "dateText": "texto de fecha exacto (ej: 12 de diciembre, mañana)",
+    "timeText": "texto de hora (ej: 14:30)",
+    "description": "descripción del recordatorio"
   }
 }
 
 Ejemplos:
-- "recordame cumpleaños lili 12 de diciembre" → action: "reminder", content: "cumpleaños lili", reminder: {isReminder: true, type: "anual", dateText: "12 de diciembre", timeText: "", description: "cumpleaños lili"}
-- "recordame mañana a las 9 llamar al médico" → action: "reminder", content: "llamar al médico", reminder: {isReminder: true, type: "unico", dateText: "mañana", timeText: "9:00", description: "llamar al médico"}
-- "agendame comprar leche" → action: "add", content: "comprar leche", reminder: {isReminder: false}`
+- "agendame comprar leche" → {"action":"add","content":"comprar leche","reminder":{"isReminder":false}}
+- "recordame cumpleaños lili 12 de diciembre" → {"action":"reminder","content":"cumpleaños lili","reminder":{"isReminder":true,"type":"anual","dateText":"12 de diciembre","timeText":"","description":"cumpleaños lili"}}
+- "Pasame cumpleaños lili" → {"action":"get","content":"cumpleaños lili","reminder":{"isReminder":false}}
+- "borra lo de la leche" → {"action":"delete","content":"leche","reminder":{"isReminder":false}}`
           },
           { role: "user", content: text }
         ],
@@ -144,6 +145,8 @@ Ejemplos:
       action = intent.action;
       textoProcesado = intent.content || text;
       reminderData = intent.reminder;
+      
+      console.log("Intent detectado:", action, "Contenido:", textoProcesado);
     }
 
     // ========== MODO EDICIÓN ==========
@@ -196,7 +199,6 @@ Ejemplos:
     let esRecordatorio = false;
 
     if (action === "reminder" || (reminderData && reminderData.isReminder)) {
-      // Enviar dateText y timeText para que Apps Script parsee la fecha
       const reminderPayload = {
         action: "addReminder",
         userId,
