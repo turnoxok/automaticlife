@@ -1,6 +1,6 @@
 import { OpenAI } from "openai";
 
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbx3udZ3iw5ZASCN2XHkT56jCnhM4X7Qi0sPhx-qPP43Eag-eOFsOo2gMEK2ya0VWu29/exec";
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwsNHHZ_ZyTRFsfeeEvkvl2kfOzWoNnNoQBowsxPbXDIBsjGSOl1iq917UvzzulnK75/exec";
 
 export const handler = async (event) => {
   const headers = {
@@ -23,7 +23,21 @@ export const handler = async (event) => {
 
   try {
     const body = JSON.parse(event.body || "{}");
-    const { text = "", email, oldText, newText, action: forcedAction, subscription, isReminder, reminderId } = body;
+    
+    // Log para debug
+    console.log("=== RESPOND.JS RECIBIDO ===");
+    console.log("Body completo:", JSON.stringify(body, null, 2));
+    
+    const { 
+      text = "", 
+      email, 
+      oldText, 
+      newText, 
+      action: forcedAction, 
+      subscription,
+      isReminder,
+      reminderId
+    } = body;
 
     if (!email && !forcedAction) {
       return {
@@ -47,7 +61,6 @@ export const handler = async (event) => {
           subscription
         })
       });
-      const data = await res.json();
       return {
         statusCode: 200,
         headers,
@@ -95,10 +108,16 @@ export const handler = async (event) => {
       };
     }
 
-    // ========== MODO EDICIÓN DIRECTA (NUEVO - APPS SCRIPT SOPORTA EDIT) ==========
-    if (forcedAction === "edit" || (oldText && newText && !text)) {
-      console.log("Modo edición detectado:", { oldText, newText, isReminder, reminderId });
-      
+    // ========== MODO EDICIÓN - PRIORIDAD MÁXIMA ==========
+    // Si viene forcedAction === "edit" O viene oldText + newText, es edición
+    if (forcedAction === "edit" || (oldText && newText)) {
+      console.log("=== MODO EDICIÓN DETECTADO ===");
+      console.log("forcedAction:", forcedAction);
+      console.log("oldText:", oldText);
+      console.log("newText:", newText);
+      console.log("isReminder:", isReminder);
+      console.log("reminderId:", reminderId);
+
       if (!oldText || !newText) {
         const errorMsg = "Faltan datos para editar.";
         const audioBase64 = await generarAudio(openai, errorMsg);
@@ -115,27 +134,32 @@ export const handler = async (event) => {
       }
 
       try {
-        const res = await fetch(SHEETS_WEBAPP_URL, {
+        // Enviar DIRECTAMENTE a Apps Script con action: "edit"
+        const editPayload = {
+          action: "edit",  // FORZAR action edit
+          userId,
+          oldText: oldText,
+          newText: newText,
+          isReminder: isReminder === true || isReminder === "true",
+          reminderId: reminderId || null
+        };
+
+        console.log("Enviando a Sheets:", JSON.stringify(editPayload, null, 2));
+
+        const resEdit = await fetch(SHEETS_WEBAPP_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "edit",
-            userId,
-            oldText,
-            newText,
-            isReminder: isReminder || false,
-            reminderId: reminderId || null
-          })
+          body: JSON.stringify(editPayload)
         });
 
-        const data = await res.json();
-        console.log("Respuesta de edit en Sheets:", data);
+        const data = await resEdit.json();
+        console.log("Respuesta de Sheets:", JSON.stringify(data, null, 2));
 
         if (!data.ok) {
-          throw new Error(data.error || "Error al editar en Sheets");
+          throw new Error(data.error || "Error al editar");
         }
 
-        // Generar mensaje de voz según el tipo
+        // Generar mensaje de éxito
         let textoVoz = "";
         let resultadoHTML = "";
         
@@ -160,7 +184,7 @@ export const handler = async (event) => {
             audioBase64,
             reminderData: data.reminderData || null
           })
-        };
+        });
         
       } catch (err) {
         console.error("Error en edición:", err);
@@ -181,7 +205,7 @@ export const handler = async (event) => {
       }
     }
 
-    // ========== DETECTAR INTENCIÓN CON OPENAI ==========
+    // ========== DETECTAR INTENCIÓN CON OPENAI (solo si NO es edición) ==========
     let action = forcedAction;
     let textoProcesado = text;
     let reminderData = null;
@@ -237,7 +261,7 @@ Ejemplos:
       textoProcesado = intent.content || text;
       reminderData = intent.reminder;
       
-      // RESPALDO: Si OpenAI no detectó la hora, extraerla manualmente del texto original
+      // RESPALDO: Si OpenAI no detectó la hora, extraerla manualmente
       if (reminderData && reminderData.isReminder) {
         const horaDetectada = extraerHoraManual(text);
         if (horaDetectada && (!reminderData.timeText || reminderData.timeText === "09:00")) {
@@ -246,7 +270,7 @@ Ejemplos:
         }
       }
       
-      console.log("Intent:", action, "Content:", textoProcesado, "Reminder:", JSON.stringify(reminderData));
+      console.log("Intent detectado:", action, "Reminder:", JSON.stringify(reminderData));
     }
 
     // ========== ACCIONES CON SHEETS ==========
@@ -265,7 +289,7 @@ Ejemplos:
         description: reminderData?.description || textoProcesado
       };
 
-      console.log("Enviando a Sheets:", JSON.stringify(reminderPayload));
+      console.log("Creando recordatorio:", JSON.stringify(reminderPayload));
 
       const res = await fetch(SHEETS_WEBAPP_URL, {
         method: "POST",
@@ -279,7 +303,6 @@ Ejemplos:
         const fechaMostrar = data.fechaFormateada || reminderData?.dateText || 'próximamente';
         const horaMostrar = data.hora || reminderData?.timeText || '09:00';
         
-        // Formatear hora bonita (13:00 → 13hs)
         const horaBonita = horaMostrar.replace(/:00$/, 'hs').replace(/:(\d+)$/, ':$1');
         
         respuestaFinal = `⏰ <strong>Recordatorio:</strong> ${textoProcesado}<br><small style="color:#ffc107">📅 ${fechaMostrar} a las ${horaBonita}</small>`;
@@ -337,11 +360,6 @@ Ejemplos:
         textoParaVoz = respuestaFinal;
       }
 
-    } else if (action === "edit") {
-      // Este caso se maneja arriba con forcedAction, pero por si OpenAI detecta "edita" en el texto
-      respuestaFinal = "Para editar, usa el botón de editar en el resultado.";
-      textoParaVoz = respuestaFinal;
-
     } else {
       respuestaFinal = "No entendí la acción. Prueba con: agendame, recordame, pasame, o borra.";
       textoParaVoz = respuestaFinal;
@@ -376,14 +394,12 @@ Ejemplos:
   }
 };
 
-// Función de respaldo para extraer hora manualmente del texto
 function extraerHoraManual(texto) {
-  // Buscar patrones: 13hs, 13 hs, 13:00, 13, 9.30, 9:30hs, etc.
   const patrones = [
-    /(\d{1,2})\s*hs/i,           // 13hs, 13 hs
-    /(\d{1,2}):(\d{2})\s*hs?/i, // 13:00, 13:00hs, 13:30
-    /(\d{1,2})\.(\d{2})/,        // 13.30
-    /\ba\s*las\s*(\d{1,2})(?::(\d{2}))?/i, // a las 13, a las 13:30
+    /(\d{1,2})\s*hs/i,
+    /(\d{1,2}):(\d{2})\s*hs?/i,
+    /(\d{1,2})\.(\d{2})/,
+    /\ba\s*las\s*(\d{1,2})(?::(\d{2}))?/i,
   ];
   
   for (let patron of patrones) {
@@ -392,7 +408,6 @@ function extraerHoraManual(texto) {
       let horas = parseInt(match[1]);
       let minutos = match[2] ? parseInt(match[2]) : 0;
       
-      // Validar rango
       if (horas >= 0 && horas <= 23 && minutos >= 0 && minutos <= 59) {
         return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
       }
