@@ -1273,8 +1273,6 @@ sendTextBtn.onclick = async () => {
   const texto = textInput.value.trim();
   if (!texto) return;
 
-  console.log("Enviando. modoEdicion:", modoEdicion, "ultimoReminderData:", ultimoReminderData);
-
   cerrarModal();
   transcribedText.textContent = texto;
 
@@ -1283,30 +1281,24 @@ sendTextBtn.onclick = async () => {
 
     let bodyData;
 
-    // Si es edición de recordatorio, primero borrar el anterior
+    // Si es edición de recordatorio, primero intentar borrar el anterior (sin bloquear)
     if (modoEdicion && ultimoReminderData && ultimoReminderData.isReminder) {
-      console.log("Editando recordatorio. Datos guardados:", ultimoReminderData);
+      console.log("Editando recordatorio. Borrando:", ultimoReminderData.description);
       
-      // Usar la descripción exacta que está guardada en la hoja
-      const textoExacto = ultimoReminderData.description || ultimoResultadoTexto;
-      
-      console.log("Borrando con texto exacto:", textoExacto);
-      
-      // Borrar el recordatorio anterior (esto borra de ambas hojas en el backend)
-      const deleteRes = await fetch("/.netlify/functions/respond", {
+      // Borrar en segundo plano (no esperar respuesta)
+      fetch("/.netlify/functions/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "delete",
-          text: textoExacto,  // Usar descripción exacta
+          text: ultimoReminderData.description,
           email: userEmail
         })
-      });
+      }).then(res => res.json())
+        .then(data => console.log("Delete completado:", data))
+        .catch(err => console.log("Error en delete:", err));
       
-      const deleteData = await deleteRes.json();
-      console.log("Respuesta delete:", deleteData);
-      
-      // Crear el nuevo (como recordatorio o nota según el texto editado)
+      // Crear el nuevo inmediatamente (no esperar al delete)
       bodyData = {
         text: texto,
         email: userEmail
