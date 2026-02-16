@@ -561,3 +561,93 @@ async function sendAudio() {
 </script>
 </body>
 </html>
+
+function normalizar(texto) {
+  return texto
+    .toLowerCase()
+    .replace(/\./g, "")
+    .replace(/,/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function doPost(e) {
+  const sheet = SpreadsheetApp
+    .getActiveSpreadsheet()
+    .getSheetByName("Sheet1");
+
+  const data = JSON.parse(e.postData.contents);
+  const action = data.action;
+  const text = data.text;
+  const userId = data.userId || "default";
+
+  if (!action) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: false, error: "acción no válida" }));
+  }
+
+  // ===== ADD =====
+  if (action === "add" && text) {
+    const id = Utilities.getUuid();
+    sheet.appendRow([id, userId, new Date(), text]);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: true, id: id }));
+  }
+
+  // ===== GET =====
+  if (action === "get" && text) {
+    const values = sheet.getDataRange().getValues();
+    const textoBuscado = normalizar(text);
+    const palabras = textoBuscado.split(" ");
+
+    for (let i = values.length - 1; i >= 0; i--) {
+      const filaUser = values[i][1]; // ahora usuario está en columna 1
+      const contenido = normalizar(String(values[i][3])); // texto está en columna 3
+
+      if (filaUser !== userId) continue;
+
+      for (let palabra of palabras) {
+        if (palabra.length > 3 && contenido.includes(palabra)) {
+          return ContentService
+            .createTextOutput(JSON.stringify({
+              ok: true,
+              id: values[i][0],
+              result: values[i][3]
+            }));
+        }
+      }
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: false }));
+  }
+
+  // ===== DELETE =====
+  if (action === "delete" && text) {
+    const values = sheet.getDataRange().getValues();
+    const textoBuscado = normalizar(text);
+    const palabras = textoBuscado.split(" ");
+
+    for (let i = values.length - 1; i >= 0; i--) {
+      const filaUser = values[i][1];
+      const contenido = normalizar(String(values[i][3]));
+
+      if (filaUser !== userId) continue;
+
+      for (let palabra of palabras) {
+        if (palabra.length > 3 && contenido.includes(palabra)) {
+          sheet.deleteRow(i + 1);
+          return ContentService
+            .createTextOutput(JSON.stringify({ ok: true }));
+        }
+      }
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: false }));
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: false, error: "acción no válida" }));
+}
