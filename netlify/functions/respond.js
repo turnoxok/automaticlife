@@ -2,12 +2,7 @@ import { OpenAI } from "openai";
 
 const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycby20e_vTjhgu79LCZGC0Ht7jP37TfaOeAqLetTvnUOrauba6EQziF3OML7rrGqLwBX2/exec";
 
-// Claves VAPID para notificaciones push (genera las tuyas en https://web-push-codelab.glitch.me/)
-const VAPID_PUBLIC_KEY = "BK3d7LKjB2vKLxJ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ8mQ=";
-const VAPID_PRIVATE_KEY = "tu-clave-privada-aqui"; // Reemplaza con tu clave privada
-
 export const handler = async (event) => {
-  // CORS headers
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
@@ -167,7 +162,6 @@ Ejemplos:
         };
       }
 
-      // Borrar + Agregar
       await fetch(SHEETS_WEBAPP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -201,7 +195,6 @@ Ejemplos:
     let esRecordatorio = false;
 
     if (action === "reminder" || (reminderData && reminderData.isReminder)) {
-      // Procesar recordatorio
       const reminderPayload = {
         action: "addReminder",
         userId,
@@ -221,8 +214,9 @@ Ejemplos:
       const data = await res.json();
       
       if (data.ok) {
-        respuestaFinal = `⏰ <strong>Recordatorio programado:</strong><br>${reminderData?.description || textoProcesado}<br><small>Para: ${reminderData?.timeText || 'próximamente'}</small>`;
-        textoParaVoz = `Perfecto, te recordaré: ${reminderData?.description || textoProcesado}`;
+        const fechaMostrar = data.fecha || reminderData?.timeText || 'próximamente';
+        respuestaFinal = `⏰ <strong>Recordatorio:</strong> ${textoProcesado}<br><small style="color:#ffc107">📅 ${fechaMostrar}</small>`;
+        textoParaVoz = `Perfecto, te recordaré: ${textoProcesado} para el ${fechaMostrar}`;
         esRecordatorio = true;
       } else {
         respuestaFinal = "No pude programar el recordatorio.";
@@ -251,42 +245,36 @@ Ejemplos:
       respuestaFinal = "";
       textoParaVoz = data.ok ? "Eliminado correctamente." : "No encontré ese dato para borrar.";
 
-    
+    } else if (action === "get") {
+      const res = await fetch(SHEETS_WEBAPP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get", text: textoProcesado, userId })
+      });
 
-else if (action === "get") {
-  const res = await fetch(SHEETS_WEBAPP_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "get", text: textoProcesado, userId })
-  });
+      const data = await res.json();
 
-  const data = await res.json();
-
-  if (data.ok && data.result) {
-    // Si es recordatorio, incluir la fecha en el resultado
-    if (data.esRecordatorio && data.fecha) {
-      respuestaFinal = `${data.result}<br><small style="color:#ffc107">${data.fecha}</small>`;
-      textoParaVoz = `Encontré: ${data.result} para el ${data.fecha.replace(/📅|🕐/g, '')}`;
-    } else if (data.fecha) {
-      respuestaFinal = `${data.result}<br><small style="opacity:0.7">Guardado el: ${data.fecha}</small>`;
-      textoParaVoz = `Encontré: ${data.result}`;
-    } else {
-      respuestaFinal = data.result;
-      textoParaVoz = `Encontré: ${data.result}`;
-    }
-  } else {
-    respuestaFinal = "No encontré información sobre eso.";
-    textoParaVoz = respuestaFinal;
-  }
-}
-
+      if (data.ok && data.result) {
+        if (data.esRecordatorio && data.fecha) {
+          respuestaFinal = `${data.result}<br><small style="color:#ffc107">${data.fecha}</small>`;
+          textoParaVoz = `Encontré: ${data.result} para el ${data.fecha.replace(/📅/g, '').trim()}`;
+        } else if (data.fecha) {
+          respuestaFinal = `${data.result}<br><small style="opacity:0.7">Guardado el: ${data.fecha}</small>`;
+          textoParaVoz = `Encontré: ${data.result}`;
+        } else {
+          respuestaFinal = data.result;
+          textoParaVoz = `Encontré: ${data.result}`;
+        }
+      } else {
+        respuestaFinal = "No encontré información sobre eso.";
+        textoParaVoz = respuestaFinal;
+      }
 
     } else {
       respuestaFinal = "No entendí la acción. Prueba con: agendame, recordame, pasame, o borra.";
       textoParaVoz = respuestaFinal;
     }
 
-    // ========== GENERAR AUDIO ==========
     const audioBase64 = await generarAudio(openai, textoParaVoz);
 
     return {
@@ -316,7 +304,6 @@ else if (action === "get") {
   }
 };
 
-// ========== FUNCIONES AUXILIARES ==========
 async function generarAudio(openai, texto) {
   try {
     const audioResponse = await openai.audio.speech.create({
