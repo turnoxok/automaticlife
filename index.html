@@ -859,8 +859,10 @@ let audioChunks = [];
 let recordingTimer;
 let recordingSeconds = 0;
 let ultimoResultado = "";
-let ultimoResultadoTexto = "";  // NUEVO: Solo texto sin HTML
+let ultimoResultadoTexto = "";
+let ultimoReminderData = null;  // NUEVO: Guardar datos completos del recordatorio
 let modoEdicion = false;
+let esEdicionRecordatorio = false;  // NUEVO: Flag para saber si es edición de recordatorio
 let pushSubscription = null;
 let pressTimer;
 let isRecording = false;
@@ -1174,11 +1176,14 @@ function stopCoreAnimation() {
 }
 
 // ==================== UI RESULTADOS ====================
-function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false) {
+function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, reminderData = null) {
   ultimoResultado = texto;  // HTML completo para mostrar
   
-  // EXTRAER SOLO EL TEXTO PLANO (antes de cualquier tag HTML)
+  // Extraer solo el texto plano (antes de cualquier tag HTML)
   ultimoResultadoTexto = texto.split('<')[0].trim();
+  
+  // NUEVO: Guardar datos del recordatorio si existe
+  ultimoReminderData = reminderData;
   
   let html = `<div class="result-content">${texto}</div>`;
   
@@ -1201,7 +1206,26 @@ function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false) 
 
 function activarEdicion() {
   modoEdicion = true;
-  textInput.value = ultimoResultadoTexto;  // USAR TEXTO LIMPIO, NO HTML
+  esEdicionRecordatorio = false;  // Por defecto no es edición de recordatorio
+  
+  // NUEVO: Si tenemos datos de recordatorio, reconstruir el comando completo
+  if (ultimoReminderData && ultimoReminderData.isReminder) {
+    esEdicionRecordatorio = true;
+    const tipo = ultimoReminderData.type || 'unico';
+    const fecha = ultimoReminderData.dateText || 'mañana';
+    const hora = ultimoReminderData.timeText || '09:00';
+    const descripcion = ultimoReminderData.description || ultimoResultadoTexto;
+    
+    // Formatear hora bonita (13:00 → 13hs)
+    const horaBonita = hora.replace(/:00$/, 'hs').replace(/:(\d+)$/, ':$1');
+    
+    // Reconstruir comando: "Recordame [fecha] a las [hora] [descripción]"
+    textInput.value = `Recordame ${fecha} a las ${horaBonita} ${descripcion}`;
+  } else {
+    // Si no es recordatorio, usar el texto plano normal
+    textInput.value = ultimoResultadoTexto;
+  }
+  
   textModal.classList.remove("hidden");
   textInput.focus();
 }
@@ -1226,6 +1250,7 @@ textFAB.onclick = () => {
   }
 
   modoEdicion = false;
+  esEdicionRecordatorio = false;
   textInput.value = "";
   textModal.classList.remove("hidden");
   textInput.focus();
@@ -1249,6 +1274,7 @@ textInput.addEventListener('keydown', (e) => {
 function cerrarModal() {
   textModal.classList.add("hidden");
   modoEdicion = false;
+  esEdicionRecordatorio = false;
   textInput.value = "";
 }
 
@@ -1265,14 +1291,34 @@ sendTextBtn.onclick = async () => {
 
     let bodyData;
 
-    if (modoEdicion) {
+    // NUEVO: Si es edición de recordatorio, primero borrar el viejo
+    if (modoEdicion && esEdicionRecordatorio && ultimoReminderData) {
+      // Borrar el recordatorio anterior
+      await fetch("/.netlify/functions/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "delete",
+          text: ultimoResultadoTexto,  // Texto del recordatorio viejo
+          email: userEmail
+        })
+      });
+      
+      // Crear como nuevo recordatorio (el backend detectará "Recordame")
+      bodyData = {
+        text: texto,  // El texto completo con "Recordame..."
+        email: userEmail
+      };
+    } else if (modoEdicion) {
+      // Edición normal (no recordatorio)
       bodyData = {
         action: "edit",
-        oldText: ultimoResultadoTexto,  // USAR TEXTO LIMPIO
+        oldText: ultimoResultadoTexto,
         newText: texto,
         email: userEmail
       };
     } else {
+      // Nuevo mensaje normal
       bodyData = {
         text: texto,
         email: userEmail
@@ -1291,7 +1337,8 @@ sendTextBtn.onclick = async () => {
       const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
       const esRecordatorio = dataResp.reminderData || false;
       
-      mostrarResultado(dataResp.result, esBusqueda, esRecordatorio);
+      // NUEVO: Pasar reminderData a mostrarResultado
+      mostrarResultado(dataResp.result, esBusqueda, esRecordatorio, dataResp.reminderData);
     }
 
     if (dataResp.ok && dataResp.audioBase64) {
@@ -1392,7 +1439,8 @@ async function sendAudio() {
         const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
         const esRecordatorio = dataResp.reminderData || false;
         
-        mostrarResultado(dataResp.result, esBusqueda, esRecordatorio);
+        // NUEVO: Pasar reminderData a mostrarResultado
+        mostrarResultado(dataResp.result, esBusqueda, esRecordatorio, dataResp.reminderData);
       }
 
       if (dataResp.ok && dataResp.audioBase64) {
@@ -1439,4 +1487,3 @@ aiCore.onclick = (e) => {
 </script>
 </body>
 </html>
-
