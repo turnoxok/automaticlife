@@ -1280,7 +1280,7 @@ sendTextBtn.onclick = async () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "delete",
-          text: ultimoResultadoTexto,  // Texto exacto del recordatorio
+          text: ultimoReminderData.description || ultimoResultadoTexto,
           email: userEmail
         })
       });
@@ -1421,8 +1421,10 @@ async function sendAudio() {
 
       if (dataResp.result) {
         const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
+        // CORREGIDO: Verificar que reminderData existe y tiene isReminder
         const esRecordatorio = dataResp.reminderData && dataResp.reminderData.isReminder;
         
+        // CORREGIDO: Pasar reminderData a mostrarResultado
         mostrarResultado(dataResp.result, esBusqueda, esRecordatorio, dataResp.reminderData);
       }
 
