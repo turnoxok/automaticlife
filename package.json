@@ -1,11 +1,5 @@
 {
-  "name": "automatic-life",
-  "version": "1.0.0",
-  "private": true,
   "dependencies": {
-    "openai": "^5.0.0"
-  },
-  "scripts": {
-    "build": "echo 'Nothing to build'"
+    "openai": "^4.0.0"
   }
 }
