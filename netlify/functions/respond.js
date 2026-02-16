@@ -1,6 +1,6 @@
 import { OpenAI } from "openai";
 
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw6tSaae4s3gJYWtqKb3UWHgEOsSZHcd-ZPI6GgzCTHwqkaYe-0NPpDFS3qMQ5o-kOb/exec";
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxaTtazxWeMpmAgTeHzaxVmMO0IQbGbTH8z8SbYuMUDNxee98GW8BXMi8XRsXGSTWr3/exec";
 
 export const handler = async (event) => {
   const headers = {
@@ -115,12 +115,14 @@ REGLAS IMPORTANTES:
 - "borra", "elimina", "saca", "quita" → action: "delete"
 - "cambia", "modifica", "actualiza", "edita" → action: "edit"
 
-Para recordatorios, extrae la hora exacta que menciona el usuario:
-- "8hs", "8:00", "8" → timeText: "08:00"
-- "16hs", "16:00", "16" → timeText: "16:00"
-- "13hs", "13:00", "13" → timeText: "13:00"
+Para recordatorios, DEBES extraer la hora exacta del texto del usuario:
+- Si dice "8hs" o "8" → timeText: "08:00"
+- Si dice "16hs" o "16" → timeText: "16:00"
+- Si dice "13hs" o "13" → timeText: "13:00"
+- Si dice "9:30" o "9hs30" → timeText: "09:30"
+- Si NO menciona hora → timeText: "09:00"
 
-Analiza el texto y responde SOLO con este JSON:
+Responde SOLO con este JSON exacto:
 {
   "action": "add|get|delete|edit|reminder|unknown",
   "content": "texto limpio SIN el comando inicial",
@@ -128,19 +130,15 @@ Analiza el texto y responde SOLO con este JSON:
   "reminder": {
     "isReminder": true/false,
     "type": "unico|diario|semanal|mensual|anual",
-    "dateText": "texto de fecha exacto (ej: 12 de diciembre, mañana, lunes a viernes)",
-    "timeText": "hora exacta en formato HH:MM (ej: 08:00, 16:00, 13:00)",
+    "dateText": "texto de fecha exacto",
+    "timeText": "HH:MM - hora exacta que dijo el usuario",
     "description": "descripción del recordatorio"
   }
 }
 
 Ejemplos:
-- "agendame comprar leche" → {"action":"add","content":"comprar leche","reminder":{"isReminder":false}}
-- "recordame cumpleaños lili 12 de diciembre" → {"action":"reminder","content":"cumpleaños lili","reminder":{"isReminder":true,"type":"anual","dateText":"12 de diciembre","timeText":"09:00","description":"cumpleaños lili"}}
 - "mañana almuerzo con Pepe 13hs" → {"action":"reminder","content":"almuerzo con Pepe","reminder":{"isReminder":true,"type":"unico","dateText":"mañana","timeText":"13:00","description":"almuerzo con Pepe"}}
-- "de lunes a viernes 8hs" → {"action":"reminder","content":"trabajo","reminder":{"isReminder":true,"type":"semanal","dateText":"lunes a viernes","timeText":"08:00","description":"trabajo"}}
-- "Pasame cumpleaños lili" → {"action":"get","content":"cumpleaños lili","reminder":{"isReminder":false}}
-- "borra lo de la leche" → {"action":"delete","content":"leche","reminder":{"isReminder":false}}`
+- "de lunes a viernes trabajo 8hs" → {"action":"reminder","content":"trabajo","reminder":{"isReminder":true,"type":"semanal","dateText":"lunes a viernes","timeText":"08:00","description":"trabajo"}}`
           },
           { role: "user", content: text }
         ],
@@ -153,7 +151,16 @@ Ejemplos:
       textoProcesado = intent.content || text;
       reminderData = intent.reminder;
       
-      console.log("Intent detectado:", action, "Contenido:", textoProcesado, "Reminder:", JSON.stringify(reminderData));
+      // RESPALDO: Si OpenAI no detectó la hora, extraerla manualmente del texto original
+      if (reminderData && reminderData.isReminder) {
+        const horaDetectada = extraerHoraManual(text);
+        if (horaDetectada && (!reminderData.timeText || reminderData.timeText === "09:00")) {
+          reminderData.timeText = horaDetectada;
+          console.log("Hora extraída manualmente:", horaDetectada);
+        }
+      }
+      
+      console.log("Intent:", action, "Content:", textoProcesado, "Reminder:", JSON.stringify(reminderData));
     }
 
     // ========== MODO EDICIÓN ==========
@@ -212,9 +219,11 @@ Ejemplos:
         text: textoProcesado,
         reminderType: reminderData?.type || "unico",
         dateText: reminderData?.dateText || "",
-        timeText: reminderData?.timeText || "",
+        timeText: reminderData?.timeText || "09:00",
         description: reminderData?.description || textoProcesado
       };
+
+      console.log("Enviando a Sheets:", JSON.stringify(reminderPayload));
 
       const res = await fetch(SHEETS_WEBAPP_URL, {
         method: "POST",
@@ -319,6 +328,32 @@ Ejemplos:
     };
   }
 };
+
+// Función de respaldo para extraer hora manualmente del texto
+function extraerHoraManual(texto) {
+  // Buscar patrones: 13hs, 13 hs, 13:00, 13, 9.30, 9:30hs, etc.
+  const patrones = [
+    /(\d{1,2})\s*hs/i,           // 13hs, 13 hs
+    /(\d{1,2}):(\d{2})\s*hs?/i, // 13:00, 13:00hs, 13:30
+    /(\d{1,2})\.(\d{2})/,        // 13.30
+    /\ba\s*las\s*(\d{1,2})(?::(\d{2}))?/i, // a las 13, a las 13:30
+  ];
+  
+  for (let patron of patrones) {
+    const match = texto.match(patron);
+    if (match) {
+      let horas = parseInt(match[1]);
+      let minutos = match[2] ? parseInt(match[2]) : 0;
+      
+      // Validar rango
+      if (horas >= 0 && horas <= 23 && minutos >= 0 && minutos <= 59) {
+        return `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
+      }
+    }
+  }
+  
+  return null;
+}
 
 async function generarAudio(openai, texto) {
   try {
