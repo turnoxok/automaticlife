@@ -351,6 +351,28 @@ Ejemplos:
           respuestaFinal = data.result;
           textoParaVoz = `Encontré: ${data.result}`;
         }
+        
+        // >>> DEVOLVER DATOS DEL RECORDATORIO PARA EDICIÓN <<<
+        const audioBase64 = await generarAudio(openai, textoParaVoz);
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            ok: true,
+            action: "get",
+            result: respuestaFinal,
+            audioBase64,
+            // Datos necesarios para edición:
+            reminderId: data.reminderId || null,
+            notaId: data.id || null,
+            tipo: data.tipo || null,
+            dateText: data.dateText || null,
+            timeText: data.timeText || null,
+            description: data.description || null,
+            esRecordatorio: data.esRecordatorio || false
+          })
+        };
       } else {
         respuestaFinal = "No encontré información sobre eso.";
         textoParaVoz = respuestaFinal;
