@@ -1279,65 +1279,116 @@ sendTextBtn.onclick = async () => {
   try {
     startCoreAnimation("...");
 
-    // PASO 1: Crear el nuevo (siempre funciona)
-    let bodyData;
+    let dataResp;
     
-    if (modoEdicion && ultimoReminderData && ultimoReminderData.isReminder) {
-      // Es edición de recordatorio - crear como nuevo recordatorio
-      bodyData = {
-        text: texto,  // El backend detectará "Recordame" y creará recordatorio
-        email: userEmail
-      };
-    } else if (modoEdicion) {
-      // Edición normal (no recordatorio)
-      bodyData = {
-        action: "edit",
-        oldText: ultimoResultadoTexto,
-        newText: texto,
-        email: userEmail
-      };
-    } else {
-      // Nuevo mensaje
-      bodyData = {
-        text: texto,
-        email: userEmail
-      };
-    }
-
-    const resResp = await fetch("/.netlify/functions/respond", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bodyData)
-    });
-
-    const dataResp = await resResp.json();
-    console.log("Respuesta crear:", dataResp);
-
-    // PASO 2: Si se creó correctamente y es edición, borrar el viejo (sin esperar)
-    if (dataResp.ok && modoEdicion && ultimoReminderData && ultimoReminderData.isReminder) {
-      console.log("Nuevo creado. Borrando viejo:", ultimoReminderData.description);
+    if (modoEdicion) {
+      // === MODO EDICIÓN ===
       
-      // Llamada rápida de delete (sin await, no bloquea)
-      setTimeout(() => {
-        fetch("/.netlify/functions/respond", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "delete",
-            text: ultimoReminderData.description,
-            email: userEmail
-          })
-        }).catch(err => console.log("Delete falló (no crítico):", err));
-      }, 100); // Pequeño delay para no saturar
+      // PASO 1: Intentar usar endpoint edit (si existe)
+      const resEdit = await fetch("/.netlify/functions/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "edit",
+          oldText: ultimoResultadoTexto,
+          newText: texto,
+          email: userEmail,
+          isReminder: ultimoReminderData && ultimoReminderData.isReminder,
+          reminderId: ultimoReminderData ? ultimoReminderData.id : null
+        })
+      });
+      
+      dataResp = await resEdit.json();
+      
+      // Si el backend no soporta edit (error o no existe), hacer fallback manual
+      if (!dataResp.ok && (dataResp.error && dataResp.error.includes("no válida"))) {
+        console.log("Backend no soporta edit, usando fallback delete+add");
+        
+        // Fallback: Borrar primero, luego crear
+        if (ultimoReminderData && ultimoReminderData.isReminder) {
+          // Es recordatorio: borrar el viejo
+          await fetch("/.netlify/functions/respond", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "delete",
+              text: ultimoReminderData.description || ultimoResultadoTexto,
+              email: userEmail
+            })
+          });
+          
+          // Crear nuevo como recordatorio (detectará "Recordame" en el texto)
+          const resNuevo = await fetch("/.netlify/functions/respond", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text: texto, // Debe contener "Recordame..." para que se detecte como recordatorio
+              email: userEmail
+            })
+          });
+          
+          dataResp = await resNuevo.json();
+          
+        } else {
+          // Es nota simple: borrar y agregar
+          await fetch("/.netlify/functions/respond", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "delete",
+              text: ultimoResultadoTexto,
+              email: userEmail
+            })
+          });
+          
+          const resNuevo = await fetch("/.netlify/functions/respond", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text: texto,
+              email: userEmail
+            })
+          });
+          
+          dataResp = await resNuevo.json();
+        }
+      }
+      
+      // Limpiar estado de edición
+      modoEdicion = false;
+      ultimoReminderData = null;
+      
+    } else {
+      // === MODO NUEVO ===
+      const res = await fetch("/.netlify/functions/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: texto,
+          email: userEmail
+        })
+      });
+      
+      dataResp = await res.json();
     }
 
-    if (dataResp.result) {
+    console.log("Respuesta:", dataResp);
+
+    if (dataResp.result || dataResp.message) {
       const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
       const esRecordatorio = dataResp.reminderData && dataResp.reminderData.isReminder;
       
-      mostrarResultado(dataResp.result, esBusqueda, esRecordatorio, dataResp.reminderData);
+      mostrarResultado(
+        dataResp.result || dataResp.message, 
+        esBusqueda, 
+        esRecordatorio, 
+        dataResp.reminderData
+      );
+    } else {
+      mostrarResultado("No se pudo completar la operación", false);
     }
 
+    // Audio
     if (dataResp.ok && dataResp.audioBase64) {
       const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
       startCoreAnimation("AI");
@@ -1353,7 +1404,6 @@ sendTextBtn.onclick = async () => {
     stopCoreAnimation();
   }
 };
-
   
 // ==================== GRABACIÓN DE VOZ ====================
 async function startRecording() {
