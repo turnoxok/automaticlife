@@ -1169,7 +1169,15 @@ function stopCoreAnimation() {
 function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, reminderData = null) {
   ultimoResultado = texto;
   ultimoResultadoTexto = texto.split('<')[0].trim();
-  ultimoReminderData = reminderData;
+  
+  // CORREGIDO: Solo actualizar ultimoReminderData si viene nuevo dato
+  if (reminderData && reminderData.isReminder) {
+    ultimoReminderData = reminderData;
+    console.log("Guardado reminderData:", ultimoReminderData);
+  } else if (!reminderData) {
+    // Si viene null, NO pisar el anterior (podría ser un get después de crear)
+    console.log("reminderData es null, mantengo anterior:", ultimoReminderData);
+  }
   
   let html = `<div class="result-content">${texto}</div>`;
   
@@ -1188,9 +1196,10 @@ function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, 
     resultPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 }
-
 function activarEdicion() {
   modoEdicion = true;
+  
+  console.log("Activando edición. ultimoReminderData:", ultimoReminderData);
   
   if (ultimoReminderData && ultimoReminderData.isReminder) {
     const tipo = ultimoReminderData.type || 'unico';
@@ -1201,8 +1210,10 @@ function activarEdicion() {
     const horaBonita = hora.replace(/:00$/, 'hs').replace(/:(\d+)$/, ':$1');
     
     textInput.value = `Recordame ${fecha} a las ${horaBonita} ${descripcion}`;
+    console.log("Texto reconstruido:", textInput.value);
   } else {
     textInput.value = ultimoResultadoTexto;
+    console.log("Edición normal (no recordatorio):", textInput.value);
   }
   
   textModal.classList.remove("hidden");
@@ -1261,6 +1272,8 @@ function cerrarModal() {
 sendTextBtn.onclick = async () => {
   const texto = textInput.value.trim();
   if (!texto) return;
+
+  console.log("Enviando. modoEdicion:", modoEdicion, "ultimoReminderData:", ultimoReminderData);
 
   cerrarModal();
   transcribedText.textContent = texto;
