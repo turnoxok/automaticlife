@@ -1270,22 +1270,32 @@ sendTextBtn.onclick = async () => {
 
     let bodyData;
 
+    // Si es edición de recordatorio, primero borrar el anterior
     if (modoEdicion && ultimoReminderData && ultimoReminderData.isReminder) {
-      await fetch("/.netlify/functions/respond", {
+      console.log("Editando recordatorio. Borrando:", ultimoResultadoTexto);
+      
+      // Intentar borrar el recordatorio anterior
+      const deleteRes = await fetch("/.netlify/functions/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "delete",
-          text: ultimoResultadoTexto,
+          text: ultimoResultadoTexto,  // Texto exacto del recordatorio
           email: userEmail
         })
       });
       
+      const deleteData = await deleteRes.json();
+      console.log("Respuesta delete:", deleteData);
+      
+      // Crear el nuevo (como recordatorio o nota normal según el texto)
       bodyData = {
         text: texto,
         email: userEmail
       };
+      
     } else if (modoEdicion) {
+      // Edición normal (no recordatorio)
       bodyData = {
         action: "edit",
         oldText: ultimoResultadoTexto,
@@ -1293,6 +1303,7 @@ sendTextBtn.onclick = async () => {
         email: userEmail
       };
     } else {
+      // Nuevo mensaje
       bodyData = {
         text: texto,
         email: userEmail
@@ -1306,6 +1317,7 @@ sendTextBtn.onclick = async () => {
     });
 
     const dataResp = await resResp.json();
+    console.log("Respuesta crear/editar:", dataResp);
 
     if (dataResp.result) {
       const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
@@ -1324,12 +1336,11 @@ sendTextBtn.onclick = async () => {
     }
 
   } catch (err) {
-    console.error(err);
+    console.error("Error completo:", err);
     mostrarResultado("Error de conexión. Intenta de nuevo.", false);
     stopCoreAnimation();
   }
 };
-
 // ==================== GRABACIÓN DE VOZ ====================
 async function startRecording() {
   try {
