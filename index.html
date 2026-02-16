@@ -434,7 +434,7 @@ body {
 #textModal {
   position: fixed;
   inset: 0;
-  background: rgba(5, 10, 25, 0.1);
+  background: rgba(5, 10, 25, 0.9);
   backdrop-filter: blur(20px);
   justify-content: center;
   align-items: flex-end;
@@ -859,6 +859,7 @@ let audioChunks = [];
 let recordingTimer;
 let recordingSeconds = 0;
 let ultimoResultado = "";
+let ultimoResultadoTexto = "";  // NUEVO: Solo texto sin HTML
 let modoEdicion = false;
 let pushSubscription = null;
 let pressTimer;
@@ -907,44 +908,44 @@ document.addEventListener('DOMContentLoaded', () => {
   // Gestos táctiles para el botón GO
   setupTouchGestures();
 
-let inactivityTimer;
-const INACTIVITY_DELAY = 10000; // 10 segundos de inactividad
-const HINT_DURATION = 10000;  // 10 segundos visible
+  let inactivityTimer;
+  const INACTIVITY_DELAY = 10000; // 10 segundos de inactividad
+  const HINT_DURATION = 10000;  // 10 segundos visible
 
-function showHint() {
-  const hint = document.getElementById('hintText');
-  if (!hint || !userEmail) return; // Solo si está logueado
-  
-  hint.classList.add('visible');
-  hint.classList.remove('fade-out');
-  
-  // Auto-ocultar después de 10 segundos
-  setTimeout(() => {
-    hint.classList.add('fade-out');
-    hint.classList.remove('visible');
-  }, HINT_DURATION);
-}
-
-function resetInactivity() {
-  clearTimeout(inactivityTimer);
-  inactivityTimer = setTimeout(showHint, INACTIVITY_DELAY);
-  
-  // Ocultar hint inmediatamente al interactuar
-  const hint = document.getElementById('hintText');
-  if (hint && hint.classList.contains('visible')) {
-    hint.classList.add('fade-out');
-    hint.classList.remove('visible');
+  function showHint() {
+    const hint = document.getElementById('hintText');
+    if (!hint || !userEmail) return; // Solo si está logueado
+    
+    hint.classList.add('visible');
+    hint.classList.remove('fade-out');
+    
+    // Auto-ocultar después de 10 segundos
+    setTimeout(() => {
+      hint.classList.add('fade-out');
+      hint.classList.remove('visible');
+    }, HINT_DURATION);
   }
-}
 
-// Eventos que resetean inactividad
-['click', 'touchstart', 'keydown', 'scroll'].forEach(event => {
-  document.addEventListener(event, resetInactivity, { passive: true });
-});
+  function resetInactivity() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(showHint, INACTIVITY_DELAY);
+    
+    // Ocultar hint inmediatamente al interactuar
+    const hint = document.getElementById('hintText');
+    if (hint && hint.classList.contains('visible')) {
+      hint.classList.add('fade-out');
+      hint.classList.remove('visible');
+    }
+  }
 
-// Iniciar timer al cargar
-resetInactivity();
+  // Eventos que resetean inactividad
+  ['click', 'touchstart', 'keydown', 'scroll'].forEach(event => {
+    document.addEventListener(event, resetInactivity, { passive: true });
   });
+
+  // Iniciar timer al cargar
+  resetInactivity();
+});
   
 function setupTouchGestures() {
   // Soporte para press largo en móvil
@@ -1145,8 +1146,6 @@ function speak(text) {
 }
 
 // ==================== ANIMACIONES ====================
-
-  
 function startCoreAnimation(label) {
   aiCore.classList.add("ai-active");
   
@@ -1176,7 +1175,10 @@ function stopCoreAnimation() {
 
 // ==================== UI RESULTADOS ====================
 function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false) {
-  ultimoResultado = texto;
+  ultimoResultado = texto;  // HTML completo para mostrar
+  
+  // EXTRAER SOLO EL TEXTO PLANO (antes de cualquier tag HTML)
+  ultimoResultadoTexto = texto.split('<')[0].trim();
   
   let html = `<div class="result-content">${texto}</div>`;
   
@@ -1199,7 +1201,7 @@ function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false) 
 
 function activarEdicion() {
   modoEdicion = true;
-  textInput.value = ultimoResultado;
+  textInput.value = ultimoResultadoTexto;  // USAR TEXTO LIMPIO, NO HTML
   textModal.classList.remove("hidden");
   textInput.focus();
 }
@@ -1266,7 +1268,7 @@ sendTextBtn.onclick = async () => {
     if (modoEdicion) {
       bodyData = {
         action: "edit",
-        oldText: ultimoResultado,
+        oldText: ultimoResultadoTexto,  // USAR TEXTO LIMPIO
         newText: texto,
         email: userEmail
       };
@@ -1437,3 +1439,4 @@ aiCore.onclick = (e) => {
 </script>
 </body>
 </html>
+
