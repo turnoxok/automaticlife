@@ -1307,50 +1307,53 @@ sendTextBtn.onclick = async () => {
   const texto = textInput.value.trim();
   if (!texto) return;
 
-  cerrarModal();
-  transcribedText.textContent = modoEdicion ? `Editando: ${texto}` : texto;
+  // ← GUARDAR ESTADO ANTES de cerrar modal
+  const esEdicion = modoEdicion;
+  const reminderActual = ultimoReminderData;
+
+  console.log("=== ENVIAR TEXTO ===");
+  console.log("esEdicion:", esEdicion);  // ← Verificar
+  console.log("texto:", texto);
+
+  cerrarModal();  // ← Esto pone modoEdicion = false, pero ya lo guardamos
+  
+  transcribedText.textContent = esEdicion ? `Editando: ${texto}` : texto;
 
   try {
     startCoreAnimation("...");
 
-    // ========== MODO EDICIÓN: BORRAR VIEJO + CREAR NUEVO ==========
-    if (modoEdicion && ultimoReminderData && ultimoReminderData.id) {
-      console.log("=== EDICIÓN: Borrando viejo y creando nuevo ===");
+    // ← USAR esEdicion EN LUGAR DE modoEdicion
+    if (esEdicion && reminderActual && reminderActual.id) {
+      console.log("=== EDICIÓN: Borrando viejo ===");
       
-      // PASO 1: Borrar el viejo usando el ID que tenemos
-      console.log("Borrando recordatorio ID:", ultimoReminderData.id);
+      // Borrar
       await fetch("/.netlify/functions/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "delete",
-          text: ultimoReminderData.description, // Descripción para buscar
+          text: reminderActual.description,
           email: userEmail,
           userId: userEmail
         })
       });
       
-      // PASO 2: Crear el nuevo con el texto modificado
-      console.log("Creando nuevo recordatorio:", texto);
+      // Crear nuevo
       const res = await fetch("/.netlify/functions/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: texto, // Texto ya modificado por el usuario
+          text: texto,
           email: userEmail,
           userId: userEmail
         })
       });
       
       const data = await res.json();
-      console.log("Nuevo creado:", data);
-      
       if (data.ok) {
         mostrarResultado(data.result, false, true, data.reminderData);
-        ultimoReminderData = data.reminderData; // Guardar nuevo ID
+        ultimoReminderData = data.reminderData;
       }
-      
-      modoEdicion = false;
       
       if (data.audioBase64) {
         const audio = new Audio(`data:audio/mpeg;base64,${data.audioBase64}`);
@@ -1361,9 +1364,10 @@ sendTextBtn.onclick = async () => {
         stopCoreAnimation();
       }
       
-      return; // Terminamos
+      return;
     }
 
+   
     // ========== MODO NORMAL (no edición) ==========
     const res = await fetch("/.netlify/functions/respond", {
       method: "POST",
