@@ -1,4 +1,5 @@
 // Netlify Function - CommonJS format
+const fetch = require("node-fetch");
 const { OpenAI } = require("openai");
 const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwkde6Ntezoan-Tc9HRMEN_ProEmzTJjJzN2S1TRA8rDYzUCzrZRDTJ1t3VM154b0An/exec";
 exports.handler = async (event, context) => {
