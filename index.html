@@ -1087,7 +1087,7 @@ async function subscribeToPush() {
     const registration = await navigator.serviceWorker.ready;
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array('BMOiAnFwuo1p0G6ZRjGgoxM4nTDmDhwRJrLiUXFnihUGXPeg6jpgXOWzTcalo0Z6LSH3lpbK8g89fhwgkIt2IOg')
+      applicationServerKey: urlBase64ToUint8Array('BLQULctrbctZlLNCLlDsVWmrCKtUF6iCPB6VRVVergi9Lj8hdw1oHHArs8OEdqfbW6u_vmWF99tvQjuphPjHLeg')
     });
     
     pushSubscription = subscription;
