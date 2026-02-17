@@ -979,22 +979,51 @@ function handlePressEnd(e) {
   }
 }
 
+
 // ==================== AUTENTICACIÓN ====================
 function handleCredentialResponse(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
   userEmail = payload.email;
-  
-  userAvatar.textContent = payload.name ? payload.name.charAt(0).toUpperCase() : 'U';
+
+  userAvatar.textContent = payload.name
+    ? payload.name.charAt(0).toUpperCase()
+    : 'U';
+
   document.querySelector(".g_id_signin").classList.add("hidden");
   userPanel.classList.remove("hidden");
   userMenu.classList.add("hidden");
   loginHint.classList.add("hidden");
   notifBtn.classList.remove("hidden");
   quickActions.classList.remove("hidden");
-  
+
   document.getElementById('centerArea').style.top = '73%';
+
+  registrarPushSubscription(); // 👈 llamada
+}
   
-  registrarPushSubscription();
+  async function registrarPushSubscription() {
+  if (!userEmail) return;
+
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    return;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+
+    if (subscription) {
+      pushSubscription = subscription;
+
+      notifBtn.classList.add("granted");
+      notifBtn.innerHTML =
+        '<svg class="icon"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+      console.log("🔔 Push restaurado automáticamente");
+    }
+  } catch (err) {
+    console.error("Error restaurando push:", err);
+  }
 }
 
 function toggleMenu() {
