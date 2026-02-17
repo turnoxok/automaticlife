@@ -1,4 +1,5 @@
 // .netlify/functions/send-push.js
+const fetch = require('node-fetch');
 const webpush = require('web-push');
 
 exports.handler = async (event, context) => {
