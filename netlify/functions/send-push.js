@@ -1,6 +1,6 @@
 // .netlify/functions/send-push.js
-const fetch = require('node-fetch');
 const webpush = require('web-push');
+const fetch = require('node-fetch'); 
 
 exports.handler = async (event, context) => {
   const headers = {
