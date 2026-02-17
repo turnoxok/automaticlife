@@ -1307,92 +1307,94 @@ sendTextBtn.onclick = async () => {
   const texto = textInput.value.trim();
   if (!texto) return;
 
-  console.log("=== ENVIAR TEXTO ===");
-  console.log("modoEdicion:", modoEdicion);  // ← Debe ser TRUE
-  console.log("texto:", texto);
-  console.log("ultimoReminderData:", ultimoReminderData);
-
   cerrarModal();
-  
-  // IMPORTANTE: Preservar el estado ANTES de limpiar
-  const esEdicion = modoEdicion;
-  const reminderDataActual = ultimoReminderData;
-  
-  transcribedText.textContent = esEdicion ? `Editando: ${texto}` : texto;
+  transcribedText.textContent = modoEdicion ? `Editando: ${texto}` : texto;
 
   try {
     startCoreAnimation("...");
 
-    let bodyData;
-    
-    if (esEdicion) {
-      // === MODO EDICIÓN ===
-      console.log("Preparando datos de EDICIÓN");
+    // ========== MODO EDICIÓN: BORRAR VIEJO + CREAR NUEVO ==========
+    if (modoEdicion && ultimoReminderData && ultimoReminderData.id) {
+      console.log("=== EDICIÓN: Borrando viejo y creando nuevo ===");
       
-      bodyData = {
-        action: "edit",  // ← Forzar action edit
-        oldText: reminderDataActual ? reminderDataActual.description : ultimoResultadoTexto,
-        newText: texto,
-        email: userEmail,
-        userId: userEmail,
-        isReminder: !!(reminderDataActual && reminderDataActual.isReminder),
-        reminderId: reminderDataActual ? reminderDataActual.id : null,
-        description: reminderDataActual ? reminderDataActual.description : null
-      };
+      // PASO 1: Borrar el viejo usando el ID que tenemos
+      console.log("Borrando recordatorio ID:", ultimoReminderData.id);
+      await fetch("/.netlify/functions/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "delete",
+          text: ultimoReminderData.description, // Descripción para buscar
+          email: userEmail,
+          userId: userEmail
+        })
+      });
       
-      console.log("BodyData para edición:", JSON.stringify(bodyData, null, 2));
+      // PASO 2: Crear el nuevo con el texto modificado
+      console.log("Creando nuevo recordatorio:", texto);
+      const res = await fetch("/.netlify/functions/respond", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: texto, // Texto ya modificado por el usuario
+          email: userEmail,
+          userId: userEmail
+        })
+      });
       
-    } else {
-      // === MODO NUEVO ===
-      bodyData = {
+      const data = await res.json();
+      console.log("Nuevo creado:", data);
+      
+      if (data.ok) {
+        mostrarResultado(data.result, false, true, data.reminderData);
+        ultimoReminderData = data.reminderData; // Guardar nuevo ID
+      }
+      
+      modoEdicion = false;
+      
+      if (data.audioBase64) {
+        const audio = new Audio(`data:audio/mpeg;base64,${data.audioBase64}`);
+        startCoreAnimation("AI");
+        audio.play();
+        audio.onended = () => stopCoreAnimation();
+      } else {
+        stopCoreAnimation();
+      }
+      
+      return; // Terminamos
+    }
+
+    // ========== MODO NORMAL (no edición) ==========
+    const res = await fetch("/.netlify/functions/respond", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         text: texto,
         email: userEmail,
         userId: userEmail
-      };
-    }
-
-    const resResp = await fetch("/.netlify/functions/respond", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bodyData)
+      })
     });
 
-    const dataResp = await resResp.json();
-    console.log("Respuesta del servidor:", dataResp);
-
-    // Limpiar modo edición DESPUÉS de procesar
+    const data = await res.json();
     modoEdicion = false;
 
-    if (dataResp.result || dataResp.message) {
-      const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
-      const esRecordatorio = dataResp.reminderData && dataResp.reminderData.isReminder;
+    if (data.result) {
+      const esBusqueda = data.action === "get" && !data.result.toLowerCase().includes("no encontr");
+      const esRecordatorio = data.reminderData && data.reminderData.isReminder;
       
-      const datosExtra = dataResp.reminderId ? {
-        reminderId: dataResp.reminderId,
-        tipo: dataResp.tipo,
-        dateText: dataResp.dateText,
-        timeText: dataResp.timeText,
-        description: dataResp.description
+      const datosExtra = data.reminderId ? {
+        reminderId: data.reminderId,
+        tipo: data.tipo,
+        dateText: data.dateText,
+        timeText: data.timeText,
+        description: data.description
       } : null;
       
-      mostrarResultado(
-        dataResp.result || dataResp.message, 
-        esBusqueda, 
-        esRecordatorio, 
-        dataResp.reminderData,
-        datosExtra
-      );
-      
-      // Si era edición exitosa, actualizar con el NUEVO ID
-      if (esEdicion && dataResp.ok && dataResp.reminderData) {
-        console.log("Edición exitosa, actualizando con nuevo ID:", dataResp.reminderData.id);
-        ultimoReminderData = dataResp.reminderData; // ← Guardar el nuevo ID
-      }
+      mostrarResultado(data.result, esBusqueda, esRecordatorio, data.reminderData, datosExtra);
     }
 
-    // Audio
-    if (dataResp.ok && dataResp.audioBase64) {
-      const audio = new Audio(`data:audio/mpeg;base64,${dataResp.audioBase64}`);
+    if (data.ok && data.audioBase64) {
+      const audio = new Audio(`data:audio/mpeg;base64,${data.audioBase64}`);
       startCoreAnimation("AI");
       audio.play();
       audio.onended = () => stopCoreAnimation();
