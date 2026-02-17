@@ -1065,57 +1065,54 @@ async function solicitarNotificaciones() {
     speak("Debes iniciar sesión primero");
     return;
   }
-  
-  if (!('Notification' in window)) {
+
+  if (!("Notification" in window)) {
     mostrarResultado("Tu navegador no soporta notificaciones", false);
     return;
   }
-  
-  const permission = await Notification.requestPermission();
-  
-  if (permission === 'granted') {
-    notifBtn.classList.add('granted');
-    notifBtn.innerHTML = '<svg class="icon"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-    await subscribeToPush();
-  } else {
-    mostrarResultado("Necesitas permitir notificaciones para los recordatorios", false);
-  }
-}
 
-async function subscribeToPush() {
+  const permission = await Notification.requestPermission();
+  if (permission !== "granted") {
+    mostrarResultado("Necesitas permitir notificaciones para los recordatorios", false);
+    return;
+  }
+
   try {
     const registration = await navigator.serviceWorker.ready;
+
+    const existingSub = await registration.pushManager.getSubscription();
+    if (existingSub) {
+      await existingSub.unsubscribe();
+    }
+
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array('BLQULctrbctZlLNCLlDsVWmrCKtUF6iCPB6VRVVergi9Lj8hdw1oHHArs8OEdqfbW6u_vmWF99tvQjuphPjHLeg')
+      applicationServerKey: urlBase64ToUint8Array(
+        "BLQULctrbctZlLNCLlDsVWmrCKtUF6iCPB6VRVVergi9Lj8hdw1oHHArs8OEdqfbW6u_vmWF99tvQjuphPjHLeg"
+      )
     });
-    
+
     pushSubscription = subscription;
-    
+
     await fetch("/.netlify/functions/respond", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "registerPush",
         email: userEmail,
-        subscription: subscription
+        subscription
       })
     });
-    
-    mostrarResultado("Notificaciones activadas correctamente", false);
-  } catch (err) {
-    console.error('Error suscripción push:', err);
-  }
-}
 
-async function registrarPushSubscription() {
-  if (!userEmail) return;
-  const registration = await navigator.serviceWorker.ready;
-  const subscription = await registration.pushManager.getSubscription();
-  if (subscription) {
-    pushSubscription = subscription;
-    notifBtn.classList.add('granted');
-    notifBtn.innerHTML = '<svg class="icon"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    notifBtn.classList.add("granted");
+    notifBtn.innerHTML =
+      '<svg class="icon"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+    mostrarResultado("Notificaciones activadas correctamente 🔔", false);
+
+  } catch (err) {
+    console.error("Error activando notificaciones:", err);
+    mostrarResultado("Error al activar notificaciones", false);
   }
 }
 
