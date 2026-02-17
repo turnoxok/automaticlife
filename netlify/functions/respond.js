@@ -1,7 +1,7 @@
 // Netlify Function - CommonJS format
 const { OpenAI } = require("openai");
 
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwsNHHZ_ZyTRFsfeeEvkvl2kfOzWoNnNoQBowsxPbXDIBsjGSOl1iq917UvzzulnK75/exec";
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbz033TGZxPrqjkOxOa2Kt0ieS3IToDEXQuVaM7oytFBgftBjky4TEs0tg7tT42xLzU3/exec";
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -36,7 +36,8 @@ exports.handler = async (event, context) => {
       action: forcedAction, 
       subscription,
       isReminder,
-      reminderId
+      reminderId,
+      description
     } = body;
 
     if (!email && !forcedAction) {
@@ -108,11 +109,13 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // ========== MODO EDICIÓN = BORRAR + CREAR NUEVO ==========
+    // ========== MODO EDICIÓN - ENVIAR A APPS SCRIPT ==========
     if (forcedAction === "edit" || (oldText && newText)) {
-      console.log("=== MODO EDICIÓN: BORRAR + CREAR NUEVO ===");
-      console.log("oldText original:", oldText);
+      console.log("=== MODO EDICIÓN: ENVIANDO A APPS SCRIPT ===");
+      console.log("oldText:", oldText);
       console.log("newText:", newText);
+      console.log("isReminder:", isReminder);
+      console.log("reminderId:", reminderId);
 
       if (!oldText || !newText) {
         const errorMsg = "Faltan datos para editar.";
@@ -130,87 +133,35 @@ exports.handler = async (event, context) => {
       }
 
       try {
-        // LIMPIAR oldText para el delete (quitar HTML, emojis, fechas)
-        const oldTextLimpio = oldText
-          .replace(/<[^>]*>/g, ' ')           // Quitar HTML tags
-          .replace(/📅.*$/, '')               // Quitar todo desde 📅 (fecha formateada)
-          .replace(/⏰.*$/, '')               // Quitar emoji de recordatorio si existe
-          .replace(/✏️.*$/, '')              // Quitar emoji de editado si existe
-          .replace(/\s+/g, ' ')               // Normalizar espacios múltiples
-          .trim();
-
-        console.log("oldText limpio para delete:", oldTextLimpio);
-
-        // PASO 1: BORRAR EL VIEJO
-        console.log("PASO 1: Borrando viejo:", oldTextLimpio);
-        
-        const deleteRes = await fetch(SHEETS_WEBAPP_URL, {
+        // Enviar a Apps Script para hacer delete + create
+        const res = await fetch(SHEETS_WEBAPP_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            action: "delete",
-            text: oldTextLimpio,
-            userId: userId
-          })
-        });
-
-        const deleteData = await deleteRes.json();
-        console.log("Respuesta delete:", deleteData);
-
-        // PASO 2: EXTRAER DATOS DEL NUEVO TEXTO
-        const completion = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: [
-            {
-              role: "system",
-              content: `Extrae fecha y hora del texto de un recordatorio.
-Responde SOLO con este JSON:
-{
-  "dateText": "mañana|hoy|pasado mañana|lunes|etc",
-  "timeText": "HH:MM",
-  "description": "descripción limpia sin fecha ni hora"
-}`
-            },
-            { role: "user", content: newText }
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.1
-        });
-
-        const nuevoDatos = JSON.parse(completion.choices[0].message.content);
-        console.log("Datos extraídos del nuevo texto:", nuevoDatos);
-
-        // PASO 3: CREAR EL NUEVO RECORDATORIO
-        console.log("PASO 3: Creando nuevo recordatorio");
-
-        const addRes = await fetch(SHEETS_WEBAPP_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "addReminder",
+            action: "edit",
+            oldText: oldText,
+            newText: newText,
             userId: userId,
-            text: newText,
-            description: nuevoDatos.description,
-            dateText: nuevoDatos.dateText,
-            timeText: nuevoDatos.timeText,
-            reminderType: "unico"
+            email: userId,
+            isReminder: !!(isReminder || reminderId),
+            reminderId: reminderId || null,
+            description: description || null
           })
         });
 
-        const addData = await addRes.json();
-        console.log("Respuesta addReminder:", addData);
+        const data = await res.json();
+        console.log("Respuesta de Apps Script (edit):", data);
 
-        if (!addData.ok) {
-          throw new Error("Error al crear el nuevo recordatorio");
+        if (!data.ok) {
+          throw new Error(data.error || "Error al editar en Apps Script");
         }
 
-        // ÉXITO
-        const fechaMostrar = addData.fechaFormateada || nuevoDatos.dateText;
-        const horaMostrar = addData.hora || nuevoDatos.timeText;
-        const horaBonita = horaMostrar.replace(/:00$/, 'hs').replace(/:(\d+)$/, ':$1');
+        // Formatear respuesta exitosa
+        const rd = data.reminderData;
+        const horaBonita = rd.timeText ? rd.timeText.replace(/:00$/, 'hs').replace(/:(\d+)$/, ':$1') : '09:00';
         
-        const resultadoHTML = `✏️ <strong>Editado:</strong> ${nuevoDatos.description}<br><small style="color:#ffc107">📅 ${fechaMostrar} a las ${horaBonita}</small>`;
-        const textoVoz = `Listo, actualicé el recordatorio: ${nuevoDatos.description} para el ${fechaMostrar} a las ${horaBonita}`;
+        const resultadoHTML = `✏️ <strong>Editado:</strong> ${rd.description}<br><small style="color:#ffc107">📅 ${rd.fechaFormateada || rd.dateText} a las ${horaBonita}</small>`;
+        const textoVoz = `Listo, actualicé el recordatorio: ${rd.description} para el ${rd.fechaFormateada || rd.dateText} a las ${horaBonita}`;
 
         const audioBase64 = await generarAudio(openai, textoVoz);
         
@@ -222,15 +173,7 @@ Responde SOLO con este JSON:
             action: "edit",
             result: resultadoHTML,
             audioBase64,
-            reminderData: {
-              isReminder: true,
-              id: addData.reminderId,
-              type: "unico",
-              dateText: nuevoDatos.dateText,
-              timeText: horaMostrar,
-              description: nuevoDatos.description,
-              fechaFormateada: fechaMostrar
-            }
+            reminderData: rd // Incluye el nuevo ID generado
           })
         };
         
