@@ -1069,9 +1069,9 @@ async function solicitarNotificaciones() {
   const registration = await navigator.serviceWorker.ready;
   const existingSub = await registration.pushManager.getSubscription();
 
-  // 👉 YA ESTÁ ACTIVA
+  // Ya está suscripto
   if (existingSub) {
-    mostrarResultado("Las notificaciones ya están activadas", false);
+    mostrarResultado("Las notificaciones ya están activadas 🔔", false);
     return;
   }
 
@@ -1084,6 +1084,9 @@ async function solicitarNotificaciones() {
 
   await subscribeToPush();
 }
+    async function subscribeToPush() {
+  try {
+    const registration = await navigator.serviceWorker.ready;
 
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
