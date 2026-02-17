@@ -1388,8 +1388,8 @@ sendTextBtn.onclick = async () => {
       
       // Si era edición exitosa, limpiar datos viejos
       if (eraEdicion && dataResp.ok) {
-        console.log("Edición exitosa, limpiando datos antiguos");
-        ultimoReminderData = null;
+  console.log("Edición exitosa, actualizando con nuevo ID:", dataResp.reminderData.id);
+  ultimoReminderData = dataResp.reminderData;
       }
     } else {
       mostrarResultado("No se pudo completar la operación", false);
