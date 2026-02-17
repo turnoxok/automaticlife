@@ -111,7 +111,7 @@ exports.handler = async (event, context) => {
     // ========== MODO EDICIÓN = BORRAR + CREAR NUEVO ==========
     if (forcedAction === "edit" || (oldText && newText)) {
       console.log("=== MODO EDICIÓN: BORRAR + CREAR NUEVO ===");
-      console.log("oldText:", oldText);
+      console.log("oldText original:", oldText);
       console.log("newText:", newText);
 
       if (!oldText || !newText) {
@@ -130,15 +130,26 @@ exports.handler = async (event, context) => {
       }
 
       try {
+        // LIMPIAR oldText para el delete (quitar HTML, emojis, fechas)
+        const oldTextLimpio = oldText
+          .replace(/<[^>]*>/g, ' ')           // Quitar HTML tags
+          .replace(/📅.*$/, '')               // Quitar todo desde 📅 (fecha formateada)
+          .replace(/⏰.*$/, '')               // Quitar emoji de recordatorio si existe
+          .replace(/✏️.*$/, '')              // Quitar emoji de editado si existe
+          .replace(/\s+/g, ' ')               // Normalizar espacios múltiples
+          .trim();
+
+        console.log("oldText limpio para delete:", oldTextLimpio);
+
         // PASO 1: BORRAR EL VIEJO
-        console.log("PASO 1: Borrando viejo:", oldText);
+        console.log("PASO 1: Borrando viejo:", oldTextLimpio);
         
         const deleteRes = await fetch(SHEETS_WEBAPP_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             action: "delete",
-            text: oldText,
+            text: oldTextLimpio,
             userId: userId
           })
         });
@@ -147,7 +158,6 @@ exports.handler = async (event, context) => {
         console.log("Respuesta delete:", deleteData);
 
         // PASO 2: EXTRAER DATOS DEL NUEVO TEXTO
-        // Usar OpenAI para detectar fecha/hora del nuevo texto
         const completion = await openai.chat.completions.create({
           model: "gpt-4o-mini",
           messages: [
@@ -159,12 +169,7 @@ Responde SOLO con este JSON:
   "dateText": "mañana|hoy|pasado mañana|lunes|etc",
   "timeText": "HH:MM",
   "description": "descripción limpia sin fecha ni hora"
-}
-
-Ejemplos:
-- "reunion arvet 22hs" → {"dateText":"hoy","timeText":"22:00","description":"reunion arvet"}
-- "reunion arvet mañana 10hs" → {"dateText":"mañana","timeText":"10:00","description":"reunion arvet"}
-- "cumpleaños de Juan 30 de abril" → {"dateText":"30 de abril","timeText":"09:00","description":"cumpleaños de Juan"}`
+}`
             },
             { role: "user", content: newText }
           ],
@@ -199,7 +204,7 @@ Ejemplos:
           throw new Error("Error al crear el nuevo recordatorio");
         }
 
-        // Generar respuesta de éxito
+        // ÉXITO
         const fechaMostrar = addData.fechaFormateada || nuevoDatos.dateText;
         const horaMostrar = addData.hora || nuevoDatos.timeText;
         const horaBonita = horaMostrar.replace(/:00$/, 'hs').replace(/:(\d+)$/, ':$1');
