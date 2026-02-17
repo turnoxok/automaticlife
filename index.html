@@ -1220,10 +1220,10 @@ function activarEdicion() {
     return;
   }
   
-  modoEdicion = true;
+  modoEdicion = true;  // ← IMPORTANTE
   
   if (ultimoReminderData && ultimoReminderData.isReminder) {
-    // Reconstruir texto del recordatorio para edición
+    // Reconstruir texto del recordatorio
     const tipo = ultimoReminderData.type || 'unico';
     const fecha = ultimoReminderData.dateText || 'mañana';
     const hora = ultimoReminderData.timeText || '09:00';
@@ -1248,7 +1248,6 @@ function activarEdicion() {
   textInput.focus();
   textInput.select();
 }
-
 function setQuickText(texto) {
   if (!userEmail) {
     toggleMenu();
@@ -1309,36 +1308,36 @@ sendTextBtn.onclick = async () => {
   if (!texto) return;
 
   console.log("=== ENVIAR TEXTO ===");
-  console.log("modoEdicion:", modoEdicion);
+  console.log("modoEdicion:", modoEdicion);  // ← Debe ser TRUE
   console.log("texto:", texto);
   console.log("ultimoReminderData:", ultimoReminderData);
 
   cerrarModal();
-  transcribedText.textContent = modoEdicion ? `Editando: ${texto}` : texto;
+  
+  // IMPORTANTE: Preservar el estado ANTES de limpiar
+  const esEdicion = modoEdicion;
+  const reminderDataActual = ultimoReminderData;
+  
+  transcribedText.textContent = esEdicion ? `Editando: ${texto}` : texto;
 
   try {
     startCoreAnimation("...");
 
     let bodyData;
     
-    if (modoEdicion) {
+    if (esEdicion) {
       // === MODO EDICIÓN ===
       console.log("Preparando datos de EDICIÓN");
       
-      // Asegurar que tenemos el texto original limpio
-      const oldTextLimpio = ultimoResultadoTexto;
-      const newTextLimpio = texto;
-      
-      // >>> CORRECCIÓN: Siempre enviar reminderId si existe <<<
       bodyData = {
-        action: "edit",
-        oldText: oldTextLimpio,
-        newText: newTextLimpio,
+        action: "edit",  // ← Forzar action edit
+        oldText: reminderDataActual ? reminderDataActual.description : ultimoResultadoTexto,
+        newText: texto,
         email: userEmail,
         userId: userEmail,
-        isReminder: !!(ultimoReminderData && ultimoReminderData.isReminder),
-        reminderId: ultimoReminderData ? ultimoReminderData.id : null,
-        description: ultimoReminderData ? ultimoReminderData.description : null
+        isReminder: !!(reminderDataActual && reminderDataActual.isReminder),
+        reminderId: reminderDataActual ? reminderDataActual.id : null,
+        description: reminderDataActual ? reminderDataActual.description : null
       };
       
       console.log("BodyData para edición:", JSON.stringify(bodyData, null, 2));
@@ -1361,15 +1360,13 @@ sendTextBtn.onclick = async () => {
     const dataResp = await resResp.json();
     console.log("Respuesta del servidor:", dataResp);
 
-    // Limpiar modo edición después de procesar
-    const eraEdicion = modoEdicion;
+    // Limpiar modo edición DESPUÉS de procesar
     modoEdicion = false;
 
     if (dataResp.result || dataResp.message) {
       const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
       const esRecordatorio = dataResp.reminderData && dataResp.reminderData.isReminder;
       
-      // >>> CORRECCIÓN: Pasar datos extra para búsquedas <<<
       const datosExtra = dataResp.reminderId ? {
         reminderId: dataResp.reminderId,
         tipo: dataResp.tipo,
@@ -1386,13 +1383,11 @@ sendTextBtn.onclick = async () => {
         datosExtra
       );
       
-      // Si era edición exitosa, limpiar datos viejos
-     if (eraEdicion && dataResp.ok && dataResp.reminderData) {
-  console.log("Edición exitosa, actualizando ID:", dataResp.reminderData.id);
-  ultimoReminderData = dataResp.reminderData; // Guardar nuevo ID
+      // Si era edición exitosa, actualizar con el NUEVO ID
+      if (esEdicion && dataResp.ok && dataResp.reminderData) {
+        console.log("Edición exitosa, actualizando con nuevo ID:", dataResp.reminderData.id);
+        ultimoReminderData = dataResp.reminderData; // ← Guardar el nuevo ID
       }
-    } else {
-      mostrarResultado("No se pudo completar la operación", false);
     }
 
     // Audio
@@ -1412,7 +1407,6 @@ sendTextBtn.onclick = async () => {
     modoEdicion = false;
   }
 };
-
 // ==================== GRABACIÓN DE VOZ ====================
 async function startRecording() {
   try {
