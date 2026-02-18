@@ -1,7 +1,7 @@
 // Netlify Function - CommonJS format
 const fetch = require("node-fetch");
 const { OpenAI } = require("openai");
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyBTIoUpd9fPRuhi8rctC_aGP8mcXehl3Vt7KicDTxikMR1VGEzY_lWhBTpITi9LgXe/exec";
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwVjA7Wh3DMI9seYQTQBTQMYfyCQf5IPxgh1Vm2nmWad7QutJ2OxpfbV5xDlcuBiR9F/exec";
 exports.handler = async (event, context) => {
   const headers = {
     "Access-Control-Allow-Origin": "*",
