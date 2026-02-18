@@ -866,6 +866,9 @@ let pushSubscription = null;
 let pressTimer;
 let isRecording = false;
 
+// VAPID KEY CORRECTA - la de Knock
+const VAPID_PUBLIC_KEY = 'BCEz3VvvDaXkZse_cMPmwS2s88ZTLiRshdRgLZZ7q2Fc5yCRkR9Y8nX1dmkw5tWvJhxABfLR7Ir8AsFF7CYJ7bw';
+
 // ==================== ELEMENTOS DOM ====================
 const aiCore = document.getElementById("aiCore");
 const coreText = document.getElementById("coreText");
@@ -979,7 +982,6 @@ function handlePressEnd(e) {
   }
 }
 
-
 // ==================== AUTENTICACIÓN ====================
 function handleCredentialResponse(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
@@ -998,10 +1000,10 @@ function handleCredentialResponse(response) {
 
   document.getElementById('centerArea').style.top = '73%';
 
-  registrarPushSubscription(); // 👈 llamada
+  registrarPushSubscription();
 }
   
- async function registrarPushSubscription() {
+async function registrarPushSubscription() {
   console.log("=== registrarPushSubscription INICIADO ===");
   console.log("userEmail recibido:", userEmail);
 
@@ -1009,35 +1011,29 @@ function handleCredentialResponse(response) {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
 
   try {
-    // 🔍 1. MIRAMOS SOLO EL NAVEGADOR
     const registration = await navigator.serviceWorker.ready;
     const subscription = await registration.pushManager.getSubscription();
 
     if (subscription) {
       console.log("🔔 Push EXISTE en navegador → prender campanita");
-
       pushSubscription = subscription;
       notifBtn.classList.add("granted");
-      notifBtn.innerHTML =
-        '<svg class="icon"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-
+      notifBtn.innerHTML = '<svg class="icon"><polyline points="20 6 9 17 4 12"></polyline></svg>';
       console.log("=== registrarPushSubscription FIN ===");
       return;
     }
 
     console.log("🔕 No hay push en navegador → campanita apagada");
-
     pushSubscription = null;
     notifBtn.classList.remove("granted");
-    notifBtn.innerHTML =
-      '<svg class="icon"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>';
-
+    notifBtn.innerHTML = '<svg class="icon"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>';
     console.log("=== registrarPushSubscription FIN ===");
 
   } catch (err) {
     console.error("💥 ERROR:", err);
   }
 }
+
 function toggleMenu() {
   userMenu.classList.toggle("hidden");
 }
@@ -1107,44 +1103,42 @@ async function solicitarNotificaciones() {
     return;
   }
 
-  const registration = await navigator.serviceWorker.ready;
-  let subscription = await registration.pushManager.getSubscription();
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    let subscription = await registration.pushManager.getSubscription();
 
-  // 🔹 Si NO hay suscripción → pedir permiso y crearla
-  if (!subscription) {
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") {
-      mostrarResultado("Necesitas permitir notificaciones", false);
-      return;
+    // Si NO hay suscripción → pedir permiso y crearla
+    if (!subscription) {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        mostrarResultado("Necesitas permitir notificaciones", false);
+        return;
+      }
+
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
     }
 
-    subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(
-        "BLQULctrbctZlLNCLlDsVWmrCKtUF6iCPB6VRVVergi9Lj8hdw1oHHArs8OEdqfbW6u_vmWF99tvQjuphPjHLeg"
-      )
+    // SIEMPRE guardar en backend
+    pushSubscription = subscription;
+
+    await fetch("/.netlify/functions/respond", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "registerPush",
+        email: userEmail,
+        subscription: subscription
+      })
     });
-  }
 
-  // 🔹 SIEMPRE guardar en backend (aunque ya exista)
-  pushSubscription = subscription;
-
-  await fetch("/.netlify/functions/respond", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "registerPush",
-      email: userEmail,
-      subscription
-    })
-  });
-
-  notifBtn.classList.add("granted");
-  notifBtn.innerHTML =
-    '<svg class="icon"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-
-  mostrarResultado("Notificaciones activadas correctamente 🔔", false);
-} catch (err) {
+    notifBtn.classList.add("granted");
+    notifBtn.innerHTML = '<svg class="icon"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+    mostrarResultado("Notificaciones activadas correctamente 🔔", false);
+    
+  } catch (err) {
     console.error("Error activando notificaciones:", err);
     mostrarResultado("Error al activar notificaciones", false);
   }
@@ -1197,18 +1191,15 @@ function stopCoreAnimation() {
   coreText.textContent = "GO";
 }
 
-// ==================== UI RESULTADOS - CORREGIDO ====================
+// ==================== UI RESULTADOS ====================
 function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, reminderData = null, datosExtra = null) {
   ultimoResultado = texto;
   ultimoResultadoTexto = texto.replace(/<[^>]*>/g, '').trim();
   
-  // >>> CORRECCIÓN CLAVE: También guardar datos de la búsqueda (get) <<<
-  // Si es recordatorio O si es búsqueda que encontró un recordatorio (tiene reminderId)
   if (reminderData && reminderData.isReminder) {
     ultimoReminderData = reminderData;
     console.log("✓ Guardado reminderData (desde creación):", ultimoReminderData);
   } else if (datosExtra && datosExtra.reminderId) {
-    // Viene de una búsqueda (get) que encontró recordatorio
     ultimoReminderData = {
       isReminder: true,
       id: datosExtra.reminderId,
@@ -1219,7 +1210,6 @@ function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, 
     };
     console.log("✓ Guardado reminderData (desde búsqueda):", ultimoReminderData);
   } else if (!modoEdicion) {
-    // Solo limpiar si no estamos en medio de una edición
     ultimoReminderData = null;
   }
   
@@ -1251,10 +1241,9 @@ function activarEdicion() {
     return;
   }
   
-  modoEdicion = true;  // ← IMPORTANTE
+  modoEdicion = true;
   
   if (ultimoReminderData && ultimoReminderData.isReminder) {
-    // Reconstruir texto del recordatorio
     const tipo = ultimoReminderData.type || 'unico';
     const fecha = ultimoReminderData.dateText || 'mañana';
     const hora = ultimoReminderData.timeText || '09:00';
@@ -1279,6 +1268,7 @@ function activarEdicion() {
   textInput.focus();
   textInput.select();
 }
+
 function setQuickText(texto) {
   if (!userEmail) {
     toggleMenu();
@@ -1333,31 +1323,28 @@ function cerrarModal() {
   sendBtnText.textContent = "Enviar";
 }
 
-// ==================== ENVIAR TEXTO - CORREGIDO ====================
+// ==================== ENVIAR TEXTO ====================
 sendTextBtn.onclick = async () => {
   const texto = textInput.value.trim();
   if (!texto) return;
 
-  // ← GUARDAR ESTADO ANTES de cerrar modal
   const esEdicion = modoEdicion;
   const reminderActual = ultimoReminderData;
 
   console.log("=== ENVIAR TEXTO ===");
-  console.log("esEdicion:", esEdicion);  // ← Verificar
+  console.log("esEdicion:", esEdicion);
   console.log("texto:", texto);
 
-  cerrarModal();  // ← Esto pone modoEdicion = false, pero ya lo guardamos
+  cerrarModal();
   
   transcribedText.textContent = esEdicion ? `Editando: ${texto}` : texto;
 
   try {
     startCoreAnimation("...");
 
-    // ← USAR esEdicion EN LUGAR DE modoEdicion
     if (esEdicion && reminderActual && reminderActual.id) {
       console.log("=== EDICIÓN: Borrando viejo ===");
       
-      // Borrar
       await fetch("/.netlify/functions/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1369,7 +1356,6 @@ sendTextBtn.onclick = async () => {
         })
       });
       
-      // Crear nuevo
       const res = await fetch("/.netlify/functions/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1398,8 +1384,6 @@ sendTextBtn.onclick = async () => {
       return;
     }
 
-   
-    // ========== MODO NORMAL (no edición) ==========
     const res = await fetch("/.netlify/functions/respond", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -1444,6 +1428,7 @@ sendTextBtn.onclick = async () => {
     modoEdicion = false;
   }
 };
+
 // ==================== GRABACIÓN DE VOZ ====================
 async function startRecording() {
   try {
@@ -1526,7 +1511,6 @@ async function sendAudio() {
         const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
         const esRecordatorio = dataResp.reminderData && dataResp.reminderData.isReminder;
         
-        // Pasar datos extra para búsquedas
         const datosExtra = dataResp.reminderId ? {
           reminderId: dataResp.reminderId,
           tipo: dataResp.tipo,
@@ -1561,7 +1545,7 @@ async function sendAudio() {
   };
 }
 
-// Click simple en desktop (compatibilidad hacia atrás)
+// Click simple en desktop
 aiCore.onclick = (e) => {
   if (window.innerWidth > 768) {
     if (!userEmail) {
