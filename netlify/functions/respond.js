@@ -194,7 +194,25 @@ exports.handler = async (event, context) => {
         };
       }
     }
-
+     // ========== OBTENER SUSCRIPCIÓN PUSH ==========
+if (forcedAction === "getPushSubscription") {
+  const res = await fetch(SHEETS_WEBAPP_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "getPushSubscription",
+      userId
+    })
+  });
+  
+  const data = await res.json();
+  
+  return {
+    statusCode: 200,
+    headers,
+    body: JSON.stringify(data)
+  };
+}
     // ========== DETECTAR INTENCIÓN CON OPENAI ==========
     let action = forcedAction;
     let textoProcesado = text;
