@@ -194,8 +194,10 @@ exports.handler = async (event, context) => {
         };
       }
     }
+    console.log("=== FORCED ACTION:", forcedAction);  // ← NUEVO LOG
      // ========== OBTENER SUSCRIPCIÓN PUSH ==========
 if (forcedAction === "getPushSubscription") {
+  console.log("=== EJECUTANDO getPushSubscription ===");  // ← NUEVO LOG
   const res = await fetch(SHEETS_WEBAPP_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -206,7 +208,7 @@ if (forcedAction === "getPushSubscription") {
   });
   
   const data = await res.json();
-  
+  console.log("=== RESPUESTA DE APPS SCRIPT:", data);  // ← NUEVO LOG
   return {
     statusCode: 200,
     headers,
