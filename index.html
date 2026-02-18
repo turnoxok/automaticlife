@@ -1001,7 +1001,7 @@ function handleCredentialResponse(response) {
   registrarPushSubscription(); // 👈 llamada
 }
   
-  async function registrarPushSubscription() {
+ async function registrarPushSubscription() {
   if (!userEmail) return;
 
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -1009,48 +1009,56 @@ function handleCredentialResponse(response) {
   }
 
   try {
+    // ← PASO 1: Primero verificar si existe en Apps Script (sin importar navegador)
+    const resBackend = await fetch("/.netlify/functions/respond", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "getPushSubscription",  // Usar esta que ya tenés
+        userId: userEmail
+      })
+    });
+    
+    const dataBackend = await resBackend.json();
+    const existeEnBackend = dataBackend.ok && dataBackend.subscription;
+
+    // ← PASO 2: Verificar navegador
     const registration = await navigator.serviceWorker.ready;
     const subscription = await registration.pushManager.getSubscription();
+    const existeEnNavegador = !!subscription;
 
-    if (subscription) {
-      // ← NUEVO: Verificar si existe en el backend
-      try {
-        const res = await fetch("/.netlify/functions/respond", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "verifyPush",
-            userId: userEmail,
-            subscription: subscription.toJSON()
-          })
-        });
-        
-        const data = await res.json();
-        
-        if (!data.exists) {
-          // No está en la hoja, desuscribir localmente
-          console.log("Suscripción huérfana detectada, limpiando...");
-          await subscription.unsubscribe();
-          pushSubscription = null;
-          notifBtn.classList.remove("granted");
-          notifBtn.innerHTML = '<svg class="icon"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>';
-          return; // Salir sin marcar como suscrito
-        }
-      } catch (err) {
-        console.log("Error verificando suscripción:", err);
-      }
-      
-      // Si llegó aquí, sí existe en el backend
+    console.log("Estado:", { existeEnBackend, existeEnNavegador });
+
+    // ← PASO 3: Lógica de sincronización
+    if (existeEnBackend && existeEnNavegador) {
+      // ✅ Todo sincronizado, activar campanita
       pushSubscription = subscription;
       notifBtn.classList.add("granted");
       notifBtn.innerHTML = '<svg class="icon"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-      console.log("🔔 Push restaurado automáticamente");
+      console.log("🔔 Push activo (backend + navegador)");
+      
+    } else if (existeEnBackend && !existeEnNavegador) {
+      // ⚠️ Está en backend pero no en navegador → Debe re-suscribirse
+      console.log("⚠️ Suscripción solo en backend, se necesita re-suscribir");
+      // No activamos campanita, esperamos que el usuario presione el botón
+      
+    } else if (!existeEnBackend && existeEnNavegador) {
+      // 🧹 Huérfano en navegador, limpiar
+      console.log("🧹 Suscripción huérfana, limpiando...");
+      await subscription.unsubscribe();
+      pushSubscription = null;
+      notifBtn.classList.remove("granted");
+      notifBtn.innerHTML = '<svg class="icon"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>';
+      
+    } else {
+      // ❌ Nada en ningún lado
+      console.log("❌ No hay suscripción");
     }
+    
   } catch (err) {
-    console.error("Error restaurando push:", err);
+    console.error("Error verificando push:", err);
   }
 }
-  
 function toggleMenu() {
   userMenu.classList.toggle("hidden");
 }
