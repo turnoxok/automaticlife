@@ -1003,7 +1003,8 @@ function handleCredentialResponse(response) {
   
  async function registrarPushSubscription() {
   console.log("=== registrarPushSubscription INICIADO ===");
-  console.log("userEmail:", userEmail);
+   console.log("userEmail recibido:", JSON.stringify(userEmail));
+  
   
   if (!userEmail) {
     console.log("❌ No hay userEmail, saliendo");
@@ -1026,6 +1027,11 @@ function handleCredentialResponse(response) {
         userId: userEmail
       })
     });
+    
+    console.log("Body enviado:", JSON.stringify({  // ← AGREGAR ESTO
+      action: "getPushSubscription",
+      userId: userEmail
+    }));
     
     console.log("📡 Respuesta backend status:", resBackend.status);
     
