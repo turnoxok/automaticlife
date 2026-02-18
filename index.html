@@ -1003,76 +1003,37 @@ function handleCredentialResponse(response) {
   
  async function registrarPushSubscription() {
   console.log("=== registrarPushSubscription INICIADO ===");
-   console.log("userEmail recibido:", JSON.stringify(userEmail));
-  
-  
-  if (!userEmail) {
-    console.log("❌ No hay userEmail, saliendo");
-    return;
-  }
+  console.log("userEmail recibido:", userEmail);
 
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.log("❌ No soporta Push");
-    return;
-  }
+  if (!userEmail) return;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
 
   try {
-    console.log("⏳ Preguntando a backend...");
-    
-    const resBackend = await fetch("/.netlify/functions/respond", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "getPushSubscription",
-        userId: userEmail
-      })
-    });
-    
-    console.log("Body enviado:", JSON.stringify({  // ← AGREGAR ESTO
-      action: "getPushSubscription",
-      userId: userEmail
-    }));
-    
-    console.log("📡 Respuesta backend status:", resBackend.status);
-    
-    const dataBackend = await resBackend.json();
-    console.log("📡 Respuesta backend data:", dataBackend);
-    
-    const existeEnBackend = dataBackend.ok && dataBackend.subscription;
-    console.log("✅ existeEnBackend:", existeEnBackend);
-
-    console.log("⏳ Verificando navegador...");
+    // 🔍 1. MIRAMOS SOLO EL NAVEGADOR
     const registration = await navigator.serviceWorker.ready;
     const subscription = await registration.pushManager.getSubscription();
-    const existeEnNavegador = !!subscription;
-    
-    console.log("✅ existeEnNavegador:", existeEnNavegador);
-    console.log("Suscripción navegador:", subscription ? "SÍ" : "NO");
 
-    if (existeEnBackend && existeEnNavegador) {
-      console.log("🔔 CASO 1: Backend + Navegador → Activar campanita");
+    if (subscription) {
+      console.log("🔔 Push EXISTE en navegador → prender campanita");
+
       pushSubscription = subscription;
       notifBtn.classList.add("granted");
-      notifBtn.innerHTML = '<svg class="icon"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-      
-    } else if (existeEnBackend && !existeEnNavegador) {
-      console.log("⚠️ CASO 2: Solo backend → NO activar, esperar re-suscripción");
-      // No hacemos nada, campanita queda gris
-      
-    } else if (!existeEnBackend && existeEnNavegador) {
-  await subscription.unsubscribe();
-  pushSubscription = null;
-  notifBtn.classList.remove("granted");
+      notifBtn.innerHTML =
+        '<svg class="icon"><polyline points="20 6 9 17 4 12"></polyline></svg>';
 
-
-      notifBtn.innerHTML = '<svg class="icon"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>';
-      
-    } else {
-      console.log("❌ CASO 4: Nada en ningún lado");
+      console.log("=== registrarPushSubscription FIN ===");
+      return;
     }
-    
+
+    console.log("🔕 No hay push en navegador → campanita apagada");
+
+    pushSubscription = null;
+    notifBtn.classList.remove("granted");
+    notifBtn.innerHTML =
+      '<svg class="icon"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>';
+
     console.log("=== registrarPushSubscription FIN ===");
-    
+
   } catch (err) {
     console.error("💥 ERROR:", err);
   }
