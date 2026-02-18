@@ -1059,11 +1059,7 @@ function handleCredentialResponse(response) {
       console.log("⚠️ CASO 2: Solo backend → NO activar, esperar re-suscripción");
       // No hacemos nada, campanita queda gris
       
-    } else if (!existeEnBackend && existeEnNavegador) {
-      console.log("🧹 CASO 3: Huérfano → Limpiar");
-      await subscription.unsubscribe();
-      pushSubscription = null;
-      notifBtn.classList.remove("granted");
+    } else 
       notifBtn.innerHTML = '<svg class="icon"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>';
       
     } else {
