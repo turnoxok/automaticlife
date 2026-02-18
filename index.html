@@ -1108,53 +1108,43 @@ async function solicitarNotificaciones() {
   }
 
   const registration = await navigator.serviceWorker.ready;
-  const existingSub = await registration.pushManager.getSubscription();
+  let subscription = await registration.pushManager.getSubscription();
 
-  // Ya está suscripto
-  if (existingSub) {
-    mostrarResultado("Las notificaciones ya están activadas 🔔", false);
-    return;
-  }
+  // 🔹 Si NO hay suscripción → pedir permiso y crearla
+  if (!subscription) {
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      mostrarResultado("Necesitas permitir notificaciones", false);
+      return;
+    }
 
-  const permission = await Notification.requestPermission();
-
-  if (permission !== "granted") {
-    mostrarResultado("Necesitas permitir notificaciones", false);
-    return;
-  }
-
-  await subscribeToPush();
-}
-    async function subscribeToPush() {
-  try {
-    const registration = await navigator.serviceWorker.ready;
-
-    const subscription = await registration.pushManager.subscribe({
+    subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(
         "BLQULctrbctZlLNCLlDsVWmrCKtUF6iCPB6VRVVergi9Lj8hdw1oHHArs8OEdqfbW6u_vmWF99tvQjuphPjHLeg"
       )
     });
+  }
 
-    pushSubscription = subscription;
+  // 🔹 SIEMPRE guardar en backend (aunque ya exista)
+  pushSubscription = subscription;
 
-    await fetch("/.netlify/functions/respond", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "registerPush",
-        email: userEmail,
-        subscription
-      })
-    });
+  await fetch("/.netlify/functions/respond", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "registerPush",
+      email: userEmail,
+      subscription
+    })
+  });
 
-    notifBtn.classList.add("granted");
-    notifBtn.innerHTML =
-      '<svg class="icon"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  notifBtn.classList.add("granted");
+  notifBtn.innerHTML =
+    '<svg class="icon"><polyline points="20 6 9 17 4 12"></polyline></svg>';
 
-    mostrarResultado("Notificaciones activadas correctamente 🔔", false);
-
-  } catch (err) {
+  mostrarResultado("Notificaciones activadas correctamente 🔔", false);
+} catch (err) {
     console.error("Error activando notificaciones:", err);
     mostrarResultado("Error al activar notificaciones", false);
   }
