@@ -445,6 +445,15 @@ async function solicitarNotificaciones() {
   
   try {
     const registration = await navigator.serviceWorker.ready;
+    
+    // DESUSCRIBIR PRIMERO SI EXISTE
+    const existingSubscription = await registration.pushManager.getSubscription();
+    if (existingSubscription) {
+      await existingSubscription.unsubscribe();
+      console.log('Suscripción anterior eliminada');
+    }
+    
+    // CREAR NUEVA SUSCRIPCIÓN
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
