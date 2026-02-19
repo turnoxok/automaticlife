@@ -869,6 +869,10 @@ let isRecording = false;
 // VAPID KEY CORRECTA - la de Knock
 const VAPID_PUBLIC_KEY = 'BCEz3VvvDaXkZse_cMPmwS2s88ZTLiRshdRgLZZ7q2Fc5yCRkR9Y8nX1dmkw5tWvJhxABfLR7Ir8AsFF7CYJ7bw';
 
+  // DETECCIÓN DE DISPOSITIVO
+const ES_MOVIL = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 768;
+console.log('¿Es móvil?', ES_MOVIL);
+
 // ==================== ELEMENTOS DOM ====================
 const aiCore = document.getElementById("aiCore");
 const coreText = document.getElementById("coreText");
@@ -911,9 +915,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Gestos táctiles para el botón GO
-  setupTouchGestures();
+  // ===== CONFIGURAR BOTÓN GO SEGÚN DISPOSITIVO =====
+  if (ES_MOVIL) {
+    console.log('Configurando para MÓVIL');
+    configurarBotonMovil();
+  } else {
+    console.log('Configurando para DESKTOP');
+    configurarBotonDesktop();
+  }
 
+  // Inactivity timer (igual)
   let inactivityTimer;
   const INACTIVITY_DELAY = 10000;
   const HINT_DURATION = 10000;
@@ -921,10 +932,8 @@ document.addEventListener('DOMContentLoaded', () => {
   function showHint() {
     const hint = document.getElementById('hintText');
     if (!hint || !userEmail) return;
-    
     hint.classList.add('visible');
     hint.classList.remove('fade-out');
-    
     setTimeout(() => {
       hint.classList.add('fade-out');
       hint.classList.remove('visible');
@@ -934,7 +943,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function resetInactivity() {
     clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(showHint, INACTIVITY_DELAY);
-    
     const hint = document.getElementById('hintText');
     if (hint && hint.classList.contains('visible')) {
       hint.classList.add('fade-out');
@@ -948,58 +956,122 @@ document.addEventListener('DOMContentLoaded', () => {
 
   resetInactivity();
 });
+
+// ==================== BOTÓN GO - MÓVIL ====================
+function configurarBotonMovil() {
+  // Remover cualquier listener anterior
+  aiCore.replaceWith(aiCore.cloneNode(true));
+  const nuevoAiCore = document.getElementById("aiCore");
   
-function setupTouchGestures() {
-  // En móvil: solo touch events
-  aiCore.addEventListener('touchstart', handlePressStart, {passive: false});
-  aiCore.addEventListener('touchend', handlePressEnd);
-  aiCore.addEventListener('touchcancel', handlePressEnd);
+  // Re-asignar variable global
+  window.aiCore = nuevoAiCore;
   
-  // En desktop: mouse events
-  aiCore.addEventListener('mousedown', handlePressStart);
-  aiCore.addEventListener('mouseup', handlePressEnd);
-  aiCore.addEventListener('mouseleave', handlePressEnd);
+  let touchIniciado = false;
   
-  // Prevenir que el click se dispare después del touch en móvil
-  aiCore.addEventListener('click', (e) => {
-    if (window.innerWidth <= 768) {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
+  nuevoAiCore.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    console.log('MÓVIL: touchstart');
+    
+    if (!userEmail) {
+      console.log('MÓVIL: Sin usuario, mostrando login');
+      toggleMenu();
+      loginHint.classList.remove('hidden');
+      setTimeout(() => speak("Debes iniciar sesión con Google para continuar."), 100);
+      return;
     }
+    
+    touchIniciado = true;
+    pressTimer = setTimeout(() => {
+      if (touchIniciado) {
+        isRecording = true;
+        startRecording();
+      }
+    }, 200);
+  }, {passive: false});
+
+  nuevoAiCore.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    console.log('MÓVIL: touchend');
+    touchIniciado = false;
+    clearTimeout(pressTimer);
+    if (isRecording) {
+      isRecording = false;
+      stopRecording();
+    }
+  });
+
+  nuevoAiCore.addEventListener('touchcancel', (e) => {
+    e.preventDefault();
+    console.log('MÓVIL: touchcancel');
+    touchIniciado = false;
+    clearTimeout(pressTimer);
+    if (isRecording) {
+      isRecording = false;
+      stopRecording();
+    }
+  });
+  
+  // Prevenir completamente el click en móvil
+  nuevoAiCore.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    console.log('MÓVIL: click bloqueado');
+    return false;
   }, true);
 }
 
-function handlePressStart(e) {
-  e.preventDefault();
-  e.stopPropagation(); // ← NUEVO: evita que se propague
-  
-  if (!userEmail) {
-    // En móvil, mostrar mensaje y salir
-    toggleMenu();
-    loginHint.classList.remove('hidden');
-    speak("Debes iniciar sesión con Google para continuar.");
+// ==================== BOTÓN GO - DESKTOP ====================
+function configurarBotonDesktop() {
+  aiCore.addEventListener('mousedown', (e) => {
+    console.log('DESKTOP: mousedown');
+    if (!userEmail) {
+      toggleMenu();
+      loginHint.classList.remove('hidden');
+      speak("Debes iniciar sesión con Google para continuar.");
+      return;
+    }
     
-    // Cancelar cualquier timer pendiente
-    clearTimeout(pressTimer);
-    return;
-  }
-  
-  pressTimer = setTimeout(() => {
-    isRecording = true;
-    startRecording();
-  }, 200);
-}
+    pressTimer = setTimeout(() => {
+      isRecording = true;
+      startRecording();
+    }, 200);
+  });
 
-function handlePressEnd(e) {
-  e.preventDefault(); // ← NUEVO
-  e.stopPropagation(); // ← NUEVO
+  aiCore.addEventListener('mouseup', () => {
+    console.log('DESKTOP: mouseup');
+    clearTimeout(pressTimer);
+    if (isRecording) {
+      isRecording = false;
+      stopRecording();
+    }
+  });
+
+  aiCore.addEventListener('mouseleave', () => {
+    console.log('DESKTOP: mouseleave');
+    clearTimeout(pressTimer);
+    if (isRecording) {
+      isRecording = false;
+      stopRecording();
+    }
+  });
   
-  clearTimeout(pressTimer);
-  if (isRecording) {
-    isRecording = false;
-    stopRecording();
-  }
+  // Click simple para desktop (alternativa al hold)
+  aiCore.addEventListener('click', (e) => {
+    console.log('DESKTOP: click');
+    if (!userEmail) {
+      toggleMenu();
+      loginHint.classList.remove('hidden');
+      speak("Debes iniciar sesión con Google para continuar.");
+      return;
+    }
+    
+    if (!mediaRecorder || mediaRecorder.state === "inactive") {
+      startRecording();
+    } else {
+      stopRecording();
+    }
+  });
 }
 
 // ==================== AUTENTICACIÓN ====================
