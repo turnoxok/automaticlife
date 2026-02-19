@@ -355,6 +355,16 @@ function hablar(texto) {
   const u = new SpeechSynthesisUtterance(texto);
   u.lang = 'es-AR';
   u.rate = 1;
+  
+  // Buscar voz femenina
+  const voces = speechSynthesis.getVoices();
+  const vozFemenina = voces.find(v => 
+    v.lang.includes('es') && 
+    (v.name.includes('Female') || v.name.includes('Mujer') || v.name.includes('Google español'))
+  );
+  
+  if (vozFemenina) u.voice = vozFemenina;
+  
   speechSynthesis.speak(u);
 }
 
