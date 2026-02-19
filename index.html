@@ -1565,24 +1565,7 @@ async function sendAudio() {
   };
 }
 
-// Click simple en desktop (solo si no es móvil)
-aiCore.onclick = (e) => {
-  // Solo en desktop, en móvil ya manejamos con touch
-  if (window.innerWidth > 768) {
-    if (!userEmail) {
-      toggleMenu();
-      loginHint.classList.remove('hidden');
-      speak("Debes iniciar sesión con Google para continuar.");
-      return;
-    }
-    
-    if (!mediaRecorder || mediaRecorder.state === "inactive") {
-      startRecording();
-    } else {
-      stopRecording();
-    }
-  }
-};
+
 </script>
 </body>
 </html>
