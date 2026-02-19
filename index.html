@@ -950,21 +950,38 @@ document.addEventListener('DOMContentLoaded', () => {
 });
   
 function setupTouchGestures() {
+  // En móvil: solo touch events
   aiCore.addEventListener('touchstart', handlePressStart, {passive: false});
   aiCore.addEventListener('touchend', handlePressEnd);
   aiCore.addEventListener('touchcancel', handlePressEnd);
   
+  // En desktop: mouse events
   aiCore.addEventListener('mousedown', handlePressStart);
   aiCore.addEventListener('mouseup', handlePressEnd);
   aiCore.addEventListener('mouseleave', handlePressEnd);
+  
+  // Prevenir que el click se dispare después del touch en móvil
+  aiCore.addEventListener('click', (e) => {
+    if (window.innerWidth <= 768) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  }, true);
 }
 
 function handlePressStart(e) {
   e.preventDefault();
+  e.stopPropagation(); // ← NUEVO: evita que se propague
+  
   if (!userEmail) {
+    // En móvil, mostrar mensaje y salir
     toggleMenu();
     loginHint.classList.remove('hidden');
     speak("Debes iniciar sesión con Google para continuar.");
+    
+    // Cancelar cualquier timer pendiente
+    clearTimeout(pressTimer);
     return;
   }
   
@@ -975,6 +992,9 @@ function handlePressStart(e) {
 }
 
 function handlePressEnd(e) {
+  e.preventDefault(); // ← NUEVO
+  e.stopPropagation(); // ← NUEVO
+  
   clearTimeout(pressTimer);
   if (isRecording) {
     isRecording = false;
@@ -1545,12 +1565,13 @@ async function sendAudio() {
   };
 }
 
-// Click simple en desktop
+// Click simple en desktop (solo si no es móvil)
 aiCore.onclick = (e) => {
+  // Solo en desktop, en móvil ya manejamos con touch
   if (window.innerWidth > 768) {
     if (!userEmail) {
       toggleMenu();
-      loginHint.classList.remove("hidden");
+      loginHint.classList.remove('hidden');
       speak("Debes iniciar sesión con Google para continuar.");
       return;
     }
