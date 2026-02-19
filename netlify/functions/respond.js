@@ -1,7 +1,7 @@
 // Netlify Function - CommonJS format
 const fetch = require("node-fetch");
 const { OpenAI } = require("openai");
-const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyu8PYVq1lH1vTdvjUthPbRYntkzmHQuB9NaY-xjGd-sYXakiculoGQMishmrpul71y/exec";
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycby_4H9Jq9p5RwtWCSNleYmt4nH3vS6GkMKlJdGOY0GD_kmgqDXBaudA1aD4ljo-zhz7/exec";
 exports.handler = async (event, context) => {
   const headers = {
     "Access-Control-Allow-Origin": "*",
@@ -320,7 +320,7 @@ Ejemplos:
         textoParaVoz = respuestaFinal;
       }
 
-    } else if (action === "add") {
+    } } else if (action === "add") {
   const res = await fetch(SHEETS_WEBAPP_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -335,8 +335,17 @@ Ejemplos:
   });
 
   const data = await res.json();
-  respuestaFinal = data.result || textoProcesado;  // usar resultado formateado del backend
-  textoParaVoz = "Listo, lo guardé.";
+  respuestaFinal = data.result || textoProcesado;  // HTML para pantalla
+  
+  // ← CORREGIDO: Texto limpio para TTS
+  if (data.data && data.data.contenido) {
+    textoParaVoz = `Listo, guardé: ${data.data.contenido}`;
+    if (data.data.fecha) {
+      textoParaVoz += ` para el ${data.data.fecha}`;
+    }
+  } else {
+    textoParaVoz = "Listo, lo guardé en tu agenda.";
+  }
 
     } else if (action === "delete") {
       const res = await fetch(SHEETS_WEBAPP_URL, {
@@ -349,7 +358,7 @@ Ejemplos:
       respuestaFinal = "";
       textoParaVoz = data.ok ? "Eliminado correctamente." : "No encontré ese dato para borrar.";
 
-    } else if (action === "get") {
+    } } else if (action === "get") {
       const res = await fetch(SHEETS_WEBAPP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -359,18 +368,27 @@ Ejemplos:
       const data = await res.json();
 
       if (data.ok && data.result) {
+        // ← CORREGIDO: Usar data.text (limpio para TTS) si existe, sino limpiar HTML de data.result
+        const textoLimpio = data.text || data.result.replace(/<[^>]*>/g, '').replace(/📅|📝|⏰/g, '').trim();
+        
         if (data.esRecordatorio && data.fecha) {
-          respuestaFinal = `${data.result}<br><small style="color:#ffc107">${data.fecha}</small>`;
-          textoParaVoz = `Encontré: ${data.result} para el ${data.fecha.replace(/📅/g, '').trim()}`;
-        } else if (data.fecha) {
-          respuestaFinal = `${data.result}<br><small style="opacity:0.7">Guardado el: ${data.fecha}</small>`;
-          textoParaVoz = `Encontré: ${data.result}`;
+          respuestaFinal = data.result; // HTML con estilos para pantalla
+          // TTS: versión limpia sin HTML ni emojis
+          const fechaLimpia = data.fecha.replace(/📅/g, '').trim();
+          textoParaVoz = `Encontré el recordatorio: ${textoLimpio} para el ${fechaLimpia}`;
         } else {
-          respuestaFinal = data.result;
-          textoParaVoz = `Encontré: ${data.result}`;
+          respuestaFinal = data.result; // HTML con estilos para pantalla
+          // TTS: versión limpia
+          textoParaVoz = `Encontré en tu agenda: ${textoLimpio}`;
+          if (data.fecha) {
+            const fechaLimpia = data.fecha.replace(/📅/g, '').trim();
+            textoParaVoz += ` para el ${fechaLimpia}`;
+          }
         }
         
-        // Devolver datos para edición
+        console.log("Texto pantalla:", respuestaFinal);
+        console.log("Texto voz:", textoParaVoz);
+        
         const audioBase64 = await generarAudio(openai, textoParaVoz);
         
         return {
@@ -394,12 +412,6 @@ Ejemplos:
         respuestaFinal = "No encontré información sobre eso.";
         textoParaVoz = respuestaFinal;
       }
-
-    } else {
-      respuestaFinal = "No entendí la acción. Prueba con: agendame, recordame, pasame, o borra.";
-      textoParaVoz = respuestaFinal;
-    }
-
     const audioBase64 = await generarAudio(openai, textoParaVoz);
 
     return {
