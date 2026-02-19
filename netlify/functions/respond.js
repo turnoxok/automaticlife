@@ -222,17 +222,20 @@ if (forcedAction === "getPushSubscription") {
 
     if (!action && text) {
       const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "system",
-            content: `Eres un clasificador de intenciones para un asistente de notas y recordatorios.
+  model: "gpt-4o-mini",
+  messages: [
+    {
+      role: "system",
+      content: `Eres un clasificador de intenciones para un asistente de notas y recordatorios.
 
 REGLAS IMPORTANTES:
-- "agendame", "agenda", "guarda", "guardame", "anota" → action: "add"
-- "recordame", "recordatorio", "acordate", "avisame" → action: "reminder"
-- "pasame", "pasa", "dame", "busca", "buscame", "mostrame", "decime" → action: "get"
-- "borra", "elimina", "saca", "quita" → action: "delete"
+- "agendame", "agenda", "guarda", "guardame", "anota" → action: "add" (solo guarda, sin alerta)
+- "recordame", "recordatorio", "acordate", "avisame" → action: "reminder" (guarda CON alerta push)
+
+Para AMBOS casos, SI hay fecha/hora en el texto, extraer:
+- dateText: la fecha que dijo (mañana, viernes, 20 de febrero, etc.)
+- timeText: la hora exacta (13:00, 9:30, etc.)
+- description: el texto limpio sin comandos ni fechas/horas
 
 Responde SOLO con este JSON exacto:
 {
@@ -242,21 +245,21 @@ Responde SOLO con este JSON exacto:
   "reminder": {
     "isReminder": true/false,
     "type": "unico|diario|semanal|mensual|anual",
-    "dateText": "texto de fecha exacto",
-    "timeText": "HH:MM - hora exacta que dijo el usuario",
-    "description": "descripción del recordatorio"
+    "dateText": "texto de fecha exacto o vacío",
+    "timeText": "HH:MM - hora exacta o 09:00 por defecto",
+    "description": "descripción limpia del evento"
   }
 }
 
 Ejemplos:
+- "agendame reunion con Diego el viernes a las 15 en Live Rock" → {"action":"add","content":"reunion con Diego en Live Rock","reminder":{"isReminder":false,"type":"unico","dateText":"viernes","timeText":"15:00","description":"reunion con Diego en Live Rock"}}
 - "mañana almuerzo con Pepe 13hs" → {"action":"reminder","content":"almuerzo con Pepe","reminder":{"isReminder":true,"type":"unico","dateText":"mañana","timeText":"13:00","description":"almuerzo con Pepe"}}`
-          },
-          { role: "user", content: text }
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.1
-      });
-
+    },
+    { role: "user", content: text }
+  ],
+  response_format: { type: "json_object" },
+  temperature: 0.1
+});
       const intent = JSON.parse(completion.choices[0].message.content);
       action = intent.action;
       textoProcesado = intent.content || text;
@@ -314,15 +317,22 @@ Ejemplos:
       }
 
     } else if (action === "add") {
-      const res = await fetch(SHEETS_WEBAPP_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "add", text: textoProcesado, userId })
-      });
+  const res = await fetch(SHEETS_WEBAPP_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ 
+      action: "add", 
+      text: textoProcesado, 
+      userId,
+      dateText: reminderData?.dateText || "",
+      timeText: reminderData?.timeText || "",
+      description: reminderData?.description || textoProcesado
+    })
+  });
 
-      const data = await res.json();
-      respuestaFinal = textoProcesado;
-      textoParaVoz = "Listo, lo guardé.";
+  const data = await res.json();
+  respuestaFinal = data.result || textoProcesado;  // usar resultado formateado del backend
+  textoParaVoz = "Listo, lo guardé.";
 
     } else if (action === "delete") {
       const res = await fetch(SHEETS_WEBAPP_URL, {
