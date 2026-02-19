@@ -231,8 +231,10 @@ if (forcedAction === "getPushSubscription") {
 REGLAS IMPORTANTES:
 - "agendame", "agenda", "guarda", "guardame", "anota" → action: "add" (solo guarda, sin alerta)
 - "recordame", "recordatorio", "acordate", "avisame" → action: "reminder" (guarda CON alerta push)
+- "pasame", "pasa", "dame", "busca", "buscame", "mostrame", "decime" → action: "get" (buscar información)
+- "borra", "elimina", "saca", "quita" → action: "delete" (eliminar dato)
 
-Para AMBOS casos, SI hay fecha/hora en el texto, extraer:
+Para "add" y "reminder", SI hay fecha/hora en el texto, extraer:
 - dateText: la fecha que dijo (mañana, viernes, 20 de febrero, etc.)
 - timeText: la hora exacta (13:00, 9:30, etc.)
 - description: el texto limpio sin comandos ni fechas/horas
@@ -253,7 +255,9 @@ Responde SOLO con este JSON exacto:
 
 Ejemplos:
 - "agendame reunion con Diego el viernes a las 15 en Live Rock" → {"action":"add","content":"reunion con Diego en Live Rock","reminder":{"isReminder":false,"type":"unico","dateText":"viernes","timeText":"15:00","description":"reunion con Diego en Live Rock"}}
-- "mañana almuerzo con Pepe 13hs" → {"action":"reminder","content":"almuerzo con Pepe","reminder":{"isReminder":true,"type":"unico","dateText":"mañana","timeText":"13:00","description":"almuerzo con Pepe"}}`
+- "mañana almuerzo con Pepe 13hs" → {"action":"reminder","content":"almuerzo con Pepe","reminder":{"isReminder":true,"type":"unico","dateText":"mañana","timeText":"13:00","description":"almuerzo con Pepe"}}
+- "pasame reunion con juan" → {"action":"get","content":"reunion con juan","reminder":{"isReminder":false,"dateText":"","timeText":"","description":"reunion con juan"}}
+- "borra reunion en Live Rock" → {"action":"delete","content":"reunion en Live Rock","reminder":{"isReminder":false,"dateText":"","timeText":"","description":"reunion en Live Rock"}}`
     },
     { role: "user", content: text }
   ],
