@@ -28,7 +28,7 @@ exports.handler = async (event, context) => {
     );
 
     // Obtener suscripción del usuario desde Apps Script
-    const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycby_4H9Jq9p5RwtWCSNleYmt4nH3vS6GkMKlJdGOY0GD_kmgqDXBaudA1aD4ljo-zhz7/exec";
+    const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxyhFWGYmaEC07mQDtdQYsxeB1oNAlsOIO3xiJlRLkbiMO-em87eHN_Ysaw9B5bPE7Z/exec";
     
     const res = await fetch(SHEETS_WEBAPP_URL, {
       method: "POST",
