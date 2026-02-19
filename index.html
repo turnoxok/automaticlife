@@ -1,855 +1,613 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Automatic Life</title>
-
-<!-- Google Identity -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
-
-:root {
-  --primary: #00ffea;
-  --primary-dark: #00c4b4;
-  --bg-dark: #0f0c29;
-  --bg-mid: #302b63;
-  --bg-light: #24243e;
-  --danger: #ff6b6b;
-  --warning: #ffc107;
-  --glass: rgba(0, 255, 234, 0.05);
-  --glass-border: rgba(0, 255, 234, 0.2);
-}
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  background: linear-gradient(135deg, var(--bg-dark), var(--bg-mid), var(--bg-light));
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  color: var(--primary);
-  overflow-x: hidden;
-  position: relative;
-}
-
-/* ===== ICONOS SVG ===== */
-.icon {
-  width: 24px;
-  height: 24px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  flex-shrink: 0;
-}
-
-.icon-small { width: 24px; height: 24px; }
-.icon-large { width: 24px; height: 24px; }
-
-/* ===== HEADER ===== */
-#header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  padding: 15px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 100;
-  background: linear-gradient(to bottom, rgba(15, 12, 41, 0.9), transparent);
-}
-
-#logo {
-  font-size: 1.3rem;
-  font-weight: bold;
-  letter-spacing: 2px;
-  background: linear-gradient(to right, var(--primary), var(--primary-dark));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-#userSection {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-#userPanel {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  border-radius: 25px;
-  transition: all 0.3s;
-  font-size: 0.85rem;
-}
-
-#userPanel:hover {
-  background: rgba(0, 255, 234, 0.1);
-  border-color: var(--primary);
-}
-
-#userAvatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--bg-dark);
-  font-weight: bold;
-  font-size: 0.8rem;
-}
-
-.planBadge {
-  background: rgba(0, 255, 234, 0.15);
-  padding: 3px 8px;
-  border-radius: 10px;
-  border: 1px solid var(--primary);
-  font-size: 0.65rem;
-  font-weight: bold;
-  text-transform: uppercase;
-}
-
-/* ===== USER MENU ===== */
-#userMenu {
-  position: absolute;
-  top: 60px;
-  right: 20px;
-  background: rgba(15, 12, 41, 0.98);
-  border: 1px solid var(--primary);
-  border-radius: 16px;
-  padding: 12px;
-  min-width: 220px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-  z-index: 200;
-  transform-origin: top right;
-  animation: menuAppear 0.2s ease;
-}
-
-@keyframes menuAppear {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.menuItem {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-bottom: 4px;
-  font-size: 0.9rem;
-}
-
-.menuItem:hover {
-  background: rgba(0, 255, 234, 0.1);
-}
-
-.menuItem:last-child {
-  margin-bottom: 0;
-  color: var(--danger);
-}
-
-.menuItem:last-child:hover {
-  background: rgba(255, 107, 107, 0.1);
-}
-
-.menuDivider {
-  height: 1px;
-  background: var(--glass-border);
-  margin: 8px 0;
-}
-
-/* ===== MAIN CONTENT ===== */
-#mainContent {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 80px 20px 140px;
-  max-width: 800px;
-  margin: 0 auto;
-  width: 100%;
-  position: relative;
-}
-
-/* ===== RESULT PANEL ===== */
-#resultPanel {
-  flex: 1;
-  min-height: 200px;
-  max-height: calc(80vh - 300px);
-  border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  background: var(--glass);
-  backdrop-filter: blur(10px);
-  padding: 20px;
-  overflow-y: auto;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.4s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-#resultPanel.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-#resultPanel::-webkit-scrollbar {
-  width: 6px;
-}
-
-#resultPanel::-webkit-scrollbar-track {
-  background: rgba(0, 255, 234, 0.05);
-  border-radius: 3px;
-}
-
-#resultPanel::-webkit-scrollbar-thumb {
-  background: var(--primary);
-  border-radius: 3px;
-}
-
-.result-content {
-  line-height: 1.6;
-  font-size: 1rem;
-}
-
-/* ===== TRANSCRIBED TEXT ===== */
-#transcribedContainer {
-  text-align: center;
-  padding: 15px;
-  opacity: 0.7;
-  font-style: italic;
-  font-size: 0.9rem;
-  min-height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ===== CENTER BUTTON (GO) ===== */
-#centerArea {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 50;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-  pointer-events: none;
-}
-
-#aiCore {
-  position: relative;
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--primary) 0%, var(--primary-dark) 70%, #003a38 100%);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  box-shadow:
-    0 0 40px rgba(0, 255, 234, 0.6),
-    0 0 80px rgba(0, 255, 234, 0.3),
-    inset 0 0 30px rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
-  user-select: none;
-  pointer-events: all;
-}
-
-#aiCore:hover {
-  transform: scale(1.08);
-  box-shadow:
-    0 0 60px rgba(0, 255, 234, 0.8),
-    0 0 100px rgba(0, 255, 234, 0.4);
-}
-
-#aiCore:active {
-  transform: scale(0.95);
-}
-
-#coreText {
-  color: var(--bg-dark);
-  font-weight: bold;
-  font-size: 1.3rem;
-  letter-spacing: 3px;
-  pointer-events: none;
-}
-
-.pulseRing {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border: 2px solid var(--primary);
-  border-radius: 50%;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.ai-active .pulseRing {
-  animation: pulseWave 1.5s infinite;
-}
-
-.pulseRing:nth-child(1) { animation-delay: 0s; }
-.pulseRing:nth-child(2) { animation-delay: 0.5s; }
-.pulseRing:nth-child(3) { animation-delay: 1s; }
-
-@keyframes pulseWave {
-  0% { transform: scale(1); opacity: 0.8; }
-  100% { transform: scale(2.2); opacity: 0; }
-}
-
-.hint-text {
-  font-size: 0.8rem;
-  opacity: 0;
-  text-align: center;
-  max-width: 200px;
-  pointer-events: none;
-  transition: opacity 0.5s ease;
-  position: absolute;
-  bottom: -40px;
-}
-
-.hint-text.visible {
-  opacity: 0.6;
-}
-
-.hint-text.fade-out {
-  opacity: 0;
-}
-
-/* ===== BOTTOM BAR ===== */
-#bottomBar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(15, 12, 41, 0.95);
-  backdrop-filter: blur(20px);
-  border-top: 1px solid var(--glass-border);
-  padding: 15px 20px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  z-index: 100;
-}
-
-#quickActions {
-  display: flex;
-  gap: 8px;
-}
-
-.quickBtn {
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  color: var(--primary);
-  padding: 10px 14px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-
-.quickBtn:hover {
-  background: rgba(0, 255, 234, 0.15);
-  border-color: var(--primary);
-  transform: translateY(-2px);
-}
-
-#textFAB {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: var(--bg-dark);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  box-shadow: 0 0 20px rgba(0, 255, 234, 0.5);
-  transition: all 0.3s;
-  flex-shrink: 0;
-}
-
-#textFAB:hover {
-  transform: scale(1.1) rotate(90deg);
-  box-shadow: 0 0 30px rgba(0, 255, 234, 0.7);
-}
-
-#notifBtn {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  background: var(--glass);
-  border: 2px solid var(--glass-border);
-  color: var(--primary);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  flex-shrink: 0;
-}
-
-#notifBtn:hover {
-  background: rgba(0, 255, 234, 0.15);
-  transform: scale(1.1);
-}
-
-#notifBtn.granted {
-  background: var(--primary);
-  color: var(--bg-dark);
-  border-color: var(--primary);
-}
-
-/* ===== MODAL ===== */
-#textModal {
-  position: fixed;
-  inset: 0;
-  background: rgba(5, 10, 25, 0.9);
-  backdrop-filter: blur(20px);
-  justify-content: center;
-  align-items: flex-end;
-  z-index: 1000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s;
-  padding: 20px;
-}
-
-#textModal:not(.hidden) {
-  display: flex;
-  opacity: 1;
-  pointer-events: all;
-}
-
-#textBox {
-  background: rgba(15, 12, 41, 0.98);
-  border: 1px solid var(--glass-border);
-  border-radius: 24px;
-  padding: 25px;
-  width: 100%;
-  max-width: 500px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  box-shadow: 0 -10px 60px rgba(0, 0, 0, 0.8);
-  transform: translateY(20px);
-  transition: transform 0.3s;
-  margin-bottom: env(safe-area-inset-bottom, 0);
-}
-
-#textModal:not(.hidden) #textBox {
-  transform: translateY(0);
-}
-
-.modalHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modalTitle {
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-#closeModal {
-  background: none;
-  border: none;
-  color: var(--primary);
-  cursor: pointer;
-  padding: 5px;
-  border-radius: 50%;
-  transition: background 0.2s;
-}
-
-#closeModal:hover {
-  background: rgba(0, 255, 234, 0.1);
-}
-
-#textInput {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  padding: 16px;
-  color: var(--primary);
-  font-size: 16px;
-  resize: none;
-  outline: none;
-  height: 120px;
-  font-family: inherit;
-  transition: all 0.3s;
-  line-height: 1.5;
-}
-
-#textInput::placeholder {
-  color: rgba(0, 255, 234, 0.4);
-}
-
-#textInput:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 20px rgba(0, 255, 234, 0.2);
-  background: rgba(0, 0, 0, 0.5);
-}
-
-#sendTextBtn {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  border: none;
-  border-radius: 12px;
-  padding: 16px;
-  font-weight: bold;
-  letter-spacing: 1px;
-  color: var(--bg-dark);
-  cursor: pointer;
-  box-shadow: 0 4px 20px rgba(0, 255, 234, 0.4);
-  transition: all 0.3s;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-#sendTextBtn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 30px rgba(0, 255, 234, 0.6);
-}
-
-#sendTextBtn:active {
-  transform: translateY(0);
-}
-
-/* ===== COMPONENTS ===== */
-.loading-dots {
-  display: inline-flex;
-  gap: 4px;
-}
-
-.loading-dots span {
-  animation: bounce 1.4s infinite ease-in-out both;
-  background: var(--bg-dark);
-  border-radius: 50%;
-  width: 8px;
-  height: 8px;
-}
-
-.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
-.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
-
-@keyframes bounce {
-  0%, 80%, 100% { transform: scale(0); }
-  40% { transform: scale(1); }
-}
-
-.reminder-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255, 193, 7, 0.15);
-  border: 1px solid var(--warning);
-  color: var(--warning);
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  margin-top: 10px;
-  width: fit-content;
-}
-
-.edit-btn {
-  margin-top: 15px;
-  padding: 10px 24px;
-  border-radius: 20px;
-  border: none;
-  background: var(--primary);
-  cursor: pointer;
-  font-weight: bold;
-  color: var(--bg-dark);
-  transition: all 0.3s;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.edit-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 25px rgba(0, 255, 234, 0.5);
-}
-
-#loginHint {
-  position: fixed;
-  top: 75%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  padding: 20px 10px;
-  background: rgba(255, 107, 107, 0.1);
-  border: 1px solid rgba(255, 107, 107, 0.3);
-  border-radius: 16px;
-  color: var(--danger);
-  font-size: 0.75rem;
-  max-width: 300px;
-  z-index: 40;
-}
-
-.hidden { display: none !important; }
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-  #header {
-    padding: 12px 15px;
-  }
-  
-  #logo {
-    font-size: 1.1rem;
-  }
-  
-  #mainContent {
-    padding: 70px 15px 160px;
-  }
-  
-  #resultPanel {
-    min-height: 150px;
-    max-height: calc(80vh - 280px);
-    padding: 15px;
-    border-radius: 16px;
-  }
-  
-  #aiCore {
-    width: 90px;
-    height: 90px;
-  }
-  
-  #coreText {
-    font-size: 1.1rem;
-  }
-  
-  #bottomBar {
-    padding: 12px 15px;
-    gap: 10px;
-  }
-  
-  .quickBtn {
-    padding: 8px 12px;
-    font-size: 0.75rem;
-  }
-  
-  .quickBtn span {
-    display: none;
-  }
-  
-  #textFAB {
-    width: 45px;
-    height: 45px;
-  }
-  
-  #notifBtn {
-    width: 40px;
-    height: 40px;
-  }
-  
-  #userMenu {
-    right: 15px;
-    min-width: 200px;
-  }
-}
-
-@media (max-width: 480px) {
-  #quickActions {
-    gap: 6px;
-  }
-  
-  .quickBtn {
-    padding: 8px;
-  }
-  
-  .quickBtn svg {
-    width: 24px;
-    height: 24px;
-  }
-  
-  #textBox {
-    padding: 20px;
-    border-radius: 20px 20px 0 0;
-  }
-}
-
-@media (min-width: 769px) {
-  #bottomBar {
-    max-width: 800px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-radius: 30px 30px 0 0;
-    border: 1px solid var(--glass-border);
-    border-bottom: none;
-  }
-  
-  #mainContent {
-    padding-bottom: 120px;
-  }
-}
-
-/* Safe area for notched phones */
-@supports (padding: max(0px)) {
-  #header {
-    padding-top: max(15px, env(safe-area-inset-top));
-  }
-  
-  #bottomBar {
-    padding-bottom: max(15px, env(safe-area-inset-bottom));
-  }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LiliX</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    /* Estilos base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    /* Header */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+    }
+    
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #ffc107;
+    }
+    
+    /* User panel */
+    .user-panel {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 8px 12px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.1);
+      transition: background 0.3s;
+    }
+    
+    .user-panel:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #ffc107;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #1a1a2e;
+    }
+    
+    .user-menu {
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      background: #fff;
+      color: #333;
+      border-radius: 12px;
+      padding: 10px 0;
+      min-width: 200px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      z-index: 200;
+    }
+    
+    .user-menu.hidden {
+      display: none;
+    }
+    
+    .user-menu-item {
+      padding: 12px 20px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .user-menu-item:hover {
+      background: #f5f5f5;
+    }
+    
+    /* Main area */
+    .main-area {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      width: 90%;
+      max-width: 500px;
+      transition: top 0.3s ease;
+    }
+    
+    .main-area.authenticated {
+      top: 73%;
+    }
+    
+    /* AI Core */
+    .ai-core {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin: 0 auto 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+      transition: all 0.3s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .ai-core:hover {
+      transform: scale(1.05);
+      box-shadow: 0 15px 50px rgba(102, 126, 234, 0.6);
+    }
+    
+    .ai-core.ai-active {
+      animation: pulse 1.5s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    
+    .core-text {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #fff;
+    }
+    
+    /* Loading dots */
+    .loading-dots {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .loading-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #fff;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+    
+    .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+    .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+    
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+    
+    /* Transcribed text */
+    .transcribed-text {
+      min-height: 30px;
+      color: #ffc107;
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      padding: 0 20px;
+    }
+    
+    /* Result panel */
+    .result-panel {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      width: 90%;
+      max-width: 500px;
+      max-height: 50vh;
+      overflow-y: auto;
+      background: #fff;
+      color: #333;
+      border-radius: 16px;
+      padding: 20px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 50;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    
+    .result-panel.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+    
+    .result-content {
+      line-height: 1.6;
+    }
+    
+    .reminder-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #fff8e1;
+      color: #ffc107;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      margin-top: 10px;
+    }
+    
+    .edit-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 15px;
+      padding: 8px 16px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    
+    .edit-btn:hover {
+      background: #45a049;
+    }
+    
+    /* Resultados lista */
+    .resultados-lista {
+      max-height: 40vh;
+      overflow-y: auto;
+    }
+    
+    .resultados-header {
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #eee;
+      color: #667eea;
+    }
+    
+    .resultado-item {
+      transition: transform 0.2s;
+    }
+    
+    .resultado-item:hover {
+      transform: translateX(5px);
+    }
+    
+    /* Quick actions */
+    .quick-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    
+    .quick-btn {
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+    
+    .quick-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    /* Text FAB */
+    .text-fab {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #ffc107;
+      color: #1a1a2e;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+      transition: all 0.3s;
+      z-index: 60;
+    }
+    
+    .text-fab:hover {
+      transform: scale(1.1);
+    }
+    
+    /* Text modal */
+    .text-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+    
+    .text-modal:not(.hidden) {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .text-modal.hidden {
+      display: none;
+    }
+    
+    .modal-content {
+      background: #fff;
+      color: #333;
+      border-radius: 16px;
+      padding: 25px;
+      width: 90%;
+      max-width: 450px;
+    }
+    
+    .modal-title {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+      color: #667eea;
+    }
+    
+    .text-input {
+      width: 100%;
+      min-height: 100px;
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      font-size: 1rem;
+      resize: vertical;
+      font-family: inherit;
+    }
+    
+    .text-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .modal-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.3s;
+    }
+    
+    .modal-btn-primary {
+      background: #667eea;
+      color: white;
+    }
+    
+    .modal-btn-primary:hover {
+      background: #5a67d8;
+    }
+    
+    .modal-btn-secondary {
+      background: #e0e0e0;
+      color: #333;
+    }
+    
+    /* Notif button */
+    .notif-btn {
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      z-index: 60;
+    }
+    
+    .notif-btn.granted {
+      background: #4CAF50;
+      border-color: #4CAF50;
+    }
+    
+    .notif-btn:hover {
+      transform: scale(1.1);
+    }
+    
+    /* Icons */
+    .icon {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .icon-small {
+      width: 16px;
+      height: 16px;
+    }
+    
+    /* Login hint */
+    .login-hint {
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ffc107;
+      color: #1a1a2e;
+      padding: 12px 24px;
+      border-radius: 25px;
+      font-size: 0.9rem;
+      z-index: 150;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    
+    .login-hint.hidden {
+      display: none;
+    }
+    
+    /* Google sign in */
+    .g_id_signin {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    /* Hint text */
+    .hint-text {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.6);
+      font-size: 0.9rem;
+      opacity: 0;
+      transition: opacity 0.5s;
+      pointer-events: none;
+    }
+    
+    .hint-text.visible {
+      opacity: 1;
+    }
+    
+    .hint-text.fade-out {
+      opacity: 0;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .main-area {
+        width: 95%;
+      }
+      
+      .ai-core {
+        width: 100px;
+        height: 100px;
+      }
+      
+      .core-text {
+        font-size: 1.2rem;
+      }
+      
+      .result-panel {
+        width: 95%;
+        max-height: 60vh;
+        bottom: 80px;
+      }
+      
+      .text-fab {
+        bottom: 20px;
+        right: 20px;
+        width: 48px;
+        height: 48px;
+      }
+      
+      .notif-btn {
+        bottom: 20px;
+        left: 20px;
+        width: 40px;
+        height: 40px;
+      }
+    }
+  </style>
 </head>
-
 <body>
 
-<!-- Google auto loader -->
-<div id="g_id_onload"
-     data-client_id="687016135689-g9holcsj91ptukrlhr9a9bo23sroaun3.apps.googleusercontent.com"
-     data-callback="handleCredentialResponse"
-     data-auto_prompt="false">
-</div>
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">LiliX</div>
+    <div class="user-panel hidden" id="userPanel" onclick="toggleMenu()">
+      <div class="user-avatar" id="userAvatar">U</div>
+    </div>
+  </div>
 
-<!-- HEADER -->
-<header id="header">
-  <div id="logo">OLVIDEX</div>
-  
-  <div id="userSection">
-    <!-- User Panel -->
-    <div id="userPanel" class="hidden" onclick="toggleMenu()">
-      <div id="userAvatar"></div>
-      <span class="planBadge">Free</span>
-      <svg class="icon icon-small" style="opacity: 0.7;">
-        <polyline points="6 9 12 15 18 9"></polyline>
-      </svg>
+  <!-- User menu -->
+  <div class="user-menu hidden" id="userMenu">
+    <div class="user-menu-item" onclick="verRecordatorios()">📅 Mis recordatorios</div>
+    <div class="user-menu-item" onclick="mejorarPlan()">⭐ Mejorar plan</div>
+    <div class="user-menu-item" onclick="logout()">🚪 Cerrar sesión</div>
+  </div>
+
+  <!-- Login hint -->
+  <div class="login-hint hidden" id="loginHint">
+    🔑 Inicia sesión con Google para continuar
+  </div>
+
+  <!-- Google Sign In -->
+  <div class="g_id_signin" 
+       data-type="standard"
+       data-shape="pill"
+       data-theme="outline"
+       data-text="signin_with"
+       data-size="large"
+       data-logo_alignment="left"
+       data-width="300">
+  </div>
+
+  <!-- Main area -->
+  <div class="main-area" id="centerArea">
+    <!-- AI Core -->
+    <div class="ai-core" id="aiCore">
+      <div class="core-text" id="coreText">GO</div>
     </div>
     
-    <!-- Sign In Button (when logged out) -->
-    <div class="g_id_signin" data-type="icon" data-shape="circle" data-theme="outline" data-size="large"></div>
-  </div>
-
-  <!-- User Menu -->
-  <div id="userMenu" class="hidden">
-    <div class="menuItem" onclick="mejorarPlan()">
-      <svg class="icon icon-small"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-      <span>Mejorar Plan</span>
-    </div>
-    <div class="menuItem" onclick="verRecordatorios()">
-      <svg class="icon icon-small"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-      <span>Mis Recordatorios</span>
-    </div>
-    <div class="menuDivider"></div>
-    <div class="menuItem" onclick="logout()">
-      <svg class="icon icon-small"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-      <span>Cerrar sesión</span>
+    <!-- Transcribed text -->
+    <div class="transcribed-text" id="transcribedText"></div>
+    
+    <!-- Hint -->
+    <div class="hint-text" id="hintText">
+      Mantén presionado para hablar o usa el botón ✏️ para escribir
     </div>
   </div>
-</header>
 
-<!-- MAIN CONTENT -->
-<main id="mainContent">
-  <!-- Result Panel -->
-  <div id="resultPanel"></div>
-  
-  <!-- Transcribed Text -->
-  <div id="transcribedContainer">
-    <span id="transcribedText"></span>
+  <!-- Result panel -->
+  <div class="result-panel" id="resultPanel"></div>
+
+  <!-- Quick actions -->
+  <div class="quick-actions hidden" id="quickActions">
+    <button class="quick-btn" onclick="setQuickText('Agendame ')">📝 Agendar</button>
+    <button class="quick-btn" onclick="setQuickText('Recordame ')">⏰ Recordar</button>
+    <button class="quick-btn" onclick="setQuickText('Pasame ')">🔍 Buscar</button>
   </div>
-</main>
 
-<!-- CENTER BUTTON (GO) -->
-<div id="centerArea">
-  <div id="aiCore">
-    <div class="pulseRing"></div>
-    <div class="pulseRing"></div>
-    <div class="pulseRing"></div>
-    <div id="coreText">GO</div>
-  </div>
-  <span id="hintText" class="hint-text">Toca y mantén para hablar</span>
-</div>
-
-<!-- Login Hint -->
-<div id="loginHint" class="hidden">
-  <svg class="icon" style="margin-bottom: 10px; opacity: 0.8;">
-    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-  </svg>
-  <div>Inicia sesión con Google para usar Automatic Life</div>
-</div>
-
-<!-- BOTTOM BAR -->
-<nav id="bottomBar">
-  <div id="quickActions" class="hidden">
-    <button class="quickBtn" onclick="setQuickText('Recordame mañana a las ')" title="Recordatorio mañana">
-      <svg class="icon icon-small"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-      <span>Mañana</span>
-    </button>
-    <button class="quickBtn" onclick="setQuickText('Agendame ')" title="Agendar evento">
-      <svg class="icon icon-small"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-      <span>Agendar</span>
-    </button>
-    <button class="quickBtn" onclick="setQuickText('Pasame ')" title="Buscar información">
-      <svg class="icon icon-small"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <span>Buscar</span>
-    </button>
-  </div>
-  
-  <div style="flex: 1;"></div>
-  
-  <button id="notifBtn" class="hidden" onclick="solicitarNotificaciones()" title="Activar notificaciones">
+  <!-- Notif button -->
+  <button class="notif-btn hidden" id="notifBtn" onclick="solicitarNotificaciones()">
     <svg class="icon"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
   </button>
-  
-  <div id="textFAB">
-    <svg class="icon icon-large"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-  </div>
-</nav>
 
-<!-- TEXT MODAL -->
-<div id="textModal" class="hidden">
-  <div id="textBox">
-    <div class="modalHeader">
-      <span class="modalTitle" id="modalTitle">Escribe tu solicitud</span>
-      <button id="closeModal" onclick="cerrarModal()">
-        <svg class="icon"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-      </button>
+  <!-- Text FAB -->
+  <button class="text-fab" id="textFAB">
+    <svg class="icon"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>
+  </button>
+
+  <!-- Text modal -->
+  <div class="text-modal hidden" id="textModal">
+    <div class="modal-content">
+      <div class="modal-title" id="modalTitle">Escribe tu solicitud</div>
+      <textarea class="text-input" id="textInput" placeholder="Ej: Agendame reunión con Juan mañana 15hs..."></textarea>
+      <div class="modal-buttons">
+        <button class="modal-btn modal-btn-secondary" onclick="cerrarModal()">Cancelar</button>
+        <button class="modal-btn modal-btn-primary" id="sendTextBtn">
+          <span id="sendBtnText">Enviar</span>
+        </button>
+      </div>
     </div>
-    <textarea id="textInput" placeholder="Ej: Recordame mañana a las 9:00 llamar al médico"></textarea>
-    <button id="sendTextBtn">
-      <svg class="icon icon-small"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-      <span id="sendBtnText">Enviar</span>
-    </button>
   </div>
-</div>
 
 <script>
 // ==================== VARIABLES GLOBALES ====================
@@ -866,10 +624,10 @@ let pushSubscription = null;
 let pressTimer;
 let isRecording = false;
 
-// VAPID KEY CORRECTA - la de Knock
+// VAPID KEY
 const VAPID_PUBLIC_KEY = 'BCEz3VvvDaXkZse_cMPmwS2s88ZTLiRshdRgLZZ7q2Fc5yCRkR9Y8nX1dmkw5tWvJhxABfLR7Ir8AsFF7CYJ7bw';
 
-  // DETECCIÓN DE DISPOSITIVO
+// DETECCIÓN DE DISPOSITIVO
 const ES_MOVIL = window.matchMedia('(pointer: coarse)').matches || window.innerWidth <= 768;
 console.log('¿Es móvil?', ES_MOVIL);
 
@@ -915,7 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // ===== CONFIGURAR BOTÓN GO SEGÚN DISPOSITIVO =====
+  // Configurar botón según dispositivo
   if (ES_MOVIL) {
     console.log('Configurando para MÓVIL');
     configurarBotonMovil();
@@ -924,7 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
     configurarBotonDesktop();
   }
 
-  // Inactivity timer (igual)
+  // Inactivity timer
   let inactivityTimer;
   const INACTIVITY_DELAY = 10000;
   const HINT_DURATION = 10000;
@@ -959,11 +717,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ==================== BOTÓN GO - MÓVIL ====================
 function configurarBotonMovil() {
-  // Remover cualquier listener anterior
   aiCore.replaceWith(aiCore.cloneNode(true));
   const nuevoAiCore = document.getElementById("aiCore");
-  
-  // Re-asignar variable global
   window.aiCore = nuevoAiCore;
   
   let touchIniciado = false;
@@ -973,7 +728,6 @@ function configurarBotonMovil() {
     console.log('MÓVIL: touchstart');
     
     if (!userEmail) {
-      console.log('MÓVIL: Sin usuario, mostrando login');
       toggleMenu();
       loginHint.classList.remove('hidden');
       setTimeout(() => speak("Debes iniciar sesión con Google para continuar."), 100);
@@ -991,7 +745,6 @@ function configurarBotonMovil() {
 
   nuevoAiCore.addEventListener('touchend', (e) => {
     e.preventDefault();
-    console.log('MÓVIL: touchend');
     touchIniciado = false;
     clearTimeout(pressTimer);
     if (isRecording) {
@@ -1002,7 +755,6 @@ function configurarBotonMovil() {
 
   nuevoAiCore.addEventListener('touchcancel', (e) => {
     e.preventDefault();
-    console.log('MÓVIL: touchcancel');
     touchIniciado = false;
     clearTimeout(pressTimer);
     if (isRecording) {
@@ -1011,12 +763,9 @@ function configurarBotonMovil() {
     }
   });
   
-  // Prevenir completamente el click en móvil
   nuevoAiCore.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    e.stopImmediatePropagation();
-    console.log('MÓVIL: click bloqueado');
     return false;
   }, true);
 }
@@ -1024,7 +773,6 @@ function configurarBotonMovil() {
 // ==================== BOTÓN GO - DESKTOP ====================
 function configurarBotonDesktop() {
   aiCore.addEventListener('mousedown', (e) => {
-    console.log('DESKTOP: mousedown');
     if (!userEmail) {
       toggleMenu();
       loginHint.classList.remove('hidden');
@@ -1039,7 +787,6 @@ function configurarBotonDesktop() {
   });
 
   aiCore.addEventListener('mouseup', () => {
-    console.log('DESKTOP: mouseup');
     clearTimeout(pressTimer);
     if (isRecording) {
       isRecording = false;
@@ -1048,7 +795,6 @@ function configurarBotonDesktop() {
   });
 
   aiCore.addEventListener('mouseleave', () => {
-    console.log('DESKTOP: mouseleave');
     clearTimeout(pressTimer);
     if (isRecording) {
       isRecording = false;
@@ -1056,9 +802,7 @@ function configurarBotonDesktop() {
     }
   });
   
-  // Click simple para desktop (alternativa al hold)
   aiCore.addEventListener('click', (e) => {
-    console.log('DESKTOP: click');
     if (!userEmail) {
       toggleMenu();
       loginHint.classList.remove('hidden');
@@ -1096,9 +840,6 @@ function handleCredentialResponse(response) {
 }
   
 async function registrarPushSubscription() {
-  console.log("=== registrarPushSubscription INICIADO ===");
-  console.log("userEmail recibido:", userEmail);
-
   if (!userEmail) return;
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
 
@@ -1107,22 +848,17 @@ async function registrarPushSubscription() {
     const subscription = await registration.pushManager.getSubscription();
 
     if (subscription) {
-      console.log("🔔 Push EXISTE en navegador → prender campanita");
       pushSubscription = subscription;
       notifBtn.classList.add("granted");
       notifBtn.innerHTML = '<svg class="icon"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-      console.log("=== registrarPushSubscription FIN ===");
       return;
     }
 
-    console.log("🔕 No hay push en navegador → campanita apagada");
-    pushSubscription = null;
     notifBtn.classList.remove("granted");
     notifBtn.innerHTML = '<svg class="icon"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>';
-    console.log("=== registrarPushSubscription FIN ===");
 
   } catch (err) {
-    console.error("💥 ERROR:", err);
+    console.error("Error:", err);
   }
 }
 
@@ -1199,7 +935,6 @@ async function solicitarNotificaciones() {
     const registration = await navigator.serviceWorker.ready;
     let subscription = await registration.pushManager.getSubscription();
 
-    // Si NO hay suscripción → pedir permiso y crearla
     if (!subscription) {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
@@ -1213,7 +948,6 @@ async function solicitarNotificaciones() {
       });
     }
 
-    // SIEMPRE guardar en backend
     pushSubscription = subscription;
 
     await fetch("/.netlify/functions/respond", {
@@ -1283,8 +1017,15 @@ function stopCoreAnimation() {
   coreText.textContent = "GO";
 }
 
-// ==================== UI RESULTADOS ====================
+// ==================== UI RESULTADOS - VERSIÓN ACTUALIZADA ====================
 function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, reminderData = null, datosExtra = null) {
+  // Si viene una lista de resultados (nuevo formato), usar la función nueva
+  if (typeof texto === 'object' && texto.resultados) {
+    mostrarListaResultados(texto);
+    return;
+  }
+  
+  // Código anterior para un solo resultado (mantener compatibilidad)
   ultimoResultado = texto;
   ultimoResultadoTexto = texto.replace(/<[^>]*>/g, '').trim();
   
@@ -1321,6 +1062,133 @@ function mostrarResultado(texto, mostrarEditar = false, esRecordatorio = false, 
   if (window.innerWidth <= 768) {
     resultPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
+}
+
+// ========== NUEVA FUNCIÓN: Mostrar lista de resultados ==========
+function mostrarListaResultados(data) {
+  const resultados = data.resultados;
+  const total = data.total;
+  
+  console.log("Mostrando lista de", total, "resultados");
+  
+  let html = `<div class="resultados-lista">`;
+  html += `<div class="resultados-header"><strong>Encontré ${total} resultado${total > 1 ? 's' : ''}</strong></div>`;
+  
+  resultados.forEach((r, index) => {
+    const emoji = r.tipo === 'recordatorio' ? '⏰' : '📝';
+    const color = r.tipo === 'recordatorio' ? '#ffc107' : '#666';
+    
+    html += `<div class="resultado-item" style="border:1px solid #ddd; border-radius:8px; padding:12px; margin-bottom:10px; background:${r.tipo === 'recordatorio' ? '#fff8e1' : '#f5f5f5'};">`;
+    
+    // Contenido principal
+    html += `<div style="font-weight:bold; margin-bottom:5px;">${emoji} ${r.contenido}</div>`;
+    
+    // Fecha y hora si existen
+    if (r.fecha || r.hora) {
+      html += `<div style="color:${color}; font-size:0.9em; margin-bottom:8px;">`;
+      if (r.fecha) {
+        const fecha = new Date(r.fecha);
+        html += `📅 ${fecha.toLocaleDateString('es-ES', {day:'numeric', month:'short'})} `;
+      }
+      if (r.hora) {
+        html += `🕐 ${r.hora.replace(/:00$/, 'hs')}`;
+      }
+      html += `</div>`;
+    }
+    
+    // Tipo (pequeño)
+    html += `<div style="color:#999; font-size:0.75em; text-transform:uppercase; margin-bottom:8px;">${r.tipo}</div>`;
+    
+    // Botones de acción
+    html += `<div style="display:flex; gap:8px;">`;
+    html += `<button onclick="editarResultado('${r.tipo}', '${r.id}', '${r.notaId || ''}', '${encodeURIComponent(r.contenido)}', '${r.fecha || ''}', '${r.hora || ''}')" style="flex:1; padding:6px 12px; border:none; border-radius:4px; background:#4CAF50; color:white; cursor:pointer; font-size:0.85em;">✏️ Editar</button>`;
+    html += `<button onclick="eliminarResultado('${r.tipo}', '${r.id}', '${encodeURIComponent(r.contenido)}')" style="padding:6px 12px; border:none; border-radius:4px; background:#f44336; color:white; cursor:pointer; font-size:0.85em;">🗑️</button>`;
+    html += `</div>`;
+    
+    html += `</div>`;
+  });
+  
+  html += `</div>`;
+  
+  resultPanel.innerHTML = html;
+  resultPanel.classList.add("show");
+  
+  if (window.innerWidth <= 768) {
+    resultPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+// ========== NUEVA FUNCIÓN: Editar resultado específico ==========
+function editarResultado(tipo, id, notaId, contenidoEncoded, fecha, hora) {
+  const contenido = decodeURIComponent(contenidoEncoded);
+  
+  console.log("Editar:", { tipo, id, notaId, contenido, fecha, hora });
+  
+  // Guardar datos para edición
+  window.datosEdicion = {
+    tipo: tipo,
+    id: id,
+    notaId: notaId,
+    contenidoOriginal: contenido,
+    fechaOriginal: fecha,
+    horaOriginal: hora
+  };
+  
+  // Preparar modal
+  modoEdicion = true;
+  
+  if (tipo === 'recordatorio') {
+    // Reconstruir texto de recordatorio
+    const fechaTexto = fecha ? new Date(fecha).toLocaleDateString('es-ES', {day:'numeric', month:'long'}) : 'mañana';
+    const horaTexto = hora ? hora.replace(/:00$/, 'hs') : '';
+    textInput.value = `Recordame ${fechaTexto} ${horaTexto ? 'a las ' + horaTexto : ''} ${contenido}`.trim();
+    modalTitle.textContent = "Editar recordatorio";
+  } else {
+    // Agenda simple
+    textInput.value = contenido;
+    modalTitle.textContent = "Editar agenda";
+  }
+  
+  sendBtnText.textContent = "Guardar cambios";
+  textModal.classList.remove("hidden");
+  textInput.focus();
+  textInput.select();
+}
+
+// ========== NUEVA FUNCIÓN: Eliminar resultado específico ==========
+async function eliminarResultado(tipo, id, contenidoEncoded) {
+  const contenido = decodeURIComponent(contenidoEncoded);
+  
+  if (!confirm(`¿Eliminar "${contenido}"?`)) return;
+  
+  try {
+    startCoreAnimation("...");
+    
+    const res = await fetch("/.netlify/functions/respond", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "delete",
+        text: contenido,
+        email: userEmail,
+        userId: userEmail
+      })
+    });
+    
+    const data = await res.json();
+    
+    if (data.ok) {
+      mostrarResultado(`✅ Eliminado: ${contenido}`, false);
+    } else {
+      mostrarResultado(`❌ No se pudo eliminar`, false);
+    }
+    
+  } catch (err) {
+    console.error("Error eliminando:", err);
+    mostrarResultado("Error de conexión", false);
+  }
+  
+  stopCoreAnimation();
 }
 
 function activarEdicion() {
@@ -1415,7 +1283,7 @@ function cerrarModal() {
   sendBtnText.textContent = "Enviar";
 }
 
-// ==================== ENVIAR TEXTO ====================
+// ==================== ENVIAR TEXTO - ACTUALIZADO ====================
 sendTextBtn.onclick = async () => {
   const texto = textInput.value.trim();
   if (!texto) return;
@@ -1460,8 +1328,7 @@ sendTextBtn.onclick = async () => {
       
       const data = await res.json();
       if (data.ok) {
-        mostrarResultado(data.result, false, true, data.reminderData);
-        ultimoReminderData = data.reminderData;
+        mostrarResultado(data, false); // Nuevo formato
       }
       
       if (data.audioBase64) {
@@ -1489,7 +1356,12 @@ sendTextBtn.onclick = async () => {
     const data = await res.json();
     modoEdicion = false;
 
-    if (data.result) {
+    // ========== NUEVO: Detectar lista de resultados ==========
+    if (data.resultados && data.resultados.length > 0) {
+      mostrarResultado(data, false);
+      speak(data.text || `Encontré ${data.total} resultados`);
+    } else if (data.result) {
+      // Formato antiguo: un solo resultado
       const esBusqueda = data.action === "get" && !data.result.toLowerCase().includes("no encontr");
       const esRecordatorio = data.reminderData && data.reminderData.isReminder;
       
@@ -1502,6 +1374,7 @@ sendTextBtn.onclick = async () => {
       } : null;
       
       mostrarResultado(data.result, esBusqueda, esRecordatorio, data.reminderData, datosExtra);
+      speak(data.text || data.result.replace(/<[^>]*>/g, ''));
     }
 
     if (data.ok && data.audioBase64) {
@@ -1521,7 +1394,7 @@ sendTextBtn.onclick = async () => {
   }
 };
 
-// ==================== GRABACIÓN DE VOZ ====================
+// ==================== GRABACIÓN DE VOZ - ACTUALIZADO ====================
 async function startRecording() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -1599,7 +1472,11 @@ async function sendAudio() {
 
       const dataResp = await resResp.json();
 
-      if (dataResp.result) {
+      // ========== NUEVO: Detectar lista de resultados ==========
+      if (dataResp.resultados && dataResp.resultados.length > 0) {
+        mostrarResultado(dataResp, false);
+        speak(dataResp.text || `Encontré ${dataResp.total} resultados`);
+      } else if (dataResp.result) {
         const esBusqueda = dataResp.action === "get" && !dataResp.result.toLowerCase().includes("no encontr");
         const esRecordatorio = dataResp.reminderData && dataResp.reminderData.isReminder;
         
@@ -1612,6 +1489,7 @@ async function sendAudio() {
         } : null;
         
         mostrarResultado(dataResp.result, esBusqueda, esRecordatorio, dataResp.reminderData, datosExtra);
+        speak(dataResp.text || dataResp.result.replace(/<[^>]*>/g, ''));
       }
 
       if (dataResp.ok && dataResp.audioBase64) {
@@ -1636,7 +1514,6 @@ async function sendAudio() {
     stopCoreAnimation();
   };
 }
-
 
 </script>
 </body>
