@@ -320,32 +320,32 @@ Ejemplos:
         textoParaVoz = respuestaFinal;
       }
 
-    } } else if (action === "add") {
-  const res = await fetch(SHEETS_WEBAPP_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ 
-      action: "add", 
-      text: textoProcesado, 
-      userId,
-      dateText: reminderData?.dateText || "",
-      timeText: reminderData?.timeText || "",
-      description: reminderData?.description || textoProcesado
-    })
-  });
+        } else if (action === "add") {
+      const res = await fetch(SHEETS_WEBAPP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          action: "add", 
+          text: textoProcesado, 
+          userId,
+          dateText: reminderData?.dateText || "",
+          timeText: reminderData?.timeText || "",
+          description: reminderData?.description || textoProcesado
+        })
+      });
 
-  const data = await res.json();
-  respuestaFinal = data.result || textoProcesado;  // HTML para pantalla
-  
-  // ← CORREGIDO: Texto limpio para TTS
-  if (data.data && data.data.contenido) {
-    textoParaVoz = `Listo, guardé: ${data.data.contenido}`;
-    if (data.data.fecha) {
-      textoParaVoz += ` para el ${data.data.fecha}`;
-    }
-  } else {
-    textoParaVoz = "Listo, lo guardé en tu agenda.";
-  }
+      const data = await res.json();
+      respuestaFinal = data.result || textoProcesado;  // HTML para pantalla
+      
+      // ← CORREGIDO: Texto limpio para TTS
+      if (data.data && data.data.contenido) {
+        textoParaVoz = `Listo, guardé: ${data.data.contenido}`;
+        if (data.data.fecha) {
+          textoParaVoz += ` para el ${data.data.fecha}`;
+        }
+      } else {
+        textoParaVoz = "Listo, lo guardé en tu agenda.";
+      }
 
     } else if (action === "delete") {
       const res = await fetch(SHEETS_WEBAPP_URL, {
@@ -358,7 +358,7 @@ Ejemplos:
       respuestaFinal = "";
       textoParaVoz = data.ok ? "Eliminado correctamente." : "No encontré ese dato para borrar.";
 
-    } } else if (action === "get") {
+        } else if (action === "get") {
       const res = await fetch(SHEETS_WEBAPP_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -409,9 +409,15 @@ Ejemplos:
           })
         };
       } else {
+        // ← ESTE ELSE ESTABA FUERA DEL BLOQUE ANTERIOR EN MI CÓDIGO ANTERIOR
         respuestaFinal = "No encontré información sobre eso.";
         textoParaVoz = respuestaFinal;
       }
+
+    } else {
+      respuestaFinal = "No entendí la acción. Prueba con: agendame, recordame, pasame, o borra.";
+      textoParaVoz = respuestaFinal;
+    }
     const audioBase64 = await generarAudio(openai, textoParaVoz);
 
     return {
