@@ -410,7 +410,9 @@ function hablarNavegador(texto) {
 }
 // ===== COMUNICACIÓN CON APPS SCRIPT =====
 async function procesarComando(texto) {
-  if (!userEmail) return;
+  if (!userEmail) {
+    mostrarLoginHint(); // 👈 muestra texto + habla
+    return;
   
   startCoreAnimation('...');
   
