@@ -16,8 +16,15 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { textoUsuario } = JSON.parse(event.body);
-    if (!textoUsuario) throw new Error("Texto requerido");
+    const body = JSON.parse(event.body || "{}");
+
+const textoUsuario =
+  body.textoUsuario ||
+  body.texto ||       // 👈 TU FRONTEND ACTUAL
+  body.mensaje;
+
+if (!textoUsuario || textoUsuario.length < 2) {
+  throw new Error("Texto requerido");
 
     /* =========================
        1️⃣ GENERAR TEXTO (ARG)
