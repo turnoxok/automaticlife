@@ -40,8 +40,7 @@ if (!textoUsuario || textoUsuario.length < 2) {
         messages: [
           {
             role: "system",
-            role: "system",
-  content: `
+            content: `
 Sos un asistente de agenda en español argentino, tono cercano y natural.
 
 Reglas:
