@@ -411,11 +411,12 @@ function hablarNavegador(texto) {
 // ===== COMUNICACIÓN CON APPS SCRIPT =====
 async function procesarComando(texto) {
   if (!userEmail) {
-    mostrarLoginHint(); // 👈 muestra texto + habla
+    mostrarLoginHint();
     return;
-   }
+  }
+
   startCoreAnimation('...');
-  
+
   try {
     const res = await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
@@ -425,33 +426,32 @@ async function procesarComando(texto) {
         texto: texto
       })
     });
-    
+
     const data = await res.json();
-    
+
     if (data.ok) {
       mostrarResultado(data.resultado, data.esRecordatorio);
       if (data.mensajeVoz && texto && texto.length > 2) {
-  hablar(data.mensajeVoz);
-
+        hablar(data.mensajeVoz);
+      }
     } else {
       mostrarResultado(data.error || 'Error al procesar');
     }
-    
+
   } catch (err) {
     console.error(err);
     mostrarResultado('Error de conexión');
   }
-  
+
   stopCoreAnimation();
 }
-
 // ===== MODAL =====
-function abrirModal() {
+window.abrirModal = function () {
   if (!userEmail) return mostrarLoginHint();
   textModal.classList.add('visible');
   textInput.value = '';
   textInput.focus();
-}
+};
 
 function cerrarModal() {
   textModal.classList.remove('visible');
