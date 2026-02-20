@@ -29,10 +29,11 @@ exports.handler = async (event) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'tts-1',
-        voice: voz, // 'nova', 'shimmer', 'alloy', 'echo', 'fable', 'onyx'
+        model: 'tts-1-hd', // HD para mejor calidad
+        voice: voz,
         input: texto,
-        response_format: 'mp3'
+        response_format: 'mp3',
+        speed: 0.9 // Más lento y claro
       })
     });
 
@@ -40,7 +41,6 @@ exports.handler = async (event) => {
       throw new Error(`OpenAI error: ${response.status}`);
     }
 
-    // Obtener el buffer del audio
     const buffer = await response.buffer();
     const base64 = buffer.toString('base64');
 
