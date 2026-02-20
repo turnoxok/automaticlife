@@ -368,7 +368,7 @@ function mostrarResultado(html, esRecordatorio = false) {
 }
 
 async function hablar(texto) {
-  // Si no hay texto o es muy corto, no hablar
+  if (!userEmail) return;
   if (!texto || texto.length < 2) return;
   
   try {
@@ -428,7 +428,9 @@ async function procesarComando(texto) {
     
     if (data.ok) {
       mostrarResultado(data.resultado, data.esRecordatorio);
-      if (data.mensajeVoz) hablar(data.mensajeVoz);
+      if (data.mensajeVoz && texto && texto.length > 2) {
+  hablar(data.mensajeVoz);
+}
     } else {
       mostrarResultado(data.error || 'Error al procesar');
     }
