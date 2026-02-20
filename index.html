@@ -198,6 +198,17 @@ body {
     speechSynthesis.cancel();
   } catch (e) {}
 }
+  /* ===== GOOGLE LOGIN CALLBACK (GLOBAL) ===== */
+window.handleGoogleLogin = function (response) {
+  const token = response.credential;
+  const payload = JSON.parse(atob(token.split('.')[1]));
+
+  window.userEmail = payload.email;
+
+  console.log('Login OK:', window.userEmail);
+
+  hablar('Listo. Ya podés usar tu agenda.');
+};
 // ===== CONFIG =====
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxA1vnIdkeLoK-SvpqyHPYaKs-Wf8nPNiOSXD-zC-PGqWTGaRI_WZXxfG-h-EMkqGmL/exec';
 const VAPID_PUBLIC_KEY = 'BLQULctrbctZlLNCLlDsVWmrCKtUF6iCPB6VRVVergi9Lj8hdw1oHHArs8OEdqfbW6u_vmWF99tvQjuphPjHLeg';
