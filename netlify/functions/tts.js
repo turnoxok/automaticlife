@@ -25,7 +25,7 @@ const textoUsuario =
 
 if (!textoUsuario || textoUsuario.length < 2) {
   throw new Error("Texto requerido");
-
+}
     /* =========================
        1️⃣ GENERAR TEXTO (ARG)
     ========================= */
