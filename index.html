@@ -198,17 +198,7 @@ body {
     speechSynthesis.cancel();
   } catch (e) {}
 }
-  /* ===== GOOGLE LOGIN CALLBACK (GLOBAL) ===== */
-window.handleGoogleLogin = function (response) {
-  const token = response.credential;
-  const payload = JSON.parse(atob(token.split('.')[1]));
-
-  window.userEmail = payload.email;
-
-  console.log('Login OK:', window.userEmail);
-
-  hablar('Listo. Ya podés usar tu agenda.');
-};
+ 
 // ===== CONFIG =====
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxA1vnIdkeLoK-SvpqyHPYaKs-Wf8nPNiOSXD-zC-PGqWTGaRI_WZXxfG-h-EMkqGmL/exec';
 const VAPID_PUBLIC_KEY = 'BLQULctrbctZlLNCLlDsVWmrCKtUF6iCPB6VRVVergi9Lj8hdw1oHHArs8OEdqfbW6u_vmWF99tvQjuphPjHLeg';
@@ -297,16 +287,22 @@ function setupGestos() {
 // ===== AUTH =====
 function handleCredentialResponse(response) {
   const payload = JSON.parse(atob(response.credential.split('.')[1]));
-  userEmail = payload.email;
+
+  // ✅ UN SOLO userEmail, GLOBAL
+  window.userEmail = payload.email;
+
+  console.log('Login OK:', window.userEmail);
+
   userAvatar.textContent = (payload.name || 'U').charAt(0).toUpperCase();
-  
+
   document.querySelector('.g_id_signin').classList.add('hidden');
   userPanel.classList.remove('hidden');
   document.getElementById('quickActions').classList.remove('hidden');
   document.getElementById('notifBtn').classList.remove('hidden');
   document.getElementById('loginHint').classList.add('hidden');
   centerArea.classList.add('logged');
-  
+
+  hablar('Listo. Ya podés usar tu agenda.');
   checkNotificaciones();
 }
 
