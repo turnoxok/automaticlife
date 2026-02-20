@@ -418,8 +418,9 @@ function hablarNavegador(texto) {
 // ===== COMUNICACIÓN CON APPS SCRIPT =====
 async function procesarComando(texto) {
   if (!window.userEmail) {
-    mostrarLoginHint();
-    return;
+  mostrarLoginHint();
+  hablar('Tenés que iniciar sesión con Google para continuar.');
+  return;
   }
 
   startCoreAnimation('...');
