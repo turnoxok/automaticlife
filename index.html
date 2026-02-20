@@ -199,7 +199,7 @@ body {
   } catch (e) {}
 }
 // ===== CONFIG =====
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzLwF5LymxJRfoRJoDlvZvLPryHRbU2xge7cl-ELsYX_P1sbDsTT4hOPSLI4OlLEEeT/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxA1vnIdkeLoK-SvpqyHPYaKs-Wf8nPNiOSXD-zC-PGqWTGaRI_WZXxfG-h-EMkqGmL/exec';
 const VAPID_PUBLIC_KEY = 'BLQULctrbctZlLNCLlDsVWmrCKtUF6iCPB6VRVVergi9Lj8hdw1oHHArs8OEdqfbW6u_vmWF99tvQjuphPjHLeg';
   const NETLIFY_TTS_URL = 'https://automaticlife.netlify.app/.netlify/functions/tts';
 
@@ -430,7 +430,7 @@ async function procesarComando(texto) {
       mostrarResultado(data.resultado, data.esRecordatorio);
       if (data.mensajeVoz && texto && texto.length > 2) {
   hablar(data.mensajeVoz);
-}
+
     } else {
       mostrarResultado(data.error || 'Error al procesar');
     }
