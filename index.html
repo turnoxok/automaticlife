@@ -196,6 +196,7 @@ body {
 // ===== CONFIG =====
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxKXRHZXrdu9r149OcUdjTh16pX46mmJ_je1ozJ3pACA3_oloct7go2ynDbaVrnkmLe/exec';
 const VAPID_PUBLIC_KEY = 'BLQULctrbctZlLNCLlDsVWmrCKtUF6iCPB6VRVVergi9Lj8hdw1oHHArs8OEdqfbW6u_vmWF99tvQjuphPjHLeg';
+  const NETLIFY_TTS_URL = 'https://automaticlife.netlify.app/.netlify/functions/tts';
 
 let userEmail = null;
 let recognition = null;
@@ -351,23 +352,47 @@ function mostrarResultado(html, esRecordatorio = false) {
   resultPanel.classList.add('show');
 }
 
-function hablar(texto) {
+async function hablar(texto) {
+  // Si no hay texto o es muy corto, no hablar
+  if (!texto || texto.length < 2) return;
+  
+  try {
+    startCoreAnimation('...'); // Mostrar que está procesando
+    
+    const res = await fetch(NETLIFY_TTS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        texto: texto,
+        voz: 'nova' // o 'shimmer' si querés más joven
+      })
+    });
+    
+    const data = await res.json();
+    
+    stopCoreAnimation();
+    
+    if (data.ok && data.audioBase64) {
+      const audio = new Audio('data:audio/mp3;base64,' + data.audioBase64);
+      await audio.play();
+    } else {
+      throw new Error(data.error || 'Error en TTS');
+    }
+    
+  } catch (err) {
+    console.error('Error voz OpenAI:', err);
+    stopCoreAnimation();
+    hablarNavegador(texto); // Fallback a voz del navegador
+  }
+}
+
+// Fallback con voz del navegador (por si falla OpenAI)
+function hablarNavegador(texto) {
   const u = new SpeechSynthesisUtterance(texto);
   u.lang = 'es-AR';
   u.rate = 1;
-  
-  // Buscar voz femenina
-  const voces = speechSynthesis.getVoices();
-  const vozFemenina = voces.find(v => 
-    v.lang.includes('es') && 
-    (v.name.includes('Female') || v.name.includes('Mujer') || v.name.includes('Google español'))
-  );
-  
-  if (vozFemenina) u.voice = vozFemenina;
-  
   speechSynthesis.speak(u);
 }
-
 // ===== COMUNICACIÓN CON APPS SCRIPT =====
 async function procesarComando(texto) {
   if (!userEmail) return;
