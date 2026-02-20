@@ -259,7 +259,7 @@ function setupGestos() {
   const startPress = (e) => {
   e.preventDefault();
 
-  if (!userEmail) {
+  if (!window.userEmail) {
     stopCoreAnimation();
     cortarAudio();
     mostrarLoginHint();
@@ -375,7 +375,7 @@ function mostrarResultado(html, esRecordatorio = false) {
 }
 
 async function hablar(texto) {
-  if (!userEmail) return;
+  if (!window.userEmail) return;
   if (!texto || texto.length < 2) return;
   
   try {
@@ -417,7 +417,7 @@ function hablarNavegador(texto) {
 }
 // ===== COMUNICACIÓN CON APPS SCRIPT =====
 async function procesarComando(texto) {
-  if (!userEmail) {
+  if (!window.userEmail) {
     mostrarLoginHint();
     return;
   }
@@ -454,7 +454,7 @@ async function procesarComando(texto) {
 }
 // ===== MODAL =====
 window.abrirModal = function () {
-  if (!userEmail) return mostrarLoginHint();
+  if (!window.userEmail) return mostrarLoginHint();
   textModal.classList.add('visible');
   textInput.value = '';
   textInput.focus();
@@ -496,7 +496,7 @@ async function checkNotificaciones() {
 }
 
 async function solicitarNotificaciones() {
-  if (!userEmail) return;
+  if (!window.userEmail) return;
   
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') {
@@ -548,7 +548,7 @@ function urlBase64ToUint8Array(base64String) {
 // ===== MENÚ =====
 async function verRecordatorios() {
   toggleMenu();
-  if (!userEmail) return;
+  if (!window.userEmail) return;
   
   startCoreAnimation('...');
   
@@ -582,7 +582,7 @@ async function verRecordatorios() {
 
 async function verAgenda() {
   toggleMenu();
-  if (!userEmail) return;
+  if (!window.userEmail) return;
   
   startCoreAnimation('...');
   
