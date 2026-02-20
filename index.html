@@ -309,10 +309,14 @@ function mostrarLoginHint() {
   hint.classList.remove('hidden');
   setTimeout(() => hint.classList.add('hidden'), 3000);
 
-  hablar('Listo. Para continuar, iniciá sesión con Google.');
-hablar('Perfecto. Necesitás iniciar sesión con Google para seguir.');
-hablar('Hecho. Primero iniciá sesión con Google.');
-  
+  const mensajes = [
+    'Listo. Para continuar, iniciá sesión con Google.',
+    'Perfecto. Necesitás iniciar sesión con Google para seguir.',
+    'Hecho. Primero iniciá sesión con Google.'
+  ];
+
+  const mensaje = mensajes[Math.floor(Math.random() * mensajes.length)];
+  hablar(mensaje);
 }
 
 // ===== GRABACIÓN =====
