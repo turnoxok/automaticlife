@@ -16,18 +16,14 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { texto } = JSON.parse(event.body);
+    const { texto, voz = 'alloy' } = JSON.parse(event.body);
 
     if (!texto) {
       throw new Error('Texto requerido');
     }
 
-    const textoFinal = `
-Leé el siguiente texto con acento argentino rioplatense, entonación natural, cercana y humana.
-Usá voseo cuando corresponda. Pausas suaves, sin tono neutro artificial.
-
-${texto}
-`;
+    // Solo limpiar espacios, sin instrucciones
+    const textoLimpio = texto.trim();
 
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
@@ -36,9 +32,9 @@ ${texto}
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini-tts',
-        voice: 'alloy',
-        input: textoFinal,
+        model: 'tts-1',
+        voice: voz,
+        input: textoLimpio,
         response_format: 'mp3',
         speed: 0.95
       })
@@ -46,7 +42,7 @@ ${texto}
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`OpenAI error: ${errText}`);
+      throw new Error(`OpenAI error: ${response.status} - ${errText}`);
     }
 
     const buffer = await response.buffer();
