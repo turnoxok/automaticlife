@@ -193,6 +193,11 @@ body {
 </div>
 
 <script>
+  function cortarAudio() {
+  try {
+    speechSynthesis.cancel();
+  } catch (e) {}
+}
 // ===== CONFIG =====
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxJg8vws-3-DU6Eg_2K0cRxihzXrYr4zA2Jp9zl7hYTpGcvuo_ukFoeyXULAXwdsyqt/exec';
 const VAPID_PUBLIC_KEY = 'BLQULctrbctZlLNCLlDsVWmrCKtUF6iCPB6VRVVergi9Lj8hdw1oHHArs8OEdqfbW6u_vmWF99tvQjuphPjHLeg';
@@ -251,13 +256,20 @@ function setupGestos() {
   let pressTimer;
   
   const startPress = (e) => {
-    e.preventDefault();
-    if (!userEmail) return mostrarLoginHint();
-    pressTimer = setTimeout(() => {
-      isRecording = true;
-      startRecording();
-    }, 300);
-  };
+  e.preventDefault();
+
+  if (!userEmail) {
+    stopCoreAnimation();
+    cortarAudio();
+    mostrarLoginHint();
+    return; // ⛔ NO sigue nada
+  }
+
+  pressTimer = setTimeout(() => {
+    isRecording = true;
+    startRecording();
+  }, 300);
+};
   
   const endPress = () => {
     clearTimeout(pressTimer);
@@ -305,18 +317,13 @@ function logout() {
 }
 
 function mostrarLoginHint() {
+  cortarAudio(); // 🔴 corta cualquier voz anterior
+
   const hint = document.getElementById('loginHint');
   hint.classList.remove('hidden');
   setTimeout(() => hint.classList.add('hidden'), 3000);
 
-  const mensajes = [
-    'Listo. Para continuar, iniciá sesión con Google.',
-    'Perfecto. Necesitás iniciar sesión con Google para seguir.',
-    'Hecho. Primero iniciá sesión con Google.'
-  ];
-
-  const mensaje = mensajes[Math.floor(Math.random() * mensajes.length)];
-  hablar(mensaje);
+  hablar('Tenés que iniciar sesión con Google para continuar.');
 }
 
 // ===== GRABACIÓN =====
