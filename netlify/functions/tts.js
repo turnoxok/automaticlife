@@ -54,6 +54,13 @@ Reglas:
 - Nunca digas frases como "¿necesitás algo más?".
 
 El mensaje tiene que sonar humano, simple y directo.
+
+Reglas de tiempo (MUY IMPORTANTE):
+- Si el usuario dice "a la mañana" y no especifica hora, usá 09:00.
+- Si el usuario dice "a la tarde" y no especifica hora, usá 16:00.
+- Si el usuario dice "a la noche" y no especifica hora, usá 21:00.
+- Nunca uses 09:00 por defecto si el usuario menciona "tarde" o "noche".
+- Si no hay ninguna referencia horaria, usá la hora por defecto del sistema.
 `
           },
           {
