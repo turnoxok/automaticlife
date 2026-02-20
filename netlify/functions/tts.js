@@ -16,52 +16,77 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { texto, voz = 'alloy' } = JSON.parse(event.body);
+    const { textoUsuario } = JSON.parse(event.body);
+    if (!textoUsuario) throw new Error("Texto requerido");
 
-    if (!texto) {
-      throw new Error('Texto requerido');
-    }
-
-    // Solo limpiar espacios, sin instrucciones
-    const textoLimpio = texto.trim();
-
-    const response = await fetch('https://api.openai.com/v1/audio/speech', {
+    /* =========================
+       1️⃣ GENERAR TEXTO (ARG)
+    ========================= */
+    const textResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'tts-1',
-        voice: voz,
-        input: textoLimpio,
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: "system",
+            content: "Respondé siempre en español argentino rioplatense, tono natural y cercano. Usá voseo."
+          },
+          {
+            role: "user",
+            content: textoUsuario
+          }
+        ],
+        temperature: 0.7
+      })
+    });
+
+    if (!textResponse.ok) {
+      throw new Error("Error generando texto");
+    }
+
+    const textData = await textResponse.json();
+    const textoFinal = textData.choices[0].message.content;
+
+    /* =========================
+       2️⃣ TEXTO → VOZ
+    ========================= */
+    const ttsResponse = await fetch('https://api.openai.com/v1/audio/speech', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini-tts',
+        voice: 'alloy',
+        input: textoFinal,
         response_format: 'mp3',
         speed: 0.95
       })
     });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`OpenAI error: ${response.status} - ${errText}`);
+    if (!ttsResponse.ok) {
+      throw new Error("Error generando audio");
     }
 
-    const buffer = await response.buffer();
+    const audioBuffer = await ttsResponse.buffer();
 
     return {
       statusCode: 200,
-      headers: {
-        ...headers,
-        'Content-Type': 'application/json'
-      },
+      headers,
       body: JSON.stringify({
         ok: true,
-        audioBase64: buffer.toString('base64'),
-        formato: 'mp3'
+        texto: textoFinal,
+        audioBase64: audioBuffer.toString('base64')
       })
     };
 
   } catch (err) {
-    console.error('TTS error:', err);
+    console.error(err);
     return {
       statusCode: 500,
       headers,
