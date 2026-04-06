@@ -1,0 +1,8 @@
+{
+  "name": "automaticlife-functions",
+  "version": "1.0.0",
+  "dependencies": {
+    "web-push": "^3.6.7",
+    "openai": "^4.28.0"
+  }
+}
